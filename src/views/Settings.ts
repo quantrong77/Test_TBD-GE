@@ -6,6 +6,7 @@ import { storageWarning } from '../store/db';
 import { CONTENT_VERSION } from '../content';
 import { callout, esc, toast } from '../ui';
 import type { View } from '../router';
+import { fmtFixed } from '../calc/units';
 
 const THEMES: [Theme, string][] = [
   ['auto', 'Theo máy'],
@@ -25,7 +26,7 @@ export const Settings: View = async (_r, el) => {
   let usage = '';
   try {
     const e = await navigator.storage?.estimate?.();
-    if (e?.usage != null) usage = `${(e.usage / 1048576).toFixed(1)} MB${e.quota ? ` / ${(e.quota / 1048576).toFixed(0)} MB` : ''}`;
+    if (e?.usage != null) usage = `${fmtFixed(e.usage / 1048576, 1)} MB${e.quota ? ` / ${fmtFixed(e.quota / 1048576, 0)} MB` : ''}`;
   } catch {
     /* bỏ qua */
   }

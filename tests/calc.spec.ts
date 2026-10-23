@@ -61,6 +61,14 @@ describe('unbalance', () => {
     expect(s.warnings.some((w) => w.includes('kẹp dòng'))).toBe(true);
     expect(s.nominalDevPct).toBeCloseTo(0, 1);
   });
+  it('sanity warnings use Vietnamese decimal comma', () => {
+    const r = unbalance({ U: 250, Isum: 8.2, IG1: 3.9, IG2: 3.9, Idx10: 100, IdxUnit: 'mA' })!;
+    const w = sanityChecks(r, { IG1: 3.9, IG2: 3.9, Isum: 8.2 }, 104.4).warnings.join(' ');
+    expect(w).toContain('4,9 %');
+    expect(w).toContain('= 0,000 µF');
+    expect(w).toContain('= 0,127 µF');
+    expect(w).not.toMatch(/\d\.\d/);
+  });
   it('string outliers > mean + 2σ', () => {
     const v = Array(24).fill(0.34);
     v[7] = 0.5;

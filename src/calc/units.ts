@@ -37,6 +37,12 @@ export function parseNum(s: string | number | null | undefined): number {
   return Number(t);
 }
 
+/** Số với đúng `digits` chữ số thập phân, dấu phẩy kiểu VN (vd 0,000). */
+export function fmtFixed(x: number, digits: number): string {
+  if (!Number.isFinite(x)) return '—';
+  return x.toLocaleString('vi-VN', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
 export function fmt(x: number | null | undefined, digits = 3): string {
   if (x == null || !Number.isFinite(x)) return '—';
   return x.toLocaleString('vi-VN', { maximumFractionDigits: digits, minimumFractionDigits: 0 });

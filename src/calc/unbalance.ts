@@ -1,4 +1,5 @@
 import type { Result } from '../types';
+import { fmtFixed } from './units';
 
 export type CurrentUnit = 'A' | 'mA' | 'uA';
 
@@ -60,11 +61,11 @@ export function unbalanceVerdict(pct: number, alarm: number, bypass: number): Re
 export function sanityChecks(r: UnbalanceResult, raw: { IG1: number; IG2: number; Isum: number }, nominal_uF?: number) {
   const warnings: string[] = [];
   const sumMismatchPct = (Math.abs(raw.IG1 + raw.IG2 - raw.Isum) / raw.Isum) * 100;
-  if (sumMismatchPct > 2) warnings.push(`IG1 + IG2 lệch ${sumMismatchPct.toFixed(1)} % so với I∑ (> 2 %) – kiểm tra kẹp dòng.`);
+  if (sumMismatchPct > 2) warnings.push(`IG1 + IG2 lệch ${fmtFixed(sumMismatchPct, 1)} % so với I∑ (> 2 %) – kiểm tra kẹp dòng.`);
   // |CG1 − CG2| nên xấp xỉ ΔC; lệch lớn thường do sai chiều quấn hoặc sai đơn vị IΔ
   const ref = Math.max(r.dC, r.crossCheck);
   if (ref > 0.02 && Math.abs(r.crossCheck - r.dC) / ref > 0.5) {
-    warnings.push(`|CG1 − CG2| = ${r.crossCheck.toFixed(3)} µF khác nhiều so với ΔC = ${r.dC.toFixed(3)} µF – kiểm tra chiều quấn cuộn 10 vòng / đơn vị IΔ.`);
+    warnings.push(`|CG1 − CG2| = ${fmtFixed(r.crossCheck, 3)} µF khác nhiều so với ΔC = ${fmtFixed(r.dC, 3)} µF – kiểm tra chiều quấn cuộn 10 vòng / đơn vị IΔ.`);
   }
   let nominalDevPct: number | null = null;
   if (nominal_uF && nominal_uF > 0) nominalDevPct = ((r.Csum - nominal_uF) / nominal_uF) * 100;
