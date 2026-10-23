@@ -1,0 +1,172 @@
+{
+ "01_power_transfer.png": {
+  "w": 992,
+  "h": 764,
+  "caption": "Power Transfer – sơ đồ, công thức"
+ },
+ "02_platform_circuit.png": {
+  "w": 922,
+  "h": 687,
+  "caption": "Platform Circuit – nguyên lý"
+ },
+ "03_so_do_mot_soi.png": {
+  "w": 1400,
+  "h": 816,
+  "caption": "Sơ đồ một sợi chi tiết, CT, nhị thứ"
+ },
+ "04_dan_tu_thuc_te.jpg": {
+  "h": 632,
+  "w": 436,
+  "caption": "Dàn tụ lắp hoàn chỉnh"
+ },
+ "05_bo_tri_stack.png": {
+  "w": 418,
+  "h": 511,
+  "caption": "Bố trí S1–S4, R, TAG"
+ },
+ "06_dau_day_stack.png": {
+  "w": 585,
+  "h": 750,
+  "caption": "Đấu dây 1 Stack – 3 Rack"
+ },
+ "07_so_do_group_string.png": {
+  "w": 767,
+  "h": 749,
+  "caption": "Sơ đồ bình tụ pha – trung tính"
+ },
+ "08_mov_cot_su.jpg": {
+  "h": 1280,
+  "w": 565,
+  "caption": "Cột sứ MOV"
+ },
+ "09_mov_dia_zno.jpg": {
+  "h": 330,
+  "w": 492,
+  "caption": "Đĩa ZnO bên trong MOV"
+ },
+ "10_tag_nguyen_ly.png": {
+  "w": 555,
+  "h": 396,
+  "caption": "Nguyên lý Triggered Air Gap"
+ },
+ "11_tu_vap_dau_noi.jpg": {
+  "h": 684,
+  "w": 750,
+  "caption": "Tủ VAP-A/VAP-B, C1, C2"
+ },
+ "12_khang_can_diu.jpg": {
+  "h": 582,
+  "w": 732,
+  "caption": "Cuộn kháng cản dịu"
+ },
+ "13_ct_rack.jpg": {
+  "h": 657,
+  "w": 581,
+  "caption": "CT rack"
+ },
+ "14_tu_pfoi.jpg": {
+  "h": 684,
+  "w": 831,
+  "caption": "Tủ PFOI"
+ },
+ "15_tong_the_1_pha.jpg": {
+  "h": 961,
+  "w": 1280,
+  "caption": "Tổng thể 1 pha giàn tụ"
+ },
+ "16_so_do_thu_mat_can_bang.png": {
+  "w": 525,
+  "h": 402,
+  "caption": "Fig.1 – mạch thử mất cân bằng"
+ },
+ "17_4_diem_do_dong.png": {
+  "w": 1400,
+  "h": 745,
+  "caption": "4 điểm đo dòng"
+ },
+ "18_mov_thuc_te.jpg": {
+  "h": 409,
+  "w": 280,
+  "caption": "MOV trên sàn tụ"
+ },
+ "19_tag_house_su_xuyen.jpg": {
+  "h": 1280,
+  "w": 720,
+  "caption": "Sứ xuyên, thiết bị TAG house"
+ },
+ "20_dien_cuc_tag.jpg": {
+  "h": 515,
+  "w": 663,
+  "caption": "Điện cực khe hở TAG"
+ },
+ "21_vap_tester_nguyen_ly.png": {
+  "w": 554,
+  "h": 386,
+  "caption": "Simplified VAP Tester"
+ },
+ "22_vap_tester_ket_noi.jpg": {
+  "h": 917,
+  "w": 1280,
+  "caption": "Kết nối VAP Tester"
+ },
+ "23_nguon_cao_ap_10kv.jpg": {
+  "h": 522,
+  "w": 753,
+  "caption": "Nguồn cao áp DC"
+ },
+ "24_gap_injector_circuit.png": {
+  "w": 772,
+  "h": 520,
+  "caption": "Simplified Gap Injector Circuit"
+ },
+ "25_tag_house_c1_c2.jpg": {
+  "h": 359,
+  "w": 476,
+  "caption": "Tụ C1, C2 trong TAG house"
+ },
+ "26_so_do_mach_kich_hoat.png": {
+  "w": 946,
+  "h": 499,
+  "caption": "Test Circuit Diagram – GE"
+ },
+ "27_ct_rack_cua_so.jpg": {
+  "h": 663,
+  "w": 586,
+  "caption": "CT cửa sổ trên rack"
+ },
+ "28_so_do_bom_dong.png": {
+  "w": 966,
+  "h": 475,
+  "caption": "Sơ đồ bơm dòng nhất thứ"
+ },
+ "29_bang_bom_dong_ct.png": {
+  "w": 772,
+  "h": 515,
+  "caption": "Bảng bơm dòng CT gốc GE"
+ },
+ "30_bang_ct9_pfoi.png": {
+  "w": 625,
+  "h": 258,
+  "caption": "Bảng CT9 – PFOI gốc GE"
+ },
+ "31_gamma_mat_may.jpg": {
+  "h": 218,
+  "w": 517,
+  "caption": "Mặt máy nguồn GAMMA RR10-6R"
+ },
+ "32_gamma_hang_kep_tb1.png": {
+  "w": 893,
+  "h": 904,
+  "caption": "Hàng kẹp TB-1"
+ },
+ "33_gamma_dac_tuyen_cvcc.png": {
+  "w": 1030,
+  "h": 518,
+  "caption": "Đặc tuyến CV/CC"
+ },
+ "34_gamma_so_do_khoi.png": {
+  "w": 1194,
+  "h": 1400,
+  "caption": "Sơ đồ khối chức năng"
+ }
+}

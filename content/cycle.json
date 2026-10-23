@@ -1,0 +1,15 @@
+{
+  "head": ["Hạng mục", "Sau lắp đặt", "Sau 1 năm", "Định kỳ"],
+  "rows": [
+    ["Hệ thống tụ & group tụ", "✓", "✓", "1–3 năm"],
+    ["MOV bảo vệ tụ", "✓", "✓", "1–3 năm"],
+    ["Kháng cản dịu", "✓", "✓", "1–3 năm"],
+    ["Sứ xuyên TAG House", "✓", "✓", "1–3 năm"],
+    ["Tụ TAG & MOV bảo vệ tụ TAG", "✓", "✓", "1–3 năm"],
+    ["Triggered Air Gap (tủ VAP)", "✓", "✓", "**GE khuyến cáo 2 năm**"],
+    ["Biến dòng điện CT rack", "✓", "—", "— (xem QĐ 1901)"],
+    ["Cáp lực & CSV 6 kV", "✓", "✓", "1–3 năm"]
+  ],
+  "note": "Theo hướng dẫn của GE và QĐ 1901/QĐ-EVNNPT. **Nếu chu kỳ của hãng ngắn hơn thì áp dụng theo hãng.**",
+  "review": "Chu kỳ định kỳ của CT rack chưa thống nhất giữa slide 18 (chỉ \"Sau lắp đặt\") và slide 38 (theo QĐ 1901) – cần chuyên gia xác nhận."
+}

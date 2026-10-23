@@ -1,0 +1,54 @@
+{
+  "role": {
+    "title": "Vai trò của tụ bù dọc (TBD)",
+    "points": [
+      "Nâng cao khả năng tải của đường dây; cải thiện độ ổn định hệ thống; giảm tổn thất.",
+      "Tăng khả năng điều chỉnh, ổn định điện áp; điều khiển phân bố công suất trên các đường dây song song.",
+      "**Bản chất vật lý:** tụ Xc nối tiếp làm giảm điện kháng hiệu dụng (XL − Xc)."
+    ],
+    "formula": "P = [Es·Er / (XL − Xc)]·sin δ = Pmax·sin δ",
+    "images": ["01_power_transfer.png"]
+  },
+  "circuit": {
+    "title": "Sơ đồ mạch trên sàn tụ (Platform Circuit)",
+    "points": [
+      "**Series Capacitor** (bộ tụ) mắc nối tiếp trên đường dây.",
+      "**Varistor (MOV)**, **Current Limiting Reactor** (kháng cản dịu) và **Triggered Air Gap** mắc song song với bộ tụ để bảo vệ.",
+      "**Bypass Breaker** (máy cắt bypass) song song ngoài cùng, dùng để đưa tụ vào vận hành hoặc cô lập tụ.",
+      "Thứ tự lớp bảo vệ: **MOV → Triggered Gap → Bypass Breaker**."
+    ],
+    "images": ["02_platform_circuit.png", "03_so_do_mot_soi.png"]
+  },
+  "devices": [
+    { "id": "capacitor", "name": "Bộ tụ (Capacitor Bank)", "role": "Tạo tác dụng bù dọc. Sàn thép đặt trên cột sứ cao; **toàn bộ sàn mang điện áp đường dây**.", "item": "4.1", "images": ["04_dan_tu_thuc_te.jpg", "15_tong_the_1_pha.jpg"] },
+    { "id": "mov", "name": "MOV (Metal Oxide Varistor)", "role": "Lớp bảo vệ đầu tiên: giới hạn điện áp trên tụ. Gồm các đĩa ZnO xếp nhiều cột song song trong vỏ sứ, chia **2 nhóm** để giám sát qua CT.", "item": "4.2", "images": ["08_mov_cot_su.jpg", "09_mov_dia_zno.jpg", "18_mov_thuc_te.jpg"] },
+    { "id": "reactor", "name": "Kháng cản dịu (Discharge Reactor)", "role": "Giới hạn biên độ và cản dịu dòng xả tụ khi máy cắt bypass đóng. Dây nhôm hoán vị bọc epoxy, **không lõi sắt**.", "item": "4.3", "images": ["12_khang_can_diu.jpg"] },
+    { "id": "bushing", "name": "Sứ xuyên TAG House", "role": "Đưa điện vào buồng TAG.", "item": "4.4", "images": ["19_tag_house_su_xuyen.jpg"] },
+    { "id": "tag", "name": "Triggered Air Gap (TAG)", "role": "Bảo vệ MOV: phóng điện dẫn dòng thay khi năng lượng hoặc dòng qua MOV vượt ngưỡng. Đặt trong TAG house cùng tụ TAG và tụ nạp C1, C2.", "item": "4.5", "images": ["10_tag_nguyen_ly.png", "20_dien_cuc_tag.jpg"] },
+    { "id": "vap", "name": "Tủ VAP (Varistor Analog and Pulser)", "role": "Giám sát dòng và năng lượng qua MOV, phát lệnh kích TAG. Dùng năng lượng C1, C2 tạo plasma. **2 tủ độc lập VAP-A, VAP-B mỗi pha**.", "item": "4.5", "images": ["11_tu_vap_dau_noi.jpg"] },
+    { "id": "ctrack", "name": "CT rack", "role": "Đo dòng qua tụ, MOV, Gap, dòng không cân bằng… phục vụ đo lường và bảo vệ.", "item": "4.6", "images": ["13_ct_rack.jpg", "27_ct_rack_cua_so.jpg"] },
+    { "id": "pfoi", "name": "PFOI (Platform Fiber Optic Interface)", "role": "Chuyển tín hiệu dòng thành tín hiệu quang xuống tủ dưới đất; cách ly điện hoàn toàn.", "item": "4.7", "images": ["14_tu_pfoi.jpg"] }
+  ],
+  "config": {
+    "title": "Cấu hình bình tụ (mẫu giàn GE 500 kV)",
+    "points": [
+      "Mỗi pha: **4 Stack** (S1–S4), bố trí cùng kháng cản dịu (R) và TAG.",
+      "Mỗi Stack: **3 Rack**, mỗi Rack **24 Unit** (bình tụ **không cầu chì – fuseless**).",
+      "Mỗi pha có **2 Group** song song: Group 1 = Stack 1+2; Group 2 = Stack 3+4.",
+      "Mỗi Group: **24 String**, mỗi String **6 bình nối tiếp** → **144 bình/Group**.",
+      "Nguyên lý giám sát: **dòng không cân bằng** giữa 2 group để phát hiện bình tụ hỏng."
+    ],
+    "formulaRows": [
+      ["1 String", "13,05 / 6", "2,175 µF"],
+      ["1 Group", "2,175 × 24", "52,2 µF"],
+      ["Tổng 1 pha", "52,2 × 2", "**104,4 µF**"],
+      ["Trở kháng", "1/(ωC) = 1/(2π·50·104,4·10⁻⁶)", "**≈ 30,5 Ω**"]
+    ],
+    "images": ["05_bo_tri_stack.png", "06_dau_day_stack.png", "07_so_do_group_string.png"]
+  },
+  "summary": [
+    "Khối lượng và hạng mục đối chiếu cả đề cương EVNNPT và GE Field Installation Test Plan. TBD các hãng khác có thể tham khảo, áp dụng phù hợp.",
+    "Thiết bị có chu kỳ hãng quy định ngắn hơn thì **theo hãng**.",
+    "Toàn bộ thí nghiệm do nhân sự có chuyên môn, đã qua đào tạo thực hiện; tuân thủ tuyệt đối quy định an toàn, **đặc biệt với các phép thử cao áp (VAP, Trigger Circuit)** có dung lượng tích điện lớn."
+  ]
+}

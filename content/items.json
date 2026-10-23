@@ -1,0 +1,377 @@
+{
+  "version": "1.1.0",
+  "items": [
+    {
+      "id": "4.1",
+      "tab": "TAB 1",
+      "title": "Hệ thống tụ và các group tụ",
+      "short": "Tụ & Group tụ",
+      "danger": true,
+      "purpose": [
+        "Kiểm tra sự toàn vẹn của giàn tụ (kiểm tra bằng mắt, lực xiết).",
+        "Xác định chênh lệch điện dung giữa 2 group của từng pha, so với thiết kế và giá trị đặt bảo vệ.",
+        "Đo gián tiếp điện dung từng group và điện dung tổng; phát hiện bình tụ hư hỏng."
+      ],
+      "tools": [
+        "Cờ lê lực 25–250 ft-lbs; keo tiếp xúc Penetrox™ A",
+        "Bộ dụng cụ cầm tay (cờ lê, ratchet, tua vít)",
+        "Đồng hồ đo điện dung",
+        "Biến áp cách ly 220/220 Vac 10 A; Variac 0–240 Vac 10 A",
+        "Cuộn dây quấn vi sai 10 vòng; Ampe kìm 4 mA/40 A; Vôn kế số"
+      ],
+      "safetyGate": "gate-platform",
+      "tests": [
+        {
+          "id": "visual",
+          "title": "A. Kiểm tra bằng mắt (Visual Inspection)",
+          "gate": "gate-visual",
+          "purpose": ["Kiểm tra sự toàn vẹn của giàn tụ."],
+          "checklist": [
+            "Bình tụ không **rò rỉ dầu**",
+            "Bình tụ không **móp méo**",
+            "Không **tróc sơn**",
+            "Không có **hư hỏng vật lý** khác",
+            "**Mối nối tiếp xúc** chắc chắn, đủ lực xiết"
+          ],
+          "extraTables": [
+            {
+              "title": "Lực xiết bu-lông (thép low-carbon ASTM A-307) – dùng chung cho bu-lông sứ đỡ của bộ tụ, MOV và kháng cản dịu",
+              "head": ["Bu-lông", "Lực xiết"],
+              "rows": [
+                ["1/2\" – 13", "25 ft-lbs (≈ 34 N·m)"],
+                ["9/16\" – 12", "30 ft-lbs (≈ 41 N·m)"],
+                ["5/8\" – 11", "40 ft-lbs (≈ 54 N·m)"],
+                ["3/4\" – 10", "60 ft-lbs (≈ 81 N·m)"],
+                ["7/8\" – 9", "80 ft-lbs (≈ 108 N·m)"]
+              ]
+            }
+          ],
+          "images": ["15_tong_the_1_pha.jpg"],
+          "form": "checklist"
+        },
+        {
+          "id": "unbalance",
+          "title": "B. Thí nghiệm mất cân bằng điện dung",
+          "gate": "gate-hv",
+          "callouts": [
+            { "level": "danger", "text": "Điện áp có thể gây chết người xuất hiện trên thanh cái tụ, giá đỡ tụ, CT rack và trong TAG HOUSE khi cấp điện thử. Chỉ người cần thiết ở trên sàn; **KHÔNG ai ở trong TAG HOUSE**; mọi người được thông báo và ở vị trí an toàn. Chỉ nhân sự có kinh nghiệm thực hiện theo quy trình đã duyệt." }
+          ],
+          "steps": [
+            { "n": 1, "text": "Mở mạch busbar để dòng mỗi group đi qua **cuộn dây 10 vòng theo chiều ngược nhau**.", "img": "16_so_do_thu_mat_can_bang.png" },
+            { "n": 2, "text": "Đấu nối chắc chắn theo sơ đồ; cấp nguồn **≈ 200–300 Vac** (qua biến áp cách ly + variac).", "img": "16_so_do_thu_mat_can_bang.png" },
+            { "n": 3, "text": "Đo, ghi điện áp đặt **U** bằng vôn kế số.", "record": "U (V)" },
+            { "n": 4, "text": "Chờ mạch ổn định; đọc dòng **Group 1 (vị trí 1)** và **Group 2 (vị trí 2)**.", "img": "17_4_diem_do_dong.png", "record": "IG1, IG2 (A)" },
+            { "n": 5, "text": "Ghi dòng vi sai trên cuộn 10 vòng (**vị trí 4**).", "img": "17_4_diem_do_dong.png", "record": "IΔ×10", "note": "⚠️ **Giá trị đọc = 10 × dòng vi sai thực.** Chọn đúng đơn vị (A / mA / µA) khi nhập." },
+            { "n": 6, "text": "Ghi tổng dòng (**vị trí 3**).", "img": "17_4_diem_do_dong.png", "record": "I∑ (A)" },
+            { "n": 7, "text": "Đo, ghi dòng từng string tụ (24 string mỗi group).", "record": "Is[1..24]" },
+            { "n": 8, "text": "Nếu vượt dung sai: so sánh các Is, tìm string **có dòng cao bất thường** (phần tử bị ngắn mạch trong → trở kháng thấp). Đo điện dung từng bình trong string nghi ngờ, so với danh định → sửa chữa/thay thế.", "record": "Cunit (µF)" }
+          ],
+          "thresholds": ["unb_alarm", "unb_bypass"],
+          "tips": [
+            "Công thức: C[µF] = 3183,1 × I[A] / U[V]; %ΔC = IΔ thực / I∑ × 100. Dùng **Máy tính mất cân bằng** để tự tính.",
+            "Ngưỡng lấy theo **hồ sơ giàn** (mẫu TBD503 T500 Pleiku 2: alarm 0,16 %, bypass 0,22 %)."
+          ],
+          "images": ["16_so_do_thu_mat_can_bang.png", "17_4_diem_do_dong.png"],
+          "form": "unbalance"
+        }
+      ],
+      "thresholds": ["unb_alarm", "unb_bypass"],
+      "images": ["15_tong_the_1_pha.jpg", "16_so_do_thu_mat_can_bang.png", "17_4_diem_do_dong.png", "05_bo_tri_stack.png", "06_dau_day_stack.png", "07_so_do_group_string.png"]
+    },
+    {
+      "id": "4.2",
+      "tab": "",
+      "title": "Các MOV – điện trở phi tuyến (Metal Oxide Varistors)",
+      "short": "MOV",
+      "purpose": ["Kiểm tra lắp đặt và tình trạng MOV bảo vệ tụ theo quy định thí nghiệm **chống sét van không khe hở**."],
+      "tools": ["Megaom 500/2500 V", "Hợp bộ TN nhất thứ đa chức năng (đo tổn hao)", "Dụng cụ tháo lắp"],
+      "safetyGate": "gate-platform",
+      "callouts": [
+        { "level": "info", "text": "Mỗi bộ MOV được chế tạo và thí nghiệm **riêng theo từng pha**, **không hoán đổi giữa các pha**. Các bộ dùng chung 1 số serial với hậu tố khác nhau." }
+      ],
+      "tests": [
+        {
+          "id": "install",
+          "title": "A. Kiểm tra lắp đặt",
+          "gate": "gate-visual",
+          "checklist": [
+            "MOV và busbar lắp đúng, **đúng hướng van xả áp** (pressure relief vent)",
+            "Cụm MOV đặt trên tấm riêng, **cách ly với sàn tụ chính bằng sứ** (để giám sát dòng qua 2 nhóm varistor bằng CT)",
+            "Kiểm tra tình trạng bên ngoài: vỏ sứ, mối nối, không nứt vỡ"
+          ],
+          "images": ["18_mov_thuc_te.jpg", "08_mov_cot_su.jpg"],
+          "form": "checklist"
+        },
+        {
+          "id": "measure",
+          "title": "B. Thí nghiệm MOV",
+          "gate": "gate-visual",
+          "steps": [
+            { "n": 1, "text": "Kiểm tra tình trạng bên ngoài." },
+            { "n": 2, "text": "Đo **điện trở cách điện** MOV và sứ đỡ.", "record": "R_cđ (MΩ)" },
+            { "n": 3, "text": "Đo **tổn hao công suất** (có thể đo theo nhóm).", "record": "P (W)" },
+            { "n": 4, "text": "**Tách đo từng MOV** nếu các giá trị trên bất thường." }
+          ],
+          "tips": ["App so sánh với giá trị lần trước (Δ %) và gắn cờ **Bất thường** nếu vượt ngưỡng do người dùng đặt (mặc định 20 %)."],
+          "images": ["08_mov_cot_su.jpg", "09_mov_dia_zno.jpg"],
+          "form": "mov"
+        }
+      ],
+      "thresholds": [],
+      "images": ["18_mov_thuc_te.jpg", "08_mov_cot_su.jpg", "09_mov_dia_zno.jpg"]
+    },
+    {
+      "id": "4.3",
+      "tab": "TAB 3",
+      "title": "Kháng cản dịu – Discharge Reactor",
+      "short": "Kháng cản dịu",
+      "purpose": ["Thí nghiệm theo quy định thí nghiệm **kháng lõi không khí**."],
+      "tools": ["Megaom 500/2500 V", "Máy đo điện kháng", "Máy đo điện trở một chiều", "Nhiệt kế"],
+      "safetyGate": "gate-platform",
+      "tests": [
+        {
+          "id": "measure",
+          "title": "Thí nghiệm kháng cản dịu",
+          "gate": "gate-visual",
+          "steps": [
+            { "n": 1, "text": "Kiểm tra tình trạng bên ngoài: lớp bọc epoxy, mối nối, sứ đỡ." },
+            { "n": 2, "text": "Đo **điện trở cách điện**.", "record": "R_cđ (MΩ)" },
+            { "n": 3, "text": "Đo **tổng trở và điện cảm**.", "record": "Z (Ω), L (mH)" },
+            { "n": 4, "text": "Đo **điện trở một chiều**; ghi nhiệt độ môi trường.", "record": "R_dc (mΩ), t (°C)" }
+          ],
+          "tips": ["Nhập giá trị lần trước để app tính Δ %."],
+          "images": ["12_khang_can_diu.jpg"],
+          "form": "reactor"
+        }
+      ],
+      "thresholds": [],
+      "images": ["12_khang_can_diu.jpg"]
+    },
+    {
+      "id": "4.4",
+      "tab": "",
+      "title": "Sứ xuyên TAG House",
+      "short": "Sứ TAG",
+      "purpose": ["Thí nghiệm theo quy định thí nghiệm **sứ xuyên**."],
+      "tools": ["Cầu đo tang (C, tan δ)", "Thiết bị đo DFR"],
+      "safetyGate": "gate-platform",
+      "tests": [
+        {
+          "id": "measure",
+          "title": "Thí nghiệm sứ xuyên",
+          "gate": "gate-visual",
+          "steps": [
+            { "n": 1, "text": "Kiểm tra tình trạng bên ngoài." },
+            { "n": 2, "text": "Đo **điện dung và tổn hao điện môi (tan δ)**.", "record": "C1 (pF), tan δ (%)" },
+            { "n": 3, "text": "Đo **đáp ứng điện môi DFR**." }
+          ],
+          "thresholds": ["bushing_c1"],
+          "tips": ["Nếu nhà sản xuất không quy định riêng: **C1 sai lệch ≤ 5 %** so với baseline hoặc giá trị trên nhãn → app tự tính %."],
+          "images": ["19_tag_house_su_xuyen.jpg"],
+          "form": "bushing"
+        }
+      ],
+      "thresholds": ["bushing_c1"],
+      "images": ["19_tag_house_su_xuyen.jpg"]
+    },
+    {
+      "id": "4.5",
+      "tab": "TAB 5",
+      "title": "Tủ VAP và Triggered Air Gap",
+      "short": "VAP / TAG",
+      "danger": true,
+      "purpose": [
+        "Hạng mục **phức tạp và nguy hiểm nhất**.",
+        "Kiểm tra khe hở điện cực, ngưỡng năng lượng và dòng đỉnh kích hoạt khe hở của từng tủ VAP, mạch kích hoạt và đầu phun plasma."
+      ],
+      "tools": [
+        "VAP Tester GE 31F246 (nguồn 120/230 Vac, cáp 17 m, cáp nguồn 3 m)",
+        "Nguồn cao thế GAMMA RR10-6R/220/M851 (0–10 kV DC, đảo cực tính)",
+        "Dây đo; thước đo khe hở",
+        "Hợp bộ bơm dòng nhất thứ (cho phép thử D)",
+        "**Nút bịt tai** cho cả đội"
+      ],
+      "safetyGate": "gate-tag",
+      "callouts": [
+        { "level": "danger", "text": "Điện áp gây chết người tồn tại khi mạch nạp đang bật **và cho đến khi cả 3 tụ (rack, C1, C2) đã xả hết**. Chỉ nhân sự có kinh nghiệm thực hiện." },
+        { "level": "warn", "text": "Tiếng nổ đầu phun plasma **cực lớn (deafening)**. Đeo nút bịt tai; thông báo mọi người trong tầm nghe." }
+      ],
+      "tests": [
+        {
+          "id": "gap",
+          "title": "A. Đo khoảng cách khe hở điện cực",
+          "gate": "gate-visual",
+          "table": {
+            "head": ["Giàn tụ", "Khe hở"],
+            "rows": [
+              ["TBD502 Pleiku", "161 mm"],
+              ["TBD505 Pleiku", "161 mm"],
+              ["TBD508 Pleiku", "146 mm (5-3/4\")"],
+              ["TBD593 Pleiku 2", "140 mm"],
+              ["TBD503 Pleiku 2", "161 mm"],
+              ["TBD504 Pleiku 2", "161 mm"],
+              ["TBD502, TBD504 T500 Đăk Nông", "152,4 mm"],
+              ["TBD503, TBD504 T500 Di Linh", "152,4 mm"]
+            ]
+          },
+          "tips": ["Các giàn khác: đối chiếu quy trình vận hành của trạm (nhập vào hồ sơ giàn)."],
+          "thresholds": ["tag_gap"],
+          "images": ["20_dien_cuc_tag.jpg", "10_tag_nguyen_ly.png"],
+          "form": "gap"
+        },
+        {
+          "id": "vap-threshold",
+          "title": "B. Thí nghiệm ngưỡng VAP (VAP Threshold Test)",
+          "gate": "gate-tag",
+          "purpose": ["Dùng VAP Tester kiểm tra từng tủ VAP về ngưỡng năng lượng và dòng đỉnh kích hoạt khe hở."],
+          "callouts": [
+            { "level": "info", "text": "Môi trường máy: −20 °C … +40 °C, không ngưng tụ. **Dưới 10 °C phải sấy máy 15 phút** trước khi thử." }
+          ],
+          "steps": [
+            { "n": 1, "text": "Xác nhận các **jumper** cài mức năng lượng và ngưỡng dòng trong tủ VAP đúng cấu hình gốc; **ghi số serial** VAP vào biên bản.", "img": "11_tu_vap_dau_noi.jpg", "record": "Serial VAP", "equip": "vap-tester-31f246" },
+            { "n": 2, "text": "**Tắt POWER** máy thử, đấu cáp 17 m giữa VAP và ổ **TEST SOCKET P-1**; đấu nguồn AC có nối đất.", "img": "22_vap_tester_ket_noi.jpg", "equip": "vap-tester-31f246/quick" },
+            { "n": 3, "text": "Bật **POWER** → nhấn **RESET**: đèn TEST COMPLETED sáng khi nhấn, đồng hồ chỉ 0.", "img": "21_vap_tester_nguyen_ly.png", "equip": "vap-tester-31f246/controls" },
+            { "n": 4, "text": "Đặt **TEST SELECT = ENERGY (mC)**. Nhấn **RESET 1 giây**, xác nhận DPM = 0 ± 0,1 mC.", "equip": "vap-tester-31f246/controls" },
+            { "n": 5, "text": "Nhấn giữ **TEST RUN** tới khi đèn **TEST COMPLETED** sáng → **ghi mC trong vòng 0,5 s**. VAP FIRED phải sáng trong 1,5 s.", "record": "mC", "equip": "vap-tester-31f246/tests" },
+            { "n": 6, "text": "Chờ **≥ 1 phút** → RESET. Đặt **ENERGY (V)** → TEST RUN → ghi V (điện áp đỉnh trên tụ phóng của VAP).", "timer": 60, "record": "V", "note": "Chờ ≥ 1 phút giữa các lần thử để tụ VAP xả hết.", "equip": "vap-tester-31f246/tests" },
+            { "n": 7, "text": "Chờ ≥ 1 phút → RESET. Đặt **CURRENT (A)** → TEST RUN → ghi A (DPM hiển thị **số âm**, ghi trị tuyệt đối).", "timer": 60, "record": "A", "equip": "vap-tester-31f246/tests" },
+            { "n": 8, "text": "Lặp lại cho **VAP-A và VAP-B** của **pha A, B, C** (6 tủ)." },
+            { "n": 9, "text": "Luôn **tắt POWER khi tháo/lắp cáp**; **nhấn RESET ≥ 1 s để xả tụ** trước khi chỉnh trị đặt VAP.", "equip": "vap-tester-31f246/safety" }
+          ],
+          "thresholds": ["vap_mC", "vap_V", "vap_A", "vap_ext"],
+          "tips": [
+            "Không đạt khi: đèn TEST COMPLETED sáng nhưng **VAP FIRED không sáng** (mạch định thì giới hạn ~1,5 s).",
+            "Đo mC sai nếu không chờ đủ 1 phút giữa các lần (tụ tích điện VAP chưa xả hết).",
+            "Không cần tháo VAP khỏi buồng chứa, nhưng **VAP phải được đấu với mạch kích khởi khe phóng**.",
+            "Muốn có kết quả chính xác: **tách CT varistor** khỏi VAP (ghi chú trên sơ đồ GE)."
+          ],
+          "images": ["21_vap_tester_nguyen_ly.png", "22_vap_tester_ket_noi.jpg", "11_tu_vap_dau_noi.jpg"],
+          "form": "vap"
+        },
+        {
+          "id": "trigger",
+          "title": "C. Mạch kích hoạt & đầu phun plasma – mô phỏng qua VAP Tester (±10 kV)",
+          "gate": "gate-tag",
+          "callouts": [
+            { "level": "danger", "text": "Điện áp gây chết người tồn tại khi mạch nạp đang bật **và cho đến khi cả 3 tụ (rack, C1, C2) đã xả hết**. Chỉ nhân sự có kinh nghiệm thực hiện." },
+            { "level": "warn", "text": "Tiếng nổ đầu phun **cực lớn (deafening)**." }
+          ],
+          "steps": [
+            { "n": 1, "text": "Đấu cáp VAP Tester; đặt TEST SELECT = **ENERGY (mC)** hoặc **ENERGY (V)**; bật nguồn.", "img": "22_vap_tester_ket_noi.jpg", "equip": "vap-tester-31f246/quick" },
+            { "n": 2, "text": "Đấu nguồn cao áp vào **tụ C1 (phía varistor V2)** và **sàn tụ**; xác nhận đúng bản vẽ trong biên bản TAG.", "img": "26_so_do_mach_kich_hoat.png", "equip": "gamma-rr10/quick" },
+            { "n": 3, "text": "Trên nguồn **GAMMA**: nối đất vỏ máy, núm áp về 0, chọn cực tính **POSITIVE** (công tắc + nút nhấn, LED sáng), tăng áp tới **+10,0 kV**.", "img": "31_gamma_mat_may.jpg", "record": "kV", "equip": "gamma-rr10/quick" },
+            { "n": 4, "text": "**RESET 1 s** → giữ **TEST RUN** tới khi **TEST COMPLETED** sáng.", "equip": "vap-tester-31f246/controls" },
+            { "n": 5, "text": "Xác nhận **bằng mắt và tai** đầu phun đã hoạt động; **bộ đếm** trên tủ VAP nhảy số.", "img": "25_tag_house_c1_c2.jpg", "record": "FIRE ✓/✗, COUNT" },
+            { "n": 6, "text": "Lặp lại thêm 2 lần (**tổng 3 lần ở +10 kV**).", "timer": 60, "note": "Chờ ≥ 1 phút giữa các lần thử." },
+            { "n": 7, "text": "Hạ nguồn về 0; chờ U C1/C2 tự giảm **< 200 V**; **xả cả 2 đầu sứ xuyên C1 và C2 xuống đất**; **đấu ngắn mạch qua C1**.", "img": "24_gap_injector_circuit.png" },
+            { "n": 8, "text": "Trên GAMMA: chuyển **NEGATIVE** (nhấn nút xác nhận → **chờ 25–30 s** tự xả → LED sáng → chờ 3–5 s), tăng áp tới **−10,0 kV**; lặp lại **× 3 lần**.", "timer": 30, "note": "Sau khi LED NEGATIVE sáng, chờ thêm 3–5 s rồi mới tăng áp.", "equip": "gamma-rr10/quick" },
+            { "n": 9, "text": "Thực hiện cho **VAP-A và VAP-B** của cả 3 pha." }
+          ],
+          "thresholds": ["trigger"],
+          "tips": ["**Đạt:** 12/12 lần có FIRE cho mỗi pha (2 VAP × 2 cực tính × 3 lần), COUNT tăng đúng 1 sau mỗi lần."],
+          "images": ["23_nguon_cao_ap_10kv.jpg", "24_gap_injector_circuit.png", "25_tag_house_c1_c2.jpg", "26_so_do_mach_kich_hoat.png"],
+          "form": "trigger"
+        },
+        {
+          "id": "ct10",
+          "title": "D. Mô phỏng bằng bơm dòng qua CT VAP (CT10, CT11)",
+          "gate": "gate-inject",
+          "purpose": ["Trong vận hành, **CT10, CT11** đo dòng qua MOV cấp cho VAP để tính ngưỡng trigger. Bơm dòng qua CT10/CT11 là **mô phỏng tổng mạch** hệ thống khởi tạo khe hở phóng điện."],
+          "steps": [
+            { "n": 1, "text": "Tháo VAP tester khỏi tủ VAP." },
+            { "n": 2, "text": "**Cầu tắt mạch dòng** của tủ VAP không thử (tại hàng kẹp dòng trong tủ)." },
+            { "n": 3, "text": "Chuẩn bị sơ đồ bơm dòng qua CT10, CT11.", "img": "26_so_do_mach_kich_hoat.png" },
+            { "n": 4, "text": "Xác định tủ cần thử; phát **dòng nhỏ 100 A**, dùng ampe kìm kiểm tra mạch CT đúng." },
+            { "n": 5, "text": "Đặt ngưỡng dòng phát **264–276 A** (thường **265 A**) → bơm, ghi nhận TAG/VAP tác động.", "record": "I bơm (A), tác động ✓/✗" }
+          ],
+          "thresholds": ["ct10_inject"],
+          "tips": ["Tiêu chí đánh giá chi tiết (VAP tác động ở dòng nào, thời gian) cần bổ sung từ biên bản TAG của GE – mục rà soát #7."],
+          "images": ["26_so_do_mach_kich_hoat.png"],
+          "form": "ct10"
+        }
+      ],
+      "thresholds": ["tag_gap", "vap_mC", "vap_V", "vap_A", "vap_ext", "trigger", "ct10_inject"],
+      "images": ["10_tag_nguyen_ly.png", "11_tu_vap_dau_noi.jpg", "20_dien_cuc_tag.jpg", "21_vap_tester_nguyen_ly.png", "22_vap_tester_ket_noi.jpg", "23_nguon_cao_ap_10kv.jpg", "24_gap_injector_circuit.png", "25_tag_house_c1_c2.jpg", "26_so_do_mach_kich_hoat.png"]
+    },
+    {
+      "id": "4.6",
+      "tab": "TAB 4",
+      "title": "Biến dòng điện trên CT rack",
+      "short": "CT rack",
+      "purpose": [
+        "Bảo đảm CT không hư hỏng do vận chuyển, lắp đặt hay vận hành.",
+        "CT **kiểu cửa sổ** lắp trên thanh cái trung tính sàn tụ; thứ cấp đấu vào hàng kẹp trong module truyền thông trên sàn."
+      ],
+      "tools": ["Dụng cụ tháo lắp", "Bàn chải sắt, Penetrox™", "Thiết bị thí nghiệm CT theo QĐ 1901"],
+      "safetyGate": "gate-platform",
+      "tests": [
+        {
+          "id": "inspect",
+          "title": "Kiểm tra CT rack",
+          "gate": "gate-visual",
+          "checklist": [
+            "Kiểm tra bằng mắt từng CT: hư hỏng lớp nhựa resin, hư hỏng vật lý",
+            "Tháo từng **hộp đấu nối (conduit box)**: kiểm tra dây lỏng, đấu đúng, đầu nối chặt; lắp lại nắp chắc chắn",
+            "Kiểm tra giá đỡ CT rack, từng sứ và thanh cái",
+            "Thanh cái nhôm sàn tụ đấu đúng vào rack; bề mặt tiếp xúc **làm sạch bằng bàn chải sắt và bôi Penetrox™**",
+            "Thí nghiệm CT theo **QĐ 1901/QĐ-EVNNPT**"
+          ],
+          "images": ["27_ct_rack_cua_so.jpg", "13_ct_rack.jpg"],
+          "form": "checklist"
+        }
+      ],
+      "thresholds": [],
+      "images": ["27_ct_rack_cua_so.jpg", "13_ct_rack.jpg"]
+    },
+    {
+      "id": "4.7",
+      "tab": "",
+      "title": "Bơm dòng nhất thứ qua các CT trên CT rack",
+      "short": "Bơm dòng NT",
+      "purpose": [
+        "Kiểm tra tổng mạch đo lường, bảo vệ của bank tụ: **CT → PFOI → cáp quang → GFOI → PLC → HMI**.",
+        "Kiểm tra tỷ số biến và đấu nối CT.",
+        "Kiểm tra cân bằng **CT3 và CT30** (dòng không cân bằng tụ).",
+        "Thử nghiệm tổng mạch một số chức năng bảo vệ."
+      ],
+      "tools": ["Hợp bộ TN nhất thứ đa chức năng", "Ampe kìm 4 mA/40 A", "Bộ đàm / điện thoại liên lạc phòng điều khiển"],
+      "safetyGate": "gate-platform",
+      "callouts": [
+        { "level": "info", "text": "Cần **nhóm trong phòng điều khiển** đọc HMI, xác nhận tín hiệu, reset bảo vệ. Dùng nút **Phòng điều khiển** trong biểu mẫu để nhập cột HMI A/B." }
+      ],
+      "tests": [
+        {
+          "id": "inject",
+          "title": "Bơm dòng nhất thứ",
+          "gate": "gate-inject",
+          "steps": [
+            { "n": 1, "text": "**Kiểm tra ngưỡng nguồn PFOI (CT9):** trong platform enclosure, **tắt disconnect switch (aptomat) cấp nguồn phụ cho PFOI**, rồi bơm **80 A** qua CT9A, CT9B.", "img": "30_bang_ct9_pfoi.png", "record": "Cả 2 đèn GFOI Fiber Active sáng" },
+            { "n": 2, "text": "**Đóng lại aptomat**, lần lượt bơm các CT còn lại theo bảng (CT1, CT2, CT3–CT30, CT4, CT6, CT60, CT8).", "img": "29_bang_bom_dong_ct.png", "record": "HMI A, HMI B" },
+            { "n": 3, "text": "Với CT3–CT30: bơm 6 A **1 vòng CT3, 2 vòng CT30** → kỳ vọng 5,8–6,2 A; sau đó **1 vòng CT3 & CT30** → kỳ vọng ≈ 0.", "img": "28_so_do_bom_dong.png" }
+          ],
+          "table": {
+            "head": ["CT", "Chức năng", "Vòng", "Dòng bơm (A)", "Kỳ vọng HMI (A)", "Điểm HMI"],
+            "rows": [
+              ["CT9A", "Fiber Optic Power Supply", "1", "80", "Cả 2 đèn GFOI Fiber Active sáng", "—"],
+              ["CT9B", "Fiber Optic Power Supply", "1", "80", "Cả 2 đèn GFOI Fiber Active sáng", "—"],
+              ["CT1", "Capacitor Current", "1", "200", "194 – 206", "%R620"],
+              ["CT2", "Breaker Current", "1", "200", "194 – 206", "%R614"],
+              ["CT3–CT30", "Capacitor Unbalance", "1 vòng CT3, 2 vòng CT30", "6", "5,8 – 6,2", "%R626"],
+              ["CT3–CT30", "Capacitor Unbalance", "1 vòng CT3 & CT30", "6", "≈ 0", "%R626"],
+              ["CT4", "Platform Fault Current", "1", "200", "194 – 206", "%R638"],
+              ["CT5", "Not Used", "–", "–", "–", "–"],
+              ["CT6", "MOV Group 1", "1", "200", "190 – 210", "%R1233"],
+              ["CT60", "MOV Group 2", "1", "200", "190 – 210", "%R1235"],
+              ["CT8", "Gap Current", "1", "200", "194 – 206", "%R632"]
+            ]
+          },
+          "thresholds": ["ct9_pfoi", "ct_200A", "ct_unb", "ct_unb0", "ct_mov"],
+          "images": ["28_so_do_bom_dong.png", "14_tu_pfoi.jpg", "29_bang_bom_dong_ct.png", "30_bang_ct9_pfoi.png"],
+          "form": "inject"
+        }
+      ],
+      "thresholds": ["ct9_pfoi", "ct_200A", "ct_unb", "ct_unb0", "ct_mov"],
+      "images": ["28_so_do_bom_dong.png", "14_tu_pfoi.jpg", "29_bang_bom_dong_ct.png", "30_bang_ct9_pfoi.png"]
+    }
+  ]
+}

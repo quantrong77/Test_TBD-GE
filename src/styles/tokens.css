@@ -1,0 +1,78 @@
+:root {
+  --c-primary: #0b4f8a;
+  --c-primary-ink: #ffffff;
+  --c-danger: #c62828;
+  --c-danger-ink: #ffffff;
+  --c-warn: #f9a825;
+  --c-warn-bg: #fff4d6;
+  --c-warn-ink: #3d2c00;
+  --c-info-bg: #e3f0fb;
+  --c-info-ink: #0b2e4f;
+  --c-ok: #2e7d32;
+  --c-ok-bg: #e5f3e6;
+  --c-fail-bg: #fde7e7;
+  --c-bg: #ffffff;
+  --c-surface: #f3f5f8;
+  --c-surface-2: #e7ebf0;
+  --c-border: #c9d1db;
+  --c-text: #111111;
+  --c-muted: #4a5563;
+  --c-focus: #ff8f00;
+  --fs-scale: 1;
+  --fs-base: calc(17px * var(--fs-scale));
+  --fs-small: calc(15px * var(--fs-scale));
+  --fs-step: calc(20px * var(--fs-scale));
+  --fs-h1: calc(24px * var(--fs-scale));
+  --fs-h2: calc(20px * var(--fs-scale));
+  --tap-min: 48px;
+  --radius: 12px;
+  --gutter: 16px;
+  --nav-h: 64px;
+  --top-h: 56px;
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --c-primary: #6cb4f5;
+  --c-primary-ink: #04111d;
+  --c-danger: #ef5350;
+  --c-danger-ink: #ffffff;
+  --c-warn-bg: #3b2f0a;
+  --c-warn-ink: #ffe9a8;
+  --c-info-bg: #0f2a40;
+  --c-info-ink: #d6e9fb;
+  --c-ok: #66bb6a;
+  --c-ok-bg: #12301a;
+  --c-fail-bg: #3a1414;
+  --c-bg: #0e1116;
+  --c-surface: #171c23;
+  --c-surface-2: #222a33;
+  --c-border: #36414d;
+  --c-text: #eef1f4;
+  --c-muted: #a9b4c0;
+  color-scheme: dark;
+}
+
+/* Tương phản cao – đọc dưới nắng */
+[data-theme='contrast'] {
+  --c-primary: #ffd600;
+  --c-primary-ink: #000000;
+  --c-danger: #ff1744;
+  --c-danger-ink: #ffffff;
+  --c-warn: #ffd600;
+  --c-warn-bg: #000000;
+  --c-warn-ink: #ffd600;
+  --c-info-bg: #000000;
+  --c-info-ink: #ffffff;
+  --c-ok: #00e676;
+  --c-ok-bg: #002b12;
+  --c-fail-bg: #3b0000;
+  --c-bg: #000000;
+  --c-surface: #000000;
+  --c-surface-2: #1a1a1a;
+  --c-border: #ffffff;
+  --c-text: #ffffff;
+  --c-muted: #ffffff;
+  --c-focus: #00e5ff;
+  color-scheme: dark;
+}

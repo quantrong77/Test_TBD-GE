@@ -1,0 +1,16 @@
+[
+  ["Slide 30 – Ghi chú công thức", "\"U: đơn vị là A\"", "U phải là **V**. Dòng \"I: mA\" có lẽ là **IΔ**"],
+  ["Slide 30 – công thức ΔC", "ΔC = 318,31 × (IΔ×10 / U) × 10⁻⁶ (µF)", "Hệ số chỉ khớp khi IΔ×10 đọc bằng **µA**. App dùng công thức gốc C = I/(ωU) kèm bộ chọn đơn vị"],
+  ["Slide 22/24 – An toàn", "\"tụ đã cô lập ít nhất 15 phút\"", "Đề nghị ghi rõ tham chiếu thời gian xả của điện trở xả trong bình tụ theo GE"],
+  ["Slide 18 – Chu kỳ CT rack", "Chỉ \"Sau lắp đặt\"", "Slide 38 ghi theo QĐ 1901 → cần thống nhất chu kỳ định kỳ của CT"],
+  ["Slide 37 – nguồn cao áp", "0–10 kVDC", "HDSD VAP Tester ghi nguồn **0–15 kV** cho C1, C2. Phép thử dùng 10 kV nên vẫn phù hợp"],
+  ["Slide 35 – Trigger test", "\"nhấn giữ TEST RUN\"", "ENERGY (mC) phải ghi số đọc **trong 0,5 s**; giữa các lần thử chờ **≥ 1 phút** (đã bổ sung)"],
+  ["Slide 37 – Bơm CT10/CT11", "Thiếu tiêu chí đánh giá và bảng ghi", "Bổ sung bảng kỳ vọng (VAP tác động ở dòng nào, thời gian) từ biên bản TAG của GE"],
+  ["Slide 21", "\"Máy đo điện kháng\" lặp 2 dòng", "Kiểm tra lại số lượng thực tế"],
+  ["Mọi ngưỡng", "Lấy từ giàn TBD503 T500 Pleiku 2", "Mỗi giàn có ngưỡng riêng → chọn/nhập **hồ sơ giàn** trước khi đánh giá"],
+  ["QT GAMMA, điều 4.2.2", "\"Dùng điều khiển điện áp … để đặt dòng\"", "Có lẽ là **núm điều khiển dòng**"],
+  ["QT GAMMA và slide 35", "Máy tối đa 10 kV, phép thử cần ±10,0 kV", "Máy chạy 100 % định mức; nên đo thêm qua kẹp giám sát 8 (5 V = 10 kV)"],
+  ["QT GAMMA", "Không nói giới hạn dòng (IS) khi nạp C1, C2", "Bổ sung giá trị đặt núm dòng khuyến nghị cho phép thử Trigger"],
+  ["HDSD VAP 3.4 và 3.6", "ENERGY (V) không có dung sai", "Lấy ngưỡng ≥ 900 V từ biên bản giàn (slide 34)"],
+  ["Bảng 4.7 – CT3 & CT30 cùng 1 vòng", "Kỳ vọng \"≈ 0\"", "App tạm dùng |x| ≤ 0,2 A – cần chuyên gia xác nhận"]
+]

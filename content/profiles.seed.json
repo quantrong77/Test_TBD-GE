@@ -1,0 +1,12 @@
+[
+  { "id": "TBD503-PLEIKU2", "station": "T500 Pleiku 2", "bank": "TBD503", "tagGap_mm": 161, "sample": true },
+  { "id": "TBD504-PLEIKU2", "station": "T500 Pleiku 2", "bank": "TBD504", "tagGap_mm": 161 },
+  { "id": "TBD593-PLEIKU2", "station": "T500 Pleiku 2", "bank": "TBD593", "tagGap_mm": 140 },
+  { "id": "TBD502-PLEIKU", "station": "T500 Pleiku", "bank": "TBD502", "tagGap_mm": 161 },
+  { "id": "TBD505-PLEIKU", "station": "T500 Pleiku", "bank": "TBD505", "tagGap_mm": 161 },
+  { "id": "TBD508-PLEIKU", "station": "T500 Pleiku", "bank": "TBD508", "tagGap_mm": 146, "note": "Khe hở 5-3/4\"" },
+  { "id": "TBD502-DAKNONG", "station": "T500 Đăk Nông", "bank": "TBD502", "tagGap_mm": 152.4 },
+  { "id": "TBD504-DAKNONG", "station": "T500 Đăk Nông", "bank": "TBD504", "tagGap_mm": 152.4 },
+  { "id": "TBD503-DILINH", "station": "T500 Di Linh", "bank": "TBD503", "tagGap_mm": 152.4 },
+  { "id": "TBD504-DILINH", "station": "T500 Di Linh", "bank": "TBD504", "tagGap_mm": 152.4 }
+]

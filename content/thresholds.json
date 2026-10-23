@@ -1,0 +1,17 @@
+[
+  { "id": "unb_alarm", "item": "4.1", "label": "Mất cân bằng – Alarm (mức 1)", "op": "<", "value": 0.16, "unit": "%", "profileOverride": true },
+  { "id": "unb_bypass", "item": "4.1", "label": "Mất cân bằng – Bypass (mức 2)", "op": "<", "value": 0.22, "unit": "%", "profileOverride": true },
+  { "id": "bushing_c1", "item": "4.4", "label": "Sứ xuyên TAG house – sai lệch C1 so với baseline/nhãn", "op": "<=", "value": 5, "unit": "%" },
+  { "id": "tag_gap", "item": "4.5", "label": "Khe hở điện cực TAG (theo hồ sơ giàn, dung sai mặc định ± 2 mm)", "op": "range", "nominal": 161, "tol": 2, "min": 159, "max": 163, "unit": "mm", "profileOverride": true },
+  { "id": "vap_mC", "item": "4.5", "label": "VAP Energy (mC)", "op": "range", "min": 90.4, "max": 93.2, "nominal": 91.8, "tol": 1.4, "unit": "mC", "profileOverride": true },
+  { "id": "vap_V", "item": "4.5", "label": "VAP Energy (V)", "op": ">=", "value": 900, "unit": "V", "profileOverride": true },
+  { "id": "vap_A", "item": "4.5", "label": "VAP Current (A) – ghi trị tuyệt đối", "op": "range", "abs": true, "min": 4.36, "max": 4.64, "nominal": 4.5, "tol": 0.14, "unit": "A", "profileOverride": true },
+  { "id": "vap_ext", "item": "4.5", "label": "VAP EXT TRIG (V) – tùy chọn", "op": "range", "min": 775, "max": 825, "nominal": 800, "tol": 25, "unit": "V" },
+  { "id": "trigger", "item": "4.5", "label": "Trigger ±10 kV – FIRE mỗi lần, COUNT tăng 1", "op": "range", "min": 3, "max": 3, "unit": "lần/cực tính", "note": "3/3 lần ở +10 kV và 3/3 lần ở −10 kV cho mỗi VAP" },
+  { "id": "ct10_inject", "item": "4.5", "label": "Bơm dòng CT10/CT11 – ngưỡng phát", "op": "range", "min": 264, "max": 276, "nominal": 265, "unit": "A", "note": "Thường đặt 265 A; tiêu chí tác động theo biên bản TAG của GE" },
+  { "id": "ct9_pfoi", "item": "4.7", "label": "CT9A/CT9B bơm 80 A – cả 2 đèn GFOI Fiber Active sáng", "op": ">=", "value": 80, "unit": "A" },
+  { "id": "ct_200A", "item": "4.7", "label": "CT1, CT2, CT4, CT8 bơm 200 A", "op": "range", "min": 194, "max": 206, "unit": "A" },
+  { "id": "ct_mov", "item": "4.7", "label": "CT6, CT60 (MOV Group) bơm 200 A", "op": "range", "min": 190, "max": 210, "unit": "A" },
+  { "id": "ct_unb", "item": "4.7", "label": "CT3–CT30 bơm 6 A (1 vòng CT3, 2 vòng CT30)", "op": "range", "min": 5.8, "max": 6.2, "unit": "A" },
+  { "id": "ct_unb0", "item": "4.7", "label": "CT3–CT30 bơm 6 A (1 vòng CT3 & CT30)", "op": "approx0", "value": 0.2, "unit": "A", "note": "Kỳ vọng ≈ 0 (app dùng |x| ≤ 0,2 A)" }
+]

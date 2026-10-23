@@ -1,0 +1,139 @@
+{
+  "gates": [
+    {
+      "id": "gate-platform",
+      "title": "Điều kiện bắt buộc trước khi lên sàn tụ",
+      "checks": [
+        {
+          "id": "iso-dcl",
+          "text": "Tụ đã cô lập: các **DCL nối với sàn tụ đã MỞ**"
+        },
+        {
+          "id": "earth-on",
+          "text": "**Tiếp địa sàn tụ đã ĐÓNG**"
+        },
+        {
+          "id": "dcl-power-off",
+          "text": "**Nguồn lực cấp cho DCL đã CẮT**"
+        },
+        {
+          "id": "isolated-15min",
+          "text": "Thang leo đã dựng và **tụ đã cô lập ít nhất 15 phút**",
+          "timer": 900
+        },
+        {
+          "id": "ft-fuses-open",
+          "text": "**Đã tách các cầu chì FT** trước tủ bảo vệ tụ trong phòng điều khiển (đường gửi 50BF và nhận tín hiệu bypass/reinsertion từ bảo vệ đường dây)"
+        },
+        {
+          "id": "health-assign",
+          "text": "Chỉ huy trực tiếp đã kiểm tra sức khỏe nhân viên và phân công"
+        },
+        {
+          "id": "ppe",
+          "text": "Dây an toàn, mũ bảo hộ, túi đồ nghề chuyên dụng"
+        }
+      ]
+    },
+    {
+      "id": "gate-hv",
+      "title": "Điều kiện an toàn khi cấp điện thử 200–300 Vac",
+      "checks": [
+        {
+          "id": "only-needed",
+          "text": "Chỉ người cần thiết ở trên sàn"
+        },
+        {
+          "id": "nobody-in-tag-house",
+          "text": "**KHÔNG ai ở trong TAG HOUSE**"
+        },
+        {
+          "id": "team-notified",
+          "text": "Đã thông báo toàn đội; mọi người ở vị trí an toàn trước khi cấp nguồn"
+        },
+        {
+          "id": "iso-transformer",
+          "text": "Cấp nguồn qua **biến áp cách ly + variac**, variac ở vị trí 0"
+        }
+      ]
+    },
+    {
+      "id": "gate-tag",
+      "title": "Cổng an toàn riêng – VAP & Triggered Air Gap ⚡",
+      "checks": [
+        {
+          "id": "nobody-in-tag-house",
+          "text": "**Không ai ở trong TAG house / TAG enclosure**"
+        },
+        {
+          "id": "ear-protection",
+          "text": "Mọi người trong tầm nghe **đã được thông báo, đã đeo nút bịt tai**"
+        },
+        {
+          "id": "outside-tag",
+          "text": "Thiết bị đo đặt và thao tác **từ bên ngoài buồng TAG**"
+        },
+        {
+          "id": "earthed-ac",
+          "text": "Nguồn AC cấp cho VAP tester **có nối đất**"
+        }
+      ]
+    },
+    {
+      "id": "gate-visual",
+      "title": "Điều kiện an toàn – kiểm tra, đo không cấp điện thử",
+      "checks": [
+        {
+          "id": "tools-bag",
+          "text": "Dụng cụ để trong túi chuyên dụng, không đứng dưới khu vực kéo/cẩu đồ"
+        },
+        {
+          "id": "discharged",
+          "text": "Đối tượng đo đã được **xả và nối đất** trước/sau mỗi phép đo cách điện"
+        }
+      ]
+    },
+    {
+      "id": "gate-inject",
+      "title": "Điều kiện an toàn – bơm dòng nhất thứ",
+      "checks": [
+        {
+          "id": "control-room",
+          "text": "Đã liên lạc với **nhóm trong phòng điều khiển** (đọc HMI, reset bảo vệ)"
+        },
+        {
+          "id": "ft-fuses-open",
+          "text": "Cầu chì FT tới bảo vệ đường dây **vẫn đang tách**"
+        },
+        {
+          "id": "inject-set-earthed",
+          "text": "Hợp bộ bơm dòng đã nối đất vỏ, dây dòng đủ tiết diện, đấu chắc chắn"
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "level": "warn",
+      "risk": "Ngã cao",
+      "measure": "Mang dây an toàn; giữ 3 điểm tiếp xúc khi leo; mặt hướng vào thang; không cầm dụng cụ khi leo"
+    },
+    {
+      "level": "warn",
+      "risk": "Vật rơi",
+      "measure": "Dụng cụ để trong túi chuyên dụng; đội mũ bảo hộ; không đứng dưới khu vực kéo/cẩu đồ"
+    },
+    {
+      "level": "danger",
+      "risk": "Điện áp thử (4.1, 4.5)",
+      "measure": "Chỉ người cần thiết ở trên sàn; **KHÔNG ai trong TAG house**; thông báo toàn đội trước khi cấp nguồn"
+    },
+    {
+      "level": "warn",
+      "risk": "Tiếng nổ đầu phun plasma",
+      "measure": "Đeo nút bịt tai; thông báo mọi người trong tầm nghe trước khi thử"
+    }
+  ],
+  "command": "Toàn đội tuân thủ tuyệt đối mệnh lệnh của người chỉ huy trực tiếp.",
+  "disclaimer": "Ứng dụng chỉ dùng tham khảo, **không thay thế** phương án thi công, phiếu công tác, quy trình an toàn đã phê duyệt và mệnh lệnh của chỉ huy trực tiếp."
+}

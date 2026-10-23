@@ -1,0 +1,34 @@
+{
+  "staff": [
+    "01 chỉ huy trực tiếp",
+    "05 nhân viên thí nghiệm (có 01 ATVSV)",
+    "01 lái xe gàu"
+  ],
+  "vehicles": ["01 xe nâng người (xe gàu)"],
+  "prep": [
+    "Khảo sát, lập biên bản khảo sát và phương án thi công",
+    "Catalog, bản vẽ nhị thứ, **biên bản thí nghiệm cũ**",
+    "Họp triển khai",
+    "Đăng ký công tác với đơn vị quản lý vận hành"
+  ],
+  "equipment": [
+    { "id": "dmm", "name": "Đồng hồ vạn năng", "qty": "04" },
+    { "id": "dc-res", "name": "Máy đo điện trở một chiều", "qty": "01" },
+    { "id": "cap-meter", "name": "Đồng hồ đo điện dung", "qty": "02" },
+    { "id": "react-meter", "name": "Máy đo điện kháng", "qty": "01" },
+    { "id": "clamp", "name": "Ampe kìm thang 4 mA/40 A", "qty": "02" },
+    { "id": "primary-set", "name": "Hợp bộ TN nhất thứ đa chức năng", "qty": "01" },
+    { "id": "coil10", "name": "Cuộn dây quấn vi sai 10 vòng", "qty": "01" },
+    { "id": "tan-bridge", "name": "Cầu đo tang", "qty": "01" },
+    { "id": "iso-tx", "name": "Biến áp cách ly 220/220 Vac 10 A", "qty": "01" },
+    { "id": "hand-tools", "name": "Dụng cụ tháo lắp", "qty": "01" },
+    { "id": "variac", "name": "Variac 0–240 Vac 10 A", "qty": "01" },
+    { "id": "power-cords", "name": "Dây kéo nguồn sàn tụ", "qty": "03" },
+    { "id": "megger", "name": "Megaom 500/2500 V", "qty": "02" },
+    { "id": "vap-tester", "name": "VAP tester (GE 31F246)", "qty": "01", "equip": "vap-tester-31f246" },
+    { "id": "hv-dc", "name": "Hợp bộ cao áp 10 kV DC (GAMMA RR10-6R)", "qty": "01", "equip": "gamma-rr10" },
+    { "id": "torque", "name": "Cờ lê lực 25–250 ft-lbs, Penetrox™ A", "qty": "01 bộ" },
+    { "id": "earplugs", "name": "Nút bịt tai (cả đội)", "qty": "—" },
+    { "id": "harness", "name": "Dây an toàn, mũ bảo hộ, túi đồ nghề", "qty": "—" }
+  ]
+}

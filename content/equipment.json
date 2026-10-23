@@ -1,0 +1,209 @@
+[
+  {
+    "id": "vap-tester-31f246",
+    "name": "VAP Tester GE 31F246",
+    "short": "VAP Tester",
+    "usedIn": [
+      { "item": "4.5", "test": "vap-threshold", "label": "4.5.B VAP Threshold" },
+      { "item": "4.5", "test": "trigger", "label": "4.5.C Trigger ±10 kV" }
+    ],
+    "docRef": "HDSD máy thí nghiệm VAP, hiệu GE, kiểu 31F246 (GEK-32329B, bản dịch – lưu hành nội bộ)",
+    "images": ["22_vap_tester_ket_noi.jpg", "21_vap_tester_nguyen_ly.png"],
+    "sections": [
+      {
+        "id": "specs",
+        "title": "A. Thông số và phụ kiện",
+        "table": {
+          "head": ["Mục", "Giá trị"],
+          "rows": [
+            ["Chức năng", "Máy thử xách tay cho bộ tạo xung và tín hiệu tương tự của varistor (VAP) hãng GE"],
+            ["Nguồn cấp", "120/230 V AC, 50/60 Hz – **bắt buộc có nối đất**"],
+            ["Cáp kết nối VAP", "17 m, cắm vào ổ **TEST SOCKET P-1**"],
+            ["Cáp nguồn", "120 V AC, dài 3 m (cắm ở lưng máy)"],
+            ["Cáp quang (tùy chọn)", "100/400, đầu ST (phía máy thử) – SMA (phía VAP), dùng cho EXT TRIG"],
+            ["Nguồn ngoài cho TAG", "0–15 kV DC để nạp C1, C2 (dùng bộ nguồn GAMMA)"],
+            ["Môi trường", "Hiện trường −20 … +40 °C, không ngưng tụ; hiệu chuẩn chính xác ở 0 … +50 °C; có sấy 15 W tự ổn nhiệt"],
+            ["Sấy máy", "**Dưới 10 °C: sấy 15 phút** trước khi thử"]
+          ]
+        }
+      },
+      {
+        "id": "controls",
+        "title": "B. Mặt máy – các phần tử điều khiển",
+        "cards": [
+          { "name": "POWER", "icon": "⏻", "desc": "Công tắc nguồn. **Luôn tắt khi tháo/lắp cáp thí nghiệm**" },
+          { "name": "TEST SELECT", "icon": "🎚", "desc": "Chọn phép thử: ENERGY (V) · ENERGY (mC) · CURRENT (A) · EXT TRIG (V)" },
+          { "name": "TEST RUN", "icon": "▶", "desc": "Nút nhấn tự nhả – bắt đầu phép thử" },
+          { "name": "RESET", "icon": "↺", "desc": "Reset máy. **Nhấn giữ ≥ 1 s** để nối điện trở xả vào tụ phóng và tụ tích điện của VAP" },
+          { "name": "DPM (Digital Panel Meter)", "icon": "🔢", "desc": "Hiển thị V, mC hoặc A (dòng hiển thị **số âm**)" },
+          { "name": "Đèn TEST COMPLETED", "icon": "💡", "desc": "Phép thử đã chạy xong (máy thử hoạt động)" },
+          { "name": "Đèn VAP FIRED", "icon": "⚡", "desc": "VAP đã phóng xung → điều kiện **Đạt**" },
+          { "name": "VAP FOX INPUT", "icon": "🔆", "desc": "Đầu phát xung quang 2 ms cho thử EXT TRIG" }
+        ]
+      },
+      {
+        "id": "tests",
+        "title": "C. Bốn phép thử của máy",
+        "table": {
+          "head": ["Phép thử", "TEST SELECT", "Kiểm tra gì", "Đọc trên DPM", "Đạt khi"],
+          "rows": [
+            ["1. Dò năng lượng và phóng điện khe phóng", "ENERGY (V)", "Mạch giám sát năng lượng, xung ra, mạch kích khe phóng", "Điện áp đỉnh trên tụ phóng của VAP", "TEST COMPLETED + khe phóng tác động (nhìn/nghe thấy)"],
+            ["2. Kiểm chuẩn trị đặt dòng", "CURRENT (A)", "Mạch dò dòng và ngưỡng dòng (VAP không phát xung)", "Dòng đỉnh (A, số âm)", "TEST COMPLETED + VAP FIRED; giá trị trong ngưỡng hồ sơ giàn"],
+            ["3. Kiểm chuẩn trị đặt năng lượng", "ENERGY (mC)", "Hiệu chỉnh mạch giám sát năng lượng", "Điện tích đã nạp (mC)", "VAP FIRED trong **1,5 s**; số mC khớp trị đặt"],
+            ["4. Dò phóng điện chạm đất", "EXT TRIG (V)", "Mạch kích ngoài qua điôt quang (tùy chọn)", "Điện áp trước khi kích", "VAP FIRED; DPM = **800 ± 25 V DC**"]
+          ]
+        }
+      },
+      {
+        "id": "quick",
+        "title": "D. Thao tác nhanh",
+        "steps": [
+          { "n": 1, "text": "**Tắt POWER**. Đấu cáp 17 m: VAP ↔ TEST SOCKET P-1. Đấu cáp nguồn vào ổ có nối đất." },
+          { "n": 2, "text": "Bật **POWER** → nhấn **RESET**: đèn TEST COMPLETED sáng trong lúc nhấn, DPM chỉ 0." },
+          { "n": 3, "text": "Chọn **TEST SELECT**." },
+          { "n": 4, "text": "Nhấn **RESET** (giữ 1 s) và kiểm tra số 0: mC → 0 ± 0,1 mC; EXT TRIG → 0 ± 1 V." },
+          { "n": 5, "text": "Nhấn **TEST RUN** → đọc và ghi DPM. Với mC: **ghi trong vòng 0,5 s** sau khi TEST COMPLETED sáng." },
+          { "n": 6, "text": "**Chờ 1 phút** → nhấn RESET để tắt đèn, rồi sang phép thử tiếp.", "timer": 60, "lock": true }
+        ]
+      },
+      {
+        "id": "safety",
+        "title": "E. An toàn riêng của máy",
+        "callouts": [
+          { "level": "danger", "text": "Cáp thí nghiệm giữa VAP và máy thử **có thể mang điện áp gây chết người**." },
+          { "level": "danger", "text": "Khi thử, **không đứng trong buồng TAG**. Chọn chỗ đứng quan sát an toàn được khe phóng." },
+          { "level": "warn", "text": "Đầu phun plasma **nổ rất to**: đeo nút bịt tai, thông báo trước cho mọi người." },
+          { "level": "warn", "text": "Trước khi đổi trị đặt (jumper) của VAP: **nhấn giữ RESET ~1 s** để xả tụ, sau đó **tháo cáp** giữa VAP và máy thử." },
+          { "level": "info", "text": "Không cần tháo VAP khỏi buồng, nhưng **VAP phải còn đấu với mạch kích khe phóng**." }
+        ]
+      },
+      {
+        "id": "troubleshoot",
+        "title": "F. Xử lý tình huống",
+        "table": {
+          "head": ["Hiện tượng", "Ý nghĩa / Xử lý"],
+          "rows": [
+            ["TEST COMPLETED sáng, VAP FIRED **không** sáng", "VAP **không đạt** phép thử. Mạch định thì giới hạn ~1,5 s"],
+            ["Khe phóng không tác động sau vài giây", "Kiểm tra TEST COMPLETED có sáng không. Nếu có, máy thử vẫn chạy → kiểm tra mạch kích và nguồn nạp C1, C2"],
+            ["Số mC/EXT TRIG lệch bất thường", "Chưa chờ đủ **1 phút** giữa các lần (tụ VAP chưa xả hết) → chờ, RESET, thử lại"],
+            ["Số mC không về 0 ± 0,1 khi RESET", "Giữ RESET lâu hơn; kiểm tra cáp; không thử khi chưa về 0"],
+            ["Thời tiết lạnh (< 10 °C)", "Sấy máy 15 phút trước khi thử"]
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "gamma-rr10",
+    "name": "Nguồn cao thế GAMMA RR10-6R/220/M851",
+    "short": "GAMMA RR10-6R",
+    "usedIn": [{ "item": "4.5", "test": "trigger", "label": "4.5.C nạp ±10 kV DC cho tụ C1 (cùng C2)" }],
+    "docRef": "Quy trình sử dụng bộ nguồn cao thế hiệu GAMMA – QT-TNLĐ-VHMTN, ISO 9001-2015, hiệu lực 11/2025, Đội Sửa chữa, Thí nghiệm điện 3",
+    "images": ["31_gamma_mat_may.jpg", "32_gamma_hang_kep_tb1.png", "33_gamma_dac_tuyen_cvcc.png", "34_gamma_so_do_khoi.png"],
+    "monitor": true,
+    "sections": [
+      {
+        "id": "specs",
+        "title": "A. Thông số kỹ thuật",
+        "table": {
+          "head": ["Mục", "Giá trị"],
+          "rows": [
+            ["Kiểu", "Nguồn DC cao áp, chế độ **áp không đổi / dòng không đổi** (CV/CC) tự chuyển"],
+            ["Điện áp ra", "**0–10 kV DC**, cả hai cực tính (đảo được)"],
+            ["Dòng ra", "**0–6 mA**, chỉnh được trong khoảng 10–100 % định mức"],
+            ["Nguồn vào", "**220 V AC**"],
+            ["Ổn định áp", "± 0,005 % (theo nguồn và theo tải)"],
+            ["Ổn định dòng", "± 0,005 % theo nguồn; ± 100 µA theo tải (10–100 % áp)"],
+            ["Gợn sóng", "0,02 %"],
+            ["Hệ số nhiệt", "100 ppm/°C (0–60 °C)"],
+            ["Đồng hồ", "2 đồng hồ kim (áp, dòng), cấp chính xác 2 % toàn thang"],
+            ["Bảo vệ", "Hồ quang, ngắn mạch, quá tải; **tự phục hồi**"],
+            ["Đảo cực tính", "Rơle chân không. Có khóa: chỉ đảo khi áp đã xả về ≈ 0. **Điện trở xả nội 7,5 MΩ**"],
+            ["Khóa ZVS", "Không cho ra cao áp tới khi núm điện áp ở **0**"],
+            ["Cáp ra", "2,4 m, đầu 2 kẹp cá sấu (P/N 303009-012)"]
+          ]
+        }
+      },
+      {
+        "id": "controls",
+        "title": "B. Mặt máy và hàng kẹp TB-1",
+        "images": ["31_gamma_mat_may.jpg"],
+        "cards": [
+          { "name": "Công tắc nguồn chính", "icon": "⏻", "desc": "Bật/tắt máy" },
+          { "name": "Núm điện áp (chiết áp 10 vòng)", "icon": "🎛", "desc": "Đặt điện áp ra (ES); cũng là **giới hạn trên** khi lập trình từ xa" },
+          { "name": "Núm dòng điện (chiết áp 10 vòng)", "icon": "🎛", "desc": "Đặt giới hạn dòng (IS)" },
+          { "name": "Công tắc chọn cực tính + nút nhấn", "icon": "±", "desc": "Chọn và xác nhận đảo cực tính" },
+          { "name": "2 LED cực tính", "icon": "💡", "desc": "Báo cực tính đang có hiệu lực" },
+          { "name": "Đèn ZVS", "icon": "⚠", "desc": "Sáng = phải vặn núm điện áp về 0 trước khi tăng áp" },
+          { "name": "Đồng hồ kV và mA", "icon": "📟", "desc": "Chỉ thị áp và dòng ra" }
+        ],
+        "table": {
+          "head": ["Kẹp TB-1", "Chức năng", "Ghi chú"],
+          "rows": [
+            ["1", "Điện áp chuẩn nội +5 V", "—"],
+            ["2–3", "Ngõ nhập lập trình áp", "Cầu nối 2–3 = điều khiển bằng núm trên mặt máy"],
+            ["4", "Chung", "—"],
+            ["5–6", "Ngõ nhập lập trình dòng", "Cầu nối 5–6 = điều khiển bằng núm trên mặt máy"],
+            ["7", "Giám sát dòng", "**5 V = 6 mA** (giữa 7 và 4)"],
+            ["8", "Giám sát áp", "**5 V = 10 kV** (8 dương, 4 âm)"],
+            ["9–10", "Khóa liên động ngoài", "Hở mạch → máy bị khóa"],
+            ["11", "Nối đất khung máy", "—"],
+            ["12", "Nối đất thả nổi", "Cầu 11–12; tháo ra để đo dòng ngoài (điện trở đo ≤ 100 Ω)"]
+          ]
+        },
+        "tableImages": ["32_gamma_hang_kep_tb1.png"],
+        "callouts": [
+          { "level": "info", "text": "**Ở hiện trường giữ nguyên các cầu nối mặc định** (2–3, 5–6, 9–10, 11–12): máy ra được áp và dòng lớn nhất, điều khiển bằng núm trên mặt máy." }
+        ]
+      },
+      {
+        "id": "principle",
+        "title": "C. Nguyên lý CV/CC",
+        "points": [
+          "Hai bộ khuếch đại so sánh: một bộ giữ **áp không đổi**, một bộ giữ **dòng không đổi**. Máy chỉ chạy một chế độ tại một thời điểm.",
+          "Điện trở chuyển chế độ **RC = ES / IS**: RL > RC → chế độ **áp không đổi**; RL < RC → chế độ **dòng không đổi**.",
+          "Khi nạp tụ C1, C2: lúc đầu tải gần như ngắn mạch nên máy chạy **dòng không đổi** (bị giới hạn bởi IS). Khi tụ đầy, máy chuyển sang **áp không đổi** ở ES."
+        ],
+        "images": ["33_gamma_dac_tuyen_cvcc.png", "34_gamma_so_do_khoi.png"]
+      },
+      {
+        "id": "quick",
+        "title": "D. Thao tác nhanh trong phép thử Trigger ±10 kV (4.5.C)",
+        "steps": [
+          { "n": 1, "text": "Kiểm tra tình trạng máy và cáp. Đặt máy chỗ **khô, có bóng râm**, ngoài buồng TAG." },
+          { "n": 2, "text": "**Nối đất vỏ máy TRƯỚC TIÊN**." },
+          { "n": 3, "text": "Kiểm tra nguồn 220 V AC. **Cắm dây nguồn vào máy trước, rồi mới cắm vào ổ điện**." },
+          { "n": 4, "text": "Vặn **núm điện áp về 0** (tránh khóa ZVS). Đặt núm dòng theo phương án." },
+          { "n": 5, "text": "Đấu cáp ra (kẹp cá sấu): cao áp vào **tụ C1 (phía varistor V2)**, đầu kia vào **sàn tụ**, đúng bản vẽ biên bản TAG." },
+          { "n": 6, "text": "Chọn cực tính **POSITIVE** bằng công tắc → nhấn nút bên dưới → LED POSITIVE sáng." },
+          { "n": 7, "text": "Bật nguồn, kiểm tra đèn ZVS đã tắt → tăng áp từ từ tới **+10,0 kV** (xem đồng hồ kV)." },
+          { "n": 8, "text": "Thử VAP 3 lần (theo 4.5.C)." },
+          { "n": 9, "text": "**Đảo sang NEGATIVE:** vặn áp về 0 → chờ C1/C2 < 200 V → xả 2 đầu sứ xuyên C1, C2 xuống đất, nối ngắn mạch qua C1 → gạt công tắc NEGATIVE, nhấn nút → **chờ 25–30 s** cho máy xả về 0.", "timer": 30, "lock": true },
+          { "n": 9.1, "text": "LED NEGATIVE sáng → **chờ thêm 3–5 s** → tăng áp tới **−10,0 kV**.", "timer": 5, "lock": true },
+          { "n": 10, "text": "Kết thúc: áp về 0 → tắt máy → **rút dây khỏi ổ điện trước, rồi mới rút khỏi máy** → xả, nối đất đối tượng → tháo cáp ra → **tháo nối đất vỏ máy SAU CÙNG**." }
+        ]
+      },
+      {
+        "id": "safety",
+        "title": "E. An toàn riêng của máy",
+        "callouts": [
+          { "level": "info", "text": "Nhóm công tác **tối thiểu 2 người**, người giám sát an toàn **bậc 4 trở lên**. Chỉ làm khi có phân công của tổ trưởng hoặc nhóm trưởng cao áp tại công trường." },
+          { "level": "info", "text": "Nhân viên phải **học quy trình và kiểm tra đạt** trước khi sử dụng máy." },
+          { "level": "danger", "text": "**Cấm** đấu máy vào thiết bị đang mang điện. Cấm dùng máy trong môi trường dễ nổ." },
+          { "level": "warn", "text": "Nối đất **trước tiên**, tháo nối đất **sau cùng**." },
+          { "level": "info", "text": "Cáp và phụ kiện chỉ dùng cho máy này, không dùng vào việc khác." },
+          { "level": "warn", "text": "Thấy bất thường ở máy hoặc đối tượng thử → **dừng thử ngay**, báo tổ trưởng hoặc nhóm trưởng cao áp." },
+          { "level": "info", "text": "Vận chuyển tránh rung, va đập. Bảo quản nơi khô, mát, tránh mưa ẩm, hóa chất, tia lửa, nắng." }
+        ]
+      },
+      {
+        "id": "maintenance",
+        "title": "F. Bảo dưỡng – hiệu chuẩn",
+        "points": [
+          "Giữ sạch mặt máy. Vệ sinh, cất cáp vào hộp. Định kỳ kiểm tra nguồn cấp.",
+          "**Hiệu chuẩn, kiểm định định kỳ** theo kế hoạch năm. App lưu **hạn kiểm định** của máy (mục Phiên TN → Máy thí nghiệm) và **cảnh báo khi quá hạn** lúc tạo phiên."
+        ]
+      }
+    ]
+  }
+]
