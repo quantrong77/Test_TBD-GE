@@ -17,6 +17,7 @@ import { Instruments, ProfileEdit, Profiles, SessionNew, Sessions } from './view
 import { SessionForm, SessionView } from './views/Session';
 import { CalcUnbalance } from './views/CalcUnbalance';
 import { Settings } from './views/Settings';
+import { Help, Info } from './views/Info';
 
 applySettings();
 
@@ -42,6 +43,8 @@ route('profile/:id', ProfileEdit);
 route('instruments', Instruments);
 route('calc/unbalance', CalcUnbalance);
 route('settings', Settings);
+route('help', Help);
+route('info', Info);
 setNotFound((_r, el) => {
   setTop('Không tìm thấy', { back: '#/' });
   el.innerHTML = '<p>Trang không tồn tại. <a href="#/">Về trang chủ</a></p>';

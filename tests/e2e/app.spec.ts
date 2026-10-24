@@ -289,3 +289,25 @@ test.describe('layout stability when switching tabs', () => {
     await expect.poll(() => page.evaluate(() => Math.round(window.scrollY))).toBe(before);
   });
 });
+
+test('top bar: help and about icons next to settings; about shows developer contact', async ({ page }) => {
+  for (const r of ['./', '#/item/4.5', '#/sessions']) {
+    await page.goto(r);
+    await expect(page.locator('#topbar a[aria-label="Hướng dẫn sử dụng"]')).toBeVisible();
+    await expect(page.locator('#topbar a[aria-label="Giới thiệu"]')).toBeVisible();
+    await expect(page.locator('#topbar a[aria-label="Cài đặt"]')).toBeVisible();
+  }
+  await page.locator('#topbar a[aria-label="Giới thiệu"]').click();
+  await expect(page.locator('#app')).toContainText('Hoàng Trọng');
+  await expect(page.locator('#app')).toContainText('PTC');
+  await expect(page.locator('a[href="tel:0909813284"]')).toHaveText(/0909 813 284/);
+  await expect(page.locator('a[href^="mailto:quantrong77@gmail.com"]')).toBeVisible();
+  await expect(page.locator('#app')).toContainText(/Phiên bản \d+\.\d+\.\d+/);
+  await page.locator('#topbar a[aria-label="Hướng dẫn sử dụng"]').click();
+  await expect(page.locator('details.card')).toHaveCount(6);
+  // nội dung hướng dẫn tìm được, mở đúng mục
+  await page.goto('#/search');
+  await page.locator('#q').fill('sao luu');
+  await page.locator('#res a', { hasText: 'Sao lưu, chuyển máy' }).click();
+  await expect(page.locator('#help-data')).toHaveAttribute('open', '');
+});

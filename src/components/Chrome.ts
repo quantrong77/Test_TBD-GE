@@ -34,7 +34,9 @@ export function setTop(title: string, opts: { back?: string | true; sub?: string
       : // giữ chỗ cho nút ← để tiêu đề không xô ngang giữa các trang
         '<span class="icon-btn" aria-hidden="true"></span>';
   top.innerHTML = `${left}<div class="title">${esc(title)}${opts.sub ? `<small>${esc(opts.sub)}</small>` : ''}</div>
-    <a class="icon-btn" href="#/settings" aria-label="Cài đặt">⚙️</a>`;
+    <a class="icon-btn" href="#/help" aria-label="Hướng dẫn sử dụng" title="Hướng dẫn sử dụng">📖</a>
+    <a class="icon-btn" href="#/info" aria-label="Giới thiệu" title="Giới thiệu">ℹ️</a>
+    <a class="icon-btn" href="#/settings" aria-label="Cài đặt" title="Cài đặt">⚙️</a>`;
   top.querySelector('[data-back]')?.addEventListener('click', () => history.back());
   document.title = `${title} – TBD-GE Field`;
 }

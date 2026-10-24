@@ -71,9 +71,7 @@ export const Settings: View = async (_r, el) => {
     </div>
 
     <h2>Thông tin</h2>
-    <p class="small">Nội dung v${esc(CONTENT_VERSION)} · Nguồn: bài giảng "Thí nghiệm các thiết bị trên sàn tụ GE", HDSD VAP GE 31F246 (GEK-32329B), QT GAMMA RR10-6R (QT-TNLĐ-VHMTN).</p>
-    <p><a href="#/about">Các điểm cần rà soát lại nội dung nguồn →</a></p>
-    ${callout({ level: 'warn', text: 'Hình ảnh, sơ đồ có nguồn từ tài liệu kỹ thuật GE và tài liệu đào tạo nội bộ. Chỉ triển khai trên máy chủ nội bộ hoặc trang có kiểm soát truy cập.' })}`;
+    <p class="small">Nội dung v${esc(CONTENT_VERSION)}. Phiên bản, nguồn tài liệu và liên hệ người phát triển: <a href="#/info">Giới thiệu</a> · <a href="#/help">Hướng dẫn sử dụng</a>.</p>`;
 
   el.querySelector('.theme-grid')!.addEventListener('change', (e) => {
     setTheme((e.target as HTMLInputElement).value as Theme);

@@ -1,0 +1,64 @@
+[
+  {
+    "id": "install",
+    "title": "Cài app và dùng không cần mạng",
+    "steps": [
+      "Mở app bằng Chrome (Android) hoặc Safari (iPhone) khi **có mạng**.",
+      "Chờ thông báo **✓ Sẵn sàng dùng offline** (dấu chấm xanh ở Trang chủ).",
+      "Android: menu ⋮ → **Thêm vào màn hình chính**. iPhone: nút Chia sẻ → **Thêm vào MH chính**.",
+      "Từ đó app mở được ở trạm không có sóng. Khi có bản mới, app hiện **Có phiên bản mới – Tải lại**."
+    ]
+  },
+  {
+    "id": "lookup",
+    "title": "Tra cứu nhanh",
+    "points": [
+      "**Trang chủ:** 7 thẻ hạng mục 4.1–4.7, lối tắt Tổng quan, Ngưỡng nhanh, Dụng cụ, Máy TN, Chu kỳ, Máy tính ΔC.",
+      "**Hạng mục:** dùng các nút Mục đích · Dụng cụ · An toàn · Trình tự · Ngưỡng · Hình ảnh để nhảy tới phần cần xem.",
+      "**Ảnh, sơ đồ:** chạm để phóng to, dùng hai ngón để zoom, vuốt để xem ảnh khác.",
+      "**Tìm:** gõ không dấu cũng được, vd \"khang can diu\", \"vap fired\", \"CT6\".",
+      "**Ngưỡng:** tổng hợp mọi khoảng Đạt trên một trang, theo hồ sơ giàn của phiên đang làm."
+    ]
+  },
+  {
+    "id": "safety",
+    "title": "Cổng an toàn và chế độ từng bước",
+    "points": [
+      "Bấm **▶ BẮT ĐẦU TỪNG BƯỚC** ở một phép thử. App mở **cổng an toàn** trước; chỉ vào được trình tự khi đã tích đủ và có người xác nhận.",
+      "Mục **tụ đã cô lập ≥ 15 phút** chỉ tích được khi đồng hồ chạy hết. Bấm **Bắt đầu** ngay khi cô lập tụ.",
+      "Nếu tụ đã cô lập từ trước: mở **Tụ đã cô lập từ trước?**, nhập giờ cô lập theo phiếu công tác. Giờ này được ghi vào biên bản là nhập tay.",
+      "Xác nhận cổng có hiệu lực **12 giờ**; sang ca/ngày mới phải xác nhận lại.",
+      "Trong từng bước: chữ to, nút **✓ XONG – TIẾP** ở đáy màn hình; bước có đồng hồ chờ (vd 1 phút giữa các lần thử VAP) sẽ hiện đồng hồ."
+    ]
+  },
+  {
+    "id": "session",
+    "title": "Ghi kết quả một đợt thí nghiệm",
+    "steps": [
+      "Tab **Phiên TN** → **＋ Tạo phiên mới**: chọn hồ sơ giàn, loại thí nghiệm, ngày, chỉ huy, thành viên, máy thí nghiệm. App cảnh báo máy quá hạn kiểm định.",
+      "Qua **cổng an toàn lên sàn tụ** (tên người xác nhận chọn từ danh sách đội).",
+      "Mở từng phép thử → nhập số đo theo **pha A/B/C**. Ô tự tô xanh (Đạt) / đỏ (Không đạt); số được lưu ngay, tắt app không mất.",
+      "Chụp ảnh hiện trường ở cuối mỗi biểu mẫu.",
+      "Về trang phiên: xem tiến độ 4.1 ✅ 4.2 ⏳…, ghi **Kết luận, kiến nghị**.",
+      "Xuất **📄 PDF**, **📊 Excel** hoặc **JSON**; hoặc **📤 Chia sẻ PDF** qua Zalo, email."
+    ]
+  },
+  {
+    "id": "profiles",
+    "title": "Hồ sơ giàn và máy thí nghiệm",
+    "points": [
+      "Mỗi giàn có ngưỡng riêng (ΔC alarm/bypass, VAP, khe hở TAG). Sửa ở **Phiên TN → Hồ sơ giàn**; luôn đối chiếu biên bản/data sheet của giàn.",
+      "Phiên lưu bản chụp ngưỡng lúc tạo. Sửa hồ sơ sau đó không làm đổi kết quả cũ; muốn áp ngưỡng mới, bấm **↻ Cập nhật ngưỡng từ hồ sơ giàn** trong phiên.",
+      "**Máy TN:** nhập số serial và hạn hiệu chuẩn/kiểm định để app cảnh báo khi quá hạn."
+    ]
+  },
+  {
+    "id": "data",
+    "title": "Sao lưu, chuyển máy, giao diện",
+    "points": [
+      "Dữ liệu chỉ nằm trên điện thoại này. Định kỳ vào **⚙️ → Sao lưu toàn bộ** để có file JSON.",
+      "Chuyển máy: trên máy mới vào **⚙️ → Khôi phục / nhập JSON**.",
+      "**Giao diện:** Tiêu chuẩn (trong nhà), Ca đêm, Nắng gắt (dưới nắng), Đêm đỏ (vào chỗ tối như TAG house). Có thể tăng cỡ chữ."
+    ]
+  }
+]

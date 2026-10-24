@@ -5,6 +5,7 @@ import { foldVi } from '../calc/units';
 import { describeThreshold } from '../calc/evaluate';
 import { esc, plain } from '../ui';
 import type { View } from '../router';
+import { help } from './Info';
 
 interface Doc {
   id: string;
@@ -59,6 +60,7 @@ export function buildDocs(): Doc[] {
       });
     }
   }
+  for (const h of help) add({ id: `help-${h.id}`, title: h.title, text: [...(h.steps ?? []), ...(h.points ?? [])].join(' '), href: `#/help?s=${h.id}`, kind: 'Hướng dẫn' });
   return [...docs.values()];
 }
 

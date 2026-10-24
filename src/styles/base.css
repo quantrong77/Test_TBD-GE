@@ -955,3 +955,26 @@ details.card > summary {
 .theme-card input:focus-visible + .tc-preview {
   outline: 3px dashed var(--c-focus);
 }
+
+/* ---------- Giới thiệu ---------- */
+.about-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+}
+.about-head img {
+  flex: 0 0 72px;
+  border-radius: 16px;
+}
+.about-head h1 {
+  margin: 0 0 4px;
+}
+.about-head p {
+  margin: 0;
+  font-size: var(--fs-small);
+}
+.dev-card > b {
+  display: block;
+  font-size: var(--fs-h2);
+}
