@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "contrast": "node scripts/contrast.mjs",
     "test:e2e": "playwright test",
     "icons": "node scripts/make-icons.mjs"
   },

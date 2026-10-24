@@ -1,23 +1,63 @@
-:root {
+/*
+ * Chủ đề hiển thị – đặt theo điều kiện làm việc tại trạm, không theo tên kỹ thuật.
+ * Mỗi chủ đề là một bộ biến; selector [data-theme] dùng được trên cả phần tử con,
+ * nên thẻ xem trước trong Cài đặt tự hiển thị đúng màu của chủ đề đó.
+ *
+ *   light    – Tiêu chuẩn: trong nhà, ban ngày (xanh EVN NPT theo đặc tả 6.1)
+ *   dark     – Ca đêm: thép xanh sẫm, điểm nhấn hổ phách như đèn báo trên tủ
+ *   contrast – Nắng gắt: đen/trắng thuần + vàng an toàn
+ *   nightred – Đêm đỏ: chữ đỏ trên nền đen, giữ thị lực thích nghi bóng tối (TAG house, sân trạm ban đêm)
+ */
+
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/fonts/BeVietnamPro-Bold.ttf') format('truetype');
+  font-weight: 600 800;
+  font-display: swap;
+}
+
+:root,
+[data-theme='light'] {
   --c-primary: #0b4f8a;
   --c-primary-ink: #ffffff;
+  --c-bar: #0b4f8a;
+  --c-bar-ink: #ffffff;
   --c-danger: #c62828;
   --c-danger-ink: #ffffff;
+  --c-danger-edge: #7f0000;
+  /* màu nguy hiểm dùng làm chữ/viền/vạch trên nền trang */
+  --c-danger-fg: #c62828;
   --c-warn: #f9a825;
   --c-warn-bg: #fff4d6;
   --c-warn-ink: #3d2c00;
-  --c-info-bg: #e3f0fb;
+  --c-info-bg: #e6f0fa;
   --c-info-ink: #0b2e4f;
   --c-ok: #2e7d32;
+  --c-ok-ink: #ffffff;
   --c-ok-bg: #e5f3e6;
   --c-fail-bg: #fde7e7;
   --c-bg: #ffffff;
-  --c-surface: #f3f5f8;
-  --c-surface-2: #e7ebf0;
-  --c-border: #c9d1db;
-  --c-text: #111111;
-  --c-muted: #4a5563;
+  --c-surface: #f2f5f8;
+  --c-surface-2: #e4e9ef;
+  --c-border: #c3ccd6;
+  --c-text: #10202f;
+  --c-muted: #4a5868;
   --c-focus: #ff8f00;
+  --c-toast: #1d2733;
+  --c-toast-ink: #ffffff;
+  --img-filter: none;
+  --ico-filter: none;
+  color-scheme: light;
+}
+
+:root {
+  --font-ui: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --fs-scale: 1;
   --fs-base: calc(17px * var(--fs-scale));
   --fs-small: calc(15px * var(--fs-scale));
@@ -29,42 +69,58 @@
   --gutter: 16px;
   --nav-h: 64px;
   --top-h: 56px;
-  color-scheme: light;
 }
 
 [data-theme='dark'] {
-  --c-primary: #6cb4f5;
-  --c-primary-ink: #04111d;
-  --c-danger: #ef5350;
-  --c-danger-ink: #ffffff;
-  --c-warn-bg: #3b2f0a;
-  --c-warn-ink: #ffe9a8;
-  --c-info-bg: #0f2a40;
-  --c-info-ink: #d6e9fb;
-  --c-ok: #66bb6a;
-  --c-ok-bg: #12301a;
-  --c-fail-bg: #3a1414;
-  --c-bg: #0e1116;
-  --c-surface: #171c23;
-  --c-surface-2: #222a33;
-  --c-border: #36414d;
-  --c-text: #eef1f4;
-  --c-muted: #a9b4c0;
+  --c-primary: #f2b33d;
+  --c-primary-ink: #1a1200;
+  --c-bar: #16232f;
+  --c-bar-ink: #e3eaf0;
+  --c-danger: #ff5a4e;
+  --c-danger-ink: #1c0200;
+  --c-danger-edge: #ff9b92;
+  /* màu nguy hiểm dùng làm chữ/viền/vạch trên nền trang */
+  --c-danger-fg: #ff5a4e;
+  --c-warn: #f2b33d;
+  --c-warn-bg: #2f2408;
+  --c-warn-ink: #ffe3a3;
+  --c-info-bg: #132c40;
+  --c-info-ink: #d3e6f7;
+  --c-ok: #5cc870;
+  --c-ok-ink: #04210b;
+  --c-ok-bg: #0f2a17;
+  --c-fail-bg: #3a1513;
+  --c-bg: #0e1822;
+  --c-surface: #16232f;
+  --c-surface-2: #1f2f3d;
+  --c-border: #33495c;
+  --c-text: #e3eaf0;
+  --c-muted: #a3b4c4;
+  --c-focus: #7cc4ff;
+  --c-toast: #2a3f51;
+  --c-toast-ink: #e3eaf0;
+  --img-filter: brightness(0.88);
+  --ico-filter: none;
   color-scheme: dark;
 }
 
-/* Tương phản cao – đọc dưới nắng */
 [data-theme='contrast'] {
   --c-primary: #ffd600;
   --c-primary-ink: #000000;
-  --c-danger: #ff1744;
+  --c-bar: #ffd600;
+  --c-bar-ink: #000000;
+  --c-danger: #d50000;
   --c-danger-ink: #ffffff;
+  --c-danger-edge: #ffffff;
+  /* màu nguy hiểm dùng làm chữ/viền/vạch trên nền trang */
+  --c-danger-fg: #ff1744;
   --c-warn: #ffd600;
   --c-warn-bg: #000000;
   --c-warn-ink: #ffd600;
   --c-info-bg: #000000;
   --c-info-ink: #ffffff;
   --c-ok: #00e676;
+  --c-ok-ink: #000000;
   --c-ok-bg: #002b12;
   --c-fail-bg: #3b0000;
   --c-bg: #000000;
@@ -74,5 +130,43 @@
   --c-text: #ffffff;
   --c-muted: #ffffff;
   --c-focus: #00e5ff;
+  --c-toast: #ffffff;
+  --c-toast-ink: #000000;
+  --img-filter: none;
+  --ico-filter: none;
+  color-scheme: dark;
+}
+
+/* Đêm đỏ: không dùng xanh/trắng; trạng thái Đạt/Không đạt phân biệt bằng biểu tượng ✅/❌ và chữ, màu chỉ phụ trợ */
+[data-theme='nightred'] {
+  --c-primary: #ff5a3c;
+  --c-primary-ink: #000000;
+  --c-bar: #140404;
+  --c-bar-ink: #ff7a66;
+  --c-danger: #4a0703;
+  --c-danger-ink: #ff8a78;
+  --c-danger-edge: #ff3b24;
+  /* màu nguy hiểm dùng làm chữ/viền/vạch trên nền trang */
+  --c-danger-fg: #ff3b24;
+  --c-warn: #d98a1c;
+  --c-warn-bg: #1f0a02;
+  --c-warn-ink: #f2a14a;
+  --c-info-bg: #140404;
+  --c-info-ink: #ff7a66;
+  --c-ok: #a39324;
+  --c-ok-ink: #000000;
+  --c-ok-bg: #141005;
+  --c-fail-bg: #2a0503;
+  --c-bg: #000000;
+  --c-surface: #0d0202;
+  --c-surface-2: #1c0505;
+  --c-border: #5a1a12;
+  --c-text: #ff7a66;
+  --c-muted: #d0503c;
+  --c-focus: #ffb199;
+  --c-toast: #1c0505;
+  --c-toast-ink: #ff7a66;
+  --img-filter: brightness(0.55) sepia(1) saturate(4) hue-rotate(-30deg);
+  --ico-filter: grayscale(1) sepia(1) saturate(6) hue-rotate(-45deg) brightness(0.7);
   color-scheme: dark;
 }

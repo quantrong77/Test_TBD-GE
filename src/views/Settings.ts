@@ -1,5 +1,5 @@
 import { setTop } from '../components/Chrome';
-import { getFontScale, getTheme, isOfflineReady, setFontScale, setTheme, type Theme } from '../settings';
+import { effectiveTheme, getFontScale, getTheme, isOfflineReady, setFontScale, setTheme, type EffectiveTheme, type Theme } from '../settings';
 import { canInstall, isStandalone, onInstallable, promptInstall } from '../pwa';
 import { download } from '../export/report';
 import { storageWarning } from '../store/db';
@@ -8,12 +8,32 @@ import { callout, esc, toast } from '../ui';
 import type { View } from '../router';
 import { fmtFixed } from '../calc/units';
 
-const THEMES: [Theme, string][] = [
-  ['auto', 'Theo máy'],
-  ['light', 'Sáng'],
-  ['dark', 'Tối'],
-  ['contrast', 'Tương phản cao'],
+/** Chủ đề đặt theo điều kiện làm việc tại trạm. */
+const THEMES: { id: Theme; name: string; use: string }[] = [
+  { id: 'auto', name: 'Theo máy', use: 'Theo chế độ tối và tăng tương phản của điện thoại' },
+  { id: 'light', name: 'Tiêu chuẩn', use: 'Trong nhà, ban ngày' },
+  { id: 'dark', name: 'Ca đêm', use: 'Ngoài trời buổi tối, đỡ chói mắt' },
+  { id: 'contrast', name: 'Nắng gắt', use: 'Đọc được dưới nắng trực tiếp' },
+  { id: 'nightred', name: 'Đêm đỏ', use: 'Giữ thị lực khi vào chỗ tối như TAG house' },
 ];
+const THEME_NAME: Record<EffectiveTheme, string> = { light: 'Tiêu chuẩn', dark: 'Ca đêm', contrast: 'Nắng gắt', nightred: 'Đêm đỏ' };
+
+/** Thẻ xem trước: một lát cắt thật của app (cổng an toàn) vẽ bằng màu của chính chủ đề đó. */
+function themeCard(t: (typeof THEMES)[number], current: Theme): string {
+  const look = effectiveTheme(t.id);
+  return `<label class="theme-card">
+    <input type="radio" name="theme" value="${t.id}"${t.id === current ? ' checked' : ''}>
+    <span class="tc-preview" data-theme="${look}" aria-hidden="true">
+      <span class="tc-bar">Cổng an toàn</span>
+      <span class="tc-body">
+        <span class="tc-danger">⛔ Không ai trong TAG house</span>
+        <span class="tc-row"><span class="tc-box">✓</span>Tụ đã cô lập ≥ 15 phút</span>
+        <span class="res pass">✅ Đạt</span>
+      </span>
+    </span>
+    <span class="tc-meta"><b>${t.name}</b><span class="small muted">${t.id === 'auto' ? `Đang là: ${THEME_NAME[look]}` : t.use}</span></span>
+  </label>`;
+}
 const SCALES: [number, string][] = [
   [1, 'Chuẩn'],
   [1.15, 'Lớn'],
@@ -32,9 +52,9 @@ export const Settings: View = async (_r, el) => {
   }
   const warn = await storageWarning();
   el.innerHTML = `
-    <h2>Hiển thị</h2>
-    <div class="seg" role="group" aria-label="Chủ đề" style="flex-wrap:wrap">${THEMES.map(([t, l]) => `<button type="button" data-theme-btn="${t}" aria-pressed="${getTheme() === t}" style="padding:0 12px">${l}</button>`).join('')}</div>
-    <p class="small muted">"Tương phản cao" dùng khi đọc dưới nắng gắt.</p>
+    <h2>Giao diện</h2>
+    <p class="small muted">Chọn theo nơi đang làm việc. Áp dụng ngay, lưu trên máy này.</p>
+    <div class="theme-grid" role="radiogroup" aria-label="Chủ đề hiển thị">${THEMES.map((t) => themeCard(t, getTheme())).join('')}</div>
     <h3>Cỡ chữ</h3>
     <div class="seg" role="group" aria-label="Cỡ chữ">${SCALES.map(([s, l]) => `<button type="button" data-scale="${s}" aria-pressed="${getFontScale() === s}" style="padding:0 12px">${l}</button>`).join('')}</div>
 
@@ -55,12 +75,9 @@ export const Settings: View = async (_r, el) => {
     <p><a href="#/about">Các điểm cần rà soát lại nội dung nguồn →</a></p>
     ${callout({ level: 'warn', text: 'Hình ảnh, sơ đồ có nguồn từ tài liệu kỹ thuật GE và tài liệu đào tạo nội bộ. Chỉ triển khai trên máy chủ nội bộ hoặc trang có kiểm soát truy cập.' })}`;
 
-  el.querySelectorAll<HTMLButtonElement>('[data-theme-btn]').forEach((b) =>
-    b.addEventListener('click', () => {
-      setTheme(b.dataset.themeBtn as Theme);
-      el.querySelectorAll('[data-theme-btn]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    }),
-  );
+  el.querySelector('.theme-grid')!.addEventListener('change', (e) => {
+    setTheme((e.target as HTMLInputElement).value as Theme);
+  });
   el.querySelectorAll<HTMLButtonElement>('[data-scale]').forEach((b) =>
     b.addEventListener('click', () => {
       setFontScale(Number(b.dataset.scale));

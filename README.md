@@ -19,7 +19,7 @@ Triển khai: chép `dist/` lên IIS/Nginx nội bộ **có HTTPS** (service wor
 ## Sửa nội dung (không cần lập trình)
 
 | File | Nội dung |
-|---|---|
+| --- | --- |
 | `content/items.json` | 7 hạng mục: mục đích, dụng cụ, phép thử, bước, bảng, mẹo, ảnh, biểu mẫu (`form`), cổng an toàn (`gate`) |
 | `content/thresholds.json` | Ngưỡng đánh giá (`profileOverride` = lấy theo hồ sơ giàn) |
 | `content/safety.json` | Cổng an toàn (checklist; `timer` tính bằng giây) và rủi ro |
@@ -36,6 +36,20 @@ Văn bản hỗ trợ `**đậm**`. Sau khi sửa: `npm run build`; app trên đ
 - `src/views/` – các màn hình; `src/router.ts` – hash router (render tuần tự)
 - `src/store/db.ts` – IndexedDB (Dexie): sessions, measurements, checks, photos, profiles, instruments
 - `src/export/` – PDF (jsPDF + font Be Vietnam Pro), XLSX (SheetJS), JSON sao lưu/khôi phục
+
+## Chủ đề hiển thị
+
+Đặt theo điều kiện làm việc, chọn ở ⚙️ Cài đặt (thẻ xem trước vẽ đúng màu từng chủ đề):
+
+| Chủ đề | Dùng khi |
+| --- | --- |
+| Theo máy | Theo chế độ tối / tăng tương phản của điện thoại |
+| Tiêu chuẩn | Trong nhà, ban ngày (xanh EVN NPT) |
+| Ca đêm | Ngoài trời buổi tối – nền thép sẫm, điểm nhấn hổ phách |
+| Nắng gắt | Nắng trực tiếp – đen/trắng thuần + vàng an toàn |
+| Đêm đỏ | Vào chỗ tối (TAG house, sân trạm ban đêm) – chữ đỏ trên nền đen, ảnh và biểu tượng nhuộm đỏ, giữ thị lực thích nghi bóng tối |
+
+Màu nằm trong `src/styles/tokens.css`. Sau khi sửa màu, chạy `npm run contrast` (kiểm tra WCAG, CI cũng chạy bước này). `public/theme-boot.js` áp chủ đề trước khi vẽ trang để không nháy màu.
 
 ## Ghi chú kỹ thuật
 

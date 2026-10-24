@@ -146,7 +146,7 @@ const unbalanceForm: FormDef = {
       const bars = root.querySelector(`[data-bars="${g}"]`);
       if (bars) bars.innerHTML = vals.map((x, i) => `<i class="${outl.includes(i) ? 'out' : ''}" style="height:${Number.isFinite(x) && max ? (x / max) * 100 : 0}%"></i>`).join('');
       const o = root.querySelector(`[data-out="${g}"]`);
-      if (o) o.innerHTML = outl.length ? `<b style="color:var(--c-danger)">String nghi ngờ (> TB + 2σ): ${outl.map((i) => 'S' + (i + 1)).join(', ')}</b>` : vals.some(Number.isFinite) ? 'Không có string bất thường.' : '';
+      if (o) o.innerHTML = outl.length ? `<b style="color:var(--c-danger-fg)">String nghi ngờ (> TB + 2σ): ${outl.map((i) => 'S' + (i + 1)).join(', ')}</b>` : vals.some(Number.isFinite) ? 'Không có string bất thường.' : '';
     }
   },
   rows(v, p) {
