@@ -3,9 +3,9 @@ import { esc } from '../ui';
 const NAV = [
   { href: '#/', ico: '🏠', label: 'Trang chủ', match: (p: string) => p === '' },
   { href: '#/items', ico: '🧪', label: 'Hạng mục', match: (p: string) => p.startsWith('item') || p.startsWith('gate') },
+  { href: '#/sessions', ico: '📝', label: 'Phiên TN', match: (p: string) => /^(session|profile|instrument|calc)/.test(p) },
   { href: '#/thresholds', ico: '📊', label: 'Ngưỡng', match: (p: string) => p.startsWith('thresholds') },
   { href: '#/search', ico: '🔍', label: 'Tìm', match: (p: string) => p.startsWith('search') },
-  { href: '#/sessions', ico: '📝', label: 'Phiên TN', match: (p: string) => /^(session|profile|instrument|calc)/.test(p) },
 ];
 
 export function renderNav(raw: string) {
