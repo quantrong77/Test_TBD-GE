@@ -18,7 +18,7 @@ export async function buildXlsx(d: SessionData): Promise<Blob> {
     ['Máy thí nghiệm', 'Số serial', 'Hạn kiểm định'],
     ...r.instruments,
     [],
-    ['Cổng an toàn', 'Người xác nhận', 'Thời điểm'],
+    ['Cổng an toàn', 'Người xác nhận', 'Thời điểm', 'Ghi chú'],
     ...r.gates,
     [],
     ['Đạt', 'Cảnh báo', 'Không đạt'],

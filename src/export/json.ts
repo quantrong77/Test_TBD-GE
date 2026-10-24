@@ -111,6 +111,11 @@ function vCheck(c: unknown) {
   check(Object.values(o.items as object).every((x) => typeof x === 'boolean'), 'cổng an toàn – mục');
   check(o.confirmedBy === undefined || isStr(o.confirmedBy, 200), 'cổng an toàn – người xác nhận');
   check(o.timestamp === undefined || isNum(o.timestamp), 'cổng an toàn – thời điểm');
+  check(
+    o.timed === undefined ||
+      (!!o.timed && typeof o.timed === 'object' && Object.values(o.timed as object).every((x) => !!x && isNum((x as { at: unknown }).at) && typeof (x as { manual: unknown }).manual === 'boolean')),
+    'cổng an toàn – mốc đồng hồ',
+  );
 }
 function vPhoto(p: unknown) {
   const o = p as Record<string, unknown>;

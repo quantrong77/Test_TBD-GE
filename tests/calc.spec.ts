@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { unbalance, unbalanceVerdict, sanityChecks, stringOutliers, kFactor, bankCapacitance } from '../src/calc/unbalance';
 import { evalThreshold, evalTrigger, bushingDeviation, evalCtPair, calibOverdue, gapCheck, deltaPct } from '../src/calc/evaluate';
 import { ftlbToNm, gammaKv, gammaMa, foldVi, parseNum } from '../src/calc/units';
+import { parseIsolationTime } from '../src/calc/isolation';
 import thresholds from '../content/thresholds.json';
 import type { Threshold } from '../src/types';
 
@@ -149,5 +150,27 @@ describe('units', () => {
   it('fold Vietnamese diacritics', () => {
     expect(foldVi('Kháng cản dịu')).toBe('khang can diu');
     expect(foldVi('Điện dung ĐỒNG')).toBe('dien dung dong');
+  });
+});
+
+describe('isolation time entered manually', () => {
+  const now = new Date(2026, 9, 24, 9, 0, 0).getTime(); // 09:00
+  it('08:30 → 30 phút trước', () => {
+    const r = parseIsolationTime('08:30', now);
+    expect(r.ok && r.agoMin).toBe(30);
+  });
+  it('08:50 → 10 phút trước (chưa đủ 15 phút vẫn hợp lệ, đếm phần còn lại)', () => {
+    const r = parseIsolationTime('8:50', now);
+    expect(r.ok && r.agoMin).toBe(10);
+  });
+  it('giờ sau hiện tại → hôm trước; quá 12 h → từ chối', () => {
+    expect(parseIsolationTime('09:30', now).ok).toBe(false); // 23,5 h trước
+    const night = new Date(2026, 9, 24, 0, 10).getTime();
+    const r = parseIsolationTime('23:50', night);
+    expect(r.ok && r.agoMin).toBe(20);
+  });
+  it('sai định dạng → từ chối', () => {
+    expect(parseIsolationTime('25:00', now).ok).toBe(false);
+    expect(parseIsolationTime('abc', now).ok).toBe(false);
   });
 });

@@ -68,7 +68,7 @@ export async function buildPdf(d: SessionData): Promise<Blob> {
 
   autoTable(doc, { ...base, startY: 36, head: [['Thông tin', '']], body: clean(r.info), columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' } } });
   if (r.instruments.length) autoTable(doc, { ...base, startY: y(), head: [['Máy thí nghiệm', 'Số serial', 'Hạn kiểm định']], body: clean(r.instruments) });
-  if (r.gates.length) autoTable(doc, { ...base, startY: y(), head: [['Cổng an toàn', 'Người xác nhận', 'Thời điểm']], body: clean(r.gates) });
+  if (r.gates.length) autoTable(doc, { ...base, startY: y(), head: [['Cổng an toàn', 'Người xác nhận', 'Thời điểm', 'Ghi chú']], body: clean(r.gates) });
 
   let lastItem = '';
   for (const sec of r.sections) {

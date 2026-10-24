@@ -1,11 +1,13 @@
 import { getGate } from '../content';
 import { setTop } from '../components/Chrome';
-import { bindTimers, clearTimers, timerHtml, timerRemaining } from '../components/Timer';
+import { bindTimers, clearTimers, setTimerStart, timerHtml, timerRemaining } from '../components/Timer';
+import { parseIsolationTime } from '../calc/isolation';
 import { activeSessionId, db, gateScope, getGateCheck, isGateConfirmed, LOCAL_SESSION, saveGateCheck } from '../store/db';
 import { callout, esc, fmtTime, rich, toast, vibrate } from '../ui';
 import { go, params, type View } from '../router';
 
 const timerKey = (scope: string, gateId: string, checkId: string) => `gate:${scope}:${gateId}:${checkId}`;
+export const hhmm = (ts: number) => new Date(ts).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
 export const SafetyGate: View = async (r, el) => {
   const gate = getGate(params().gateId);
@@ -39,8 +41,19 @@ export const SafetyGate: View = async (r, el) => {
         .map((c) => {
           const tk = timerKey(scope, gate.id, c.id);
           const locked = !!c.timer && timerRemaining(tk, c.timer) !== 0 && !state.items[c.id];
+          const tm = state.timed?.[c.id];
+          const since = tm && timerRemaining(tk, c.timer ?? 0) != null ? `<p class="small">⏱ Cô lập từ <b>${esc(hhmm(tm.at))}</b>${tm.manual ? ' (nhập tay theo phiếu công tác/nhật ký vận hành)' : ''}</p>` : '';
           return `<div><label class="check${locked ? ' disabled' : ''}"><input type="checkbox" data-id="${c.id}"${state.items[c.id] ? ' checked' : ''}${locked || confirmed ? ' disabled' : ''}><span>${rich(c.text)}${c.timer ? ' <span class="small muted">(tích được khi hết giờ)</span>' : ''}</span></label>
-          ${c.timer && !confirmed ? timerHtml(tk, c.timer, 'Bấm "Bắt đầu" ngay khi đã cô lập tụ') : ''}</div>`;
+          ${since}
+          ${c.timer && !confirmed ? timerHtml(tk, c.timer, 'Bấm "Bắt đầu" ngay khi đã cô lập tụ') : ''}
+          ${
+            c.timer && !confirmed && !state.items[c.id]
+              ? `<details class="card"><summary>Tụ đã cô lập từ trước?</summary>
+                  <p class="small">Nhập <b>giờ cô lập thực tế</b> theo phiếu công tác / nhật ký vận hành. Đủ ${Math.round(c.timer / 60)} phút thì mở khóa ngay, chưa đủ thì đếm phần còn lại. Giờ này được ghi vào biên bản.</p>
+                  <div style="display:grid;grid-template-columns:1fr auto;gap:8px"><input type="time" data-iso-time="${c.id}" aria-label="Giờ cô lập"><button class="btn secondary" type="button" data-iso="${c.id}">Dùng giờ này</button></div>
+                </details>`
+              : ''
+          }</div>`;
         })
         .join('')}</div>
       <label class="field"><span>Người xác nhận</span>
@@ -94,10 +107,26 @@ export const SafetyGate: View = async (r, el) => {
       state.items = {};
       delete state.confirmedBy;
       delete state.timestamp;
+      delete state.timed;
       clearTimers(`gate:${scope}:${gate.id}:`);
       await saveGateCheck(state);
       draw();
     });
+    el.querySelectorAll<HTMLButtonElement>('[data-iso]').forEach((b) =>
+      b.addEventListener('click', async () => {
+        const c = gate.checks.find((x) => x.id === b.dataset.iso)!;
+        const val = el.querySelector<HTMLInputElement>(`[data-iso-time="${c.id}"]`)!.value;
+        const r = parseIsolationTime(val);
+        if (!r.ok) return toast(r.error);
+        const enough = r.agoMin >= Math.round(c.timer! / 60);
+        if (!confirm(`Xác nhận tụ đã cô lập từ ${hhmm(r.at)} (${r.agoMin} phút trước)?\n${enough ? 'Đã đủ thời gian – mục sẽ được mở khóa.' : 'Chưa đủ – app đếm phần còn lại.'}\nGiờ này được ghi vào biên bản là "nhập tay".`)) return;
+        setTimerStart(timerKey(scope, gate.id, c.id), r.at);
+        state.timed = { ...state.timed, [c.id]: { at: r.at, manual: true } };
+        await saveGateCheck(state);
+        if (enough) toast('⏱ Đủ thời gian cô lập – có thể tích mục này');
+        draw();
+      }),
+    );
     bindTimers(el, (key) => {
       // hết giờ → mở khóa ô tích tương ứng; đặt lại → khóa lại
       const reset = key.startsWith('reset:');
@@ -106,8 +135,10 @@ export const SafetyGate: View = async (r, el) => {
       if (!c) return;
       const box = el.querySelector<HTMLInputElement>(`input[data-id="${c.id}"]`)!;
       if (reset) {
+        // bấm Bắt đầu/Đặt lại → mốc cô lập = bây giờ (không phải nhập tay)
         state.items[c.id] = false;
         box.checked = false;
+        state.timed = { ...state.timed, [c.id]: { at: Date.now(), manual: false } };
         saveGateCheck(state);
       }
       box.disabled = reset;

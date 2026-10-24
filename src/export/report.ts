@@ -5,12 +5,20 @@ import { TYPE_LABEL } from '../views/Sessions';
 import { db } from '../store/db';
 import { fmtDate, fmtTime, resText } from '../ui';
 import type { ResultRow } from '../forms';
+import type { GateCheck } from '../types';
 
 export interface ReportSection {
   itemId: string;
   itemTitle: string;
   testTitle: string;
   rows: ResultRow[];
+}
+
+/** Ghi chú mốc đồng hồ của cổng (vd cô lập tụ từ 08:30 – nhập tay). */
+function timedNote(c: GateCheck): string {
+  return Object.entries(c.timed ?? {})
+    .map(([id, t]) => `Cô lập từ ${fmtTime(t.at)}${t.manual ? ' (nhập tay theo phiếu công tác)' : ''}${id === 'isolated-15min' ? '' : ' [' + id + ']'}`)
+    .join('; ');
 }
 
 export async function buildReport(d: SessionData) {
@@ -31,7 +39,7 @@ export async function buildReport(d: SessionData) {
   const instruments = insts.map((i) => [i!.model, i!.serial || '—', i!.calibDue ? fmtDate(i!.calibDue) + (calibOverdue(i!.calibDue, s.date) ? ' (QUÁ HẠN)' : '') : '—']);
   const gates = checks
     .filter((c) => c.confirmedBy)
-    .map((c) => [getGate(c.gateId)?.title ?? c.gateId, c.confirmedBy!, fmtTime(c.timestamp!)]);
+    .map((c) => [getGate(c.gateId)?.title ?? c.gateId, c.confirmedBy!, fmtTime(c.timestamp!), timedNote(c)]);
   const sections: ReportSection[] = [];
   for (const it of items)
     for (const t of it.tests) {

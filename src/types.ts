@@ -128,6 +128,8 @@ export interface GateCheck {
   timestamp?: number;
   /** lần tích/lưu cuối – dùng cho hạn hiệu lực 12 giờ */
   updatedAt?: number;
+  /** mốc bắt đầu của mục có đồng hồ (vd cô lập tụ 15 phút); manual = nhập giờ tay theo phiếu công tác */
+  timed?: Record<string, { at: number; manual: boolean }>;
 }
 
 export interface Photo {

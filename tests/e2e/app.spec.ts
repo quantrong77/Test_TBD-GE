@@ -216,3 +216,28 @@ test('review #3: stepless test (4.5.A gap) shows guidance instead of crashing', 
   await expect(page.locator('#test-gap a', { hasText: 'BẮT ĐẦU TỪNG BƯỚC' })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test('isolation time entered manually: ≥15 min unlocks, <15 min counts the remainder', async ({ page }) => {
+  page.on('dialog', (d) => d.accept());
+  const hm = (minAgo: number) => {
+    const d = new Date(Date.now() - minAgo * 60000);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+  await page.goto('#/gate/gate-platform');
+  const box = page.locator('input[data-id="isolated-15min"]');
+  await expect(box).toBeDisabled();
+  // mới cô lập 5 phút → vẫn khóa, đồng hồ còn ~10 phút
+  await page.getByText('Tụ đã cô lập từ trước?').click();
+  await page.locator('[data-iso-time="isolated-15min"]').fill(hm(5));
+  await page.locator('[data-iso="isolated-15min"]').click();
+  await expect(box).toBeDisabled();
+  await expect(page.locator('.timer .t')).toHaveText(/^(09|10):\d\d$/);
+  await expect(page.getByText(/Cô lập từ .*nhập tay/)).toBeVisible();
+  // nhập lại: đã cô lập 20 phút → mở khóa ngay
+  await page.getByText('Tụ đã cô lập từ trước?').click();
+  await page.locator('[data-iso-time="isolated-15min"]').fill(hm(20));
+  await page.locator('[data-iso="isolated-15min"]').click();
+  await expect(box).toBeEnabled();
+  await box.check();
+  await expect(box).toBeChecked();
+});
