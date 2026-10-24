@@ -305,10 +305,10 @@ test('top bar: help and about icons next to settings; about shows developer cont
   await expect(page.locator('a[href^="mailto:quantrong77@gmail.com"]')).toBeVisible();
   await expect(page.locator('#app')).toContainText(/Phiên bản \d+\.\d+\.\d+/);
   await page.locator('#topbar a[aria-label="Hướng dẫn sử dụng"]').click();
-  await expect(page.locator('details.card')).toHaveCount(6);
+  await expect(page.locator('details.card')).toHaveCount(7);
   // nội dung hướng dẫn tìm được, mở đúng mục
   await page.goto('#/search');
-  await page.locator('#q').fill('sao luu');
-  await page.locator('#res a', { hasText: 'Sao lưu, chuyển máy' }).click();
+  await page.locator('#q').fill('json');
+  await page.locator('#res a', { hasText: 'File JSON: sao lưu' }).click();
   await expect(page.locator('#help-data')).toHaveAttribute('open', '');
 });

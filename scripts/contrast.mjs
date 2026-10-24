@@ -34,6 +34,9 @@ const PAIRS = [
   ['c-info-ink', 'c-info-bg', 4.5, 'khối LƯU Ý'],
   ['c-danger-fg', 'c-bg', 3, 'viền/vạch/chữ nguy hiểm'],
   ['c-danger-edge', 'c-bg', 3, 'viền khối NGUY HIỂM'],
+  ['c-text', 'c-ok-bg', 4.5, 'số trong ô Đạt'],
+  ['c-text', 'c-fail-bg', 4.5, 'số trong ô Không đạt'],
+  ['c-text', 'c-warn-bg', 4.5, 'số trong ô Cảnh báo'],
 ];
 
 let bad = 0;

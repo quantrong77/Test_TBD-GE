@@ -54,11 +54,24 @@
   },
   {
     "id": "data",
-    "title": "Sao lưu, chuyển máy, giao diện",
+    "title": "File JSON: sao lưu và chuyển dữ liệu",
     "points": [
-      "Dữ liệu chỉ nằm trên điện thoại này. Định kỳ vào **⚙️ → Sao lưu toàn bộ** để có file JSON.",
-      "Chuyển máy: trên máy mới vào **⚙️ → Khôi phục / nhập JSON**.",
-      "**Giao diện:** Tiêu chuẩn (trong nhà), Ca đêm, Nắng gắt (dưới nắng), Đêm đỏ (vào chỗ tối như TAG house). Có thể tăng cỡ chữ."
+      "File JSON là **dữ liệu cho máy đọc**, không phải để in. Muốn xem, in, gửi biên bản thì dùng **PDF** hoặc **Excel**.",
+      "Dữ liệu app **chỉ nằm trên điện thoại này**, không gửi lên máy chủ nào. Mất máy, xóa dữ liệu trình duyệt hay gỡ app là mất hết nếu chưa sao lưu.",
+      "**Sao lưu toàn bộ** (⚙️ → Sao lưu toàn bộ): gom mọi phiên, hồ sơ giàn, máy TN và ảnh vào file **tbdge-backup-NgàyThángNăm.json**. Nên làm **sau mỗi đợt thí nghiệm**.",
+      "**Đổi điện thoại:** sao lưu ở máy cũ, trên máy mới vào **⚙️ → Khôi phục / nhập JSON**.",
+      "**JSON một phiên** (nút **{ } JSON** trong trang phiên): chứa thông tin phiên, ngưỡng hồ sơ giàn, máy TN, mọi số đo, xác nhận cổng an toàn và ảnh. Gửi cho đồng nghiệp để họ nhập vào máy mình, sửa và xuất PDF tiếp.",
+      "**So sánh với lần trước:** nhập file phiên năm trước của cùng giàn, nút **↻ Lấy số lần trước** ở MOV, kháng cản dịu, sứ xuyên sẽ tự điền giá trị cũ để tính Δ %.",
+      "File có kèm ảnh nên có thể **nặng** khi chụp nhiều ảnh.",
+      "Khi nhập: app kiểm tra file và từ chối nếu sai định dạng. Bản ghi **trùng mã sẽ bị ghi đè** (app hỏi trước). Chỉ nhập file của chính bạn hoặc đồng nghiệp trong đội."
+    ]
+  },
+  {
+    "id": "display",
+    "title": "Giao diện và cỡ chữ",
+    "points": [
+      "Vào **⚙️ Cài đặt → Giao diện**, chọn theo nơi đang làm việc: Tiêu chuẩn (trong nhà), Ca đêm, Nắng gắt (dưới nắng), Đêm đỏ (vào chỗ tối như TAG house). **Theo máy** tự đổi theo điện thoại.",
+      "Đeo găng hoặc khó đọc: tăng **Cỡ chữ** lên Lớn hoặc Rất lớn."
     ]
   }
 ]

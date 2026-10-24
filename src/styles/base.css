@@ -46,8 +46,8 @@ h3 {
 a {
   color: var(--c-primary);
 }
-[data-theme='contrast'] a {
-  color: var(--c-primary);
+/* :where() → độ ưu tiên 0: không đè màu chữ của nút/thẻ dạng link (.btn, .banner-danger, .tile…) */
+:where([data-theme='contrast']) a {
   text-decoration-thickness: 2px;
 }
 
