@@ -241,3 +241,51 @@ test('isolation time entered manually: ≥15 min unlocks, <15 min counts the rem
   await box.check();
   await expect(box).toBeChecked();
 });
+
+test.describe('layout stability when switching tabs', () => {
+  test('bottom nav is not re-created and title does not shift', async ({ page }) => {
+    await page.goto('./');
+    await expect(page.locator('.tile')).toHaveCount(7);
+    await page.evaluate(() => ((document.querySelector('#bottomnav a') as HTMLElement & { __mark?: number }).__mark = 1));
+    const titleX = () => page.locator('#topbar .title').evaluate((e) => Math.round(e.getBoundingClientRect().left));
+    const homeX = await titleX();
+    for (const tab of ['Phiên TN', 'Hạng mục', 'Ngưỡng', 'Tìm', 'Trang chủ']) {
+      await page.locator('#bottomnav a', { hasText: tab }).click();
+      await expect(page.locator('#bottomnav a[aria-current="page"]')).toHaveText(new RegExp(tab));
+      expect(await titleX()).toBe(homeX);
+    }
+    expect(await page.evaluate(() => (document.querySelector('#bottomnav a') as HTMLElement & { __mark?: number }).__mark)).toBe(1);
+  });
+
+  test('content area never goes blank between pages', async ({ page }) => {
+    await page.goto('./');
+    await expect(page.locator('.tile')).toHaveCount(7);
+    await page.evaluate(() => {
+      const w = window as unknown as { __blank: number };
+      w.__blank = 0;
+      new MutationObserver(() => {
+        if (!document.querySelector('#app')!.textContent!.trim()) w.__blank++;
+      }).observe(document.querySelector('#app')!, { childList: true, subtree: true });
+    });
+    for (const tab of ['Phiên TN', 'Hạng mục', 'Ngưỡng', 'Trang chủ']) {
+      await page.locator('#bottomnav a', { hasText: tab }).click();
+      await expect(page.locator('#bottomnav a[aria-current="page"]')).toHaveText(new RegExp(tab));
+    }
+    expect(await page.evaluate(() => (window as unknown as { __blank: number }).__blank)).toBe(0);
+  });
+
+  test('back restores scroll position; going to a new page starts at top', async ({ page }) => {
+    await page.goto('#/thresholds');
+    await expect(page.locator('h2', { hasText: 'Lực xiết' })).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, 400));
+    await page.waitForTimeout(250);
+    const before = await page.evaluate(() => Math.round(window.scrollY));
+    expect(before).toBeGreaterThan(100);
+    await page.locator('h2 a[href="#/item/4.5"]').click();
+    await expect(page.locator('h2', { hasText: 'Trình tự' })).toBeVisible();
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await page.goBack();
+    await expect(page.locator('h2', { hasText: 'Lực xiết' })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => Math.round(window.scrollY))).toBe(before);
+  });
+});

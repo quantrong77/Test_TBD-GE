@@ -1,6 +1,6 @@
 import './styles/tokens.css';
 import './styles/base.css';
-import { onRoute, route, setNotFound, start } from './router';
+import { onRendered, onRoute, route, setNotFound, start } from './router';
 import { renderNav, setTop } from './components/Chrome';
 import { bindViewer } from './components/ImageViewer';
 import { applySettings } from './settings';
@@ -17,31 +17,22 @@ import { Instruments, ProfileEdit, Profiles, SessionNew, Sessions } from './view
 import { SessionForm, SessionView } from './views/Session';
 import { CalcUnbalance } from './views/CalcUnbalance';
 import { Settings } from './views/Settings';
-import type { View } from './router';
 
 applySettings();
 
-/** Sau mỗi màn hình: gắn trình xem ảnh. */
-const withViewer =
-  (v: View): View =>
-  async (r, el) => {
-    await v(r, el);
-    bindViewer(el);
-  };
-
-route('', withViewer(Home));
+route('', Home);
 route('items', ItemsList);
-route('overview/:deviceId?', withViewer(Overview));
+route('overview/:deviceId?', Overview);
 route('safety', Safety);
 route('tools', Tools);
 route('cycle', Cycle);
 route('about', About);
-route('item/:itemId', withViewer(ItemView));
-route('item/:itemId/test/:testId/step/:n', withViewer(StepMode));
+route('item/:itemId', ItemView);
+route('item/:itemId/test/:testId/step/:n', StepMode);
 route('gate/:gateId', SafetyGate);
 route('thresholds', Thresholds);
 route('search', Search);
-route('equipment/:eqId?/:section?', withViewer(EquipmentView));
+route('equipment/:eqId?/:section?', EquipmentView);
 route('sessions', Sessions);
 route('session-new', SessionNew);
 route('session/:id', SessionView);
@@ -57,6 +48,8 @@ setNotFound((_r, el) => {
 });
 
 onRoute((r) => renderNav(r.raw));
+// trình xem ảnh phải gắn khi trang mới đã nằm trong DOM
+onRendered(() => bindViewer());
 start();
 initPwa();
 navigator.storage?.persist?.().catch(() => undefined);

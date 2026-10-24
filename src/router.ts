@@ -57,15 +57,37 @@ function match(r: Route): Entry | undefined {
 }
 
 async function doRender() {
-  const el = document.getElementById('app')!;
+  const app = document.getElementById('app')!;
   const r = parse();
+  const samePage = r.raw === lastRaw;
+  const y = samePage ? window.scrollY : popY ?? 0;
+  popY = null;
   document.body.classList.remove('immersive');
   window.dispatchEvent(new Event('route:leave'));
   const e = match(r);
   onChange(r);
-  el.innerHTML = '';
-  await (e ? e.view(r, el) : notFound(r, el));
-  window.scrollTo(0, 0);
+  // Dựng trang mới vào khung riêng; trang cũ vẫn hiển thị cho tới khi xong → không chớp trống
+  const host = document.createElement('div');
+  await (e ? e.view(r, host) : notFound(r, host));
+  app.replaceChildren(host);
+  lastRaw = r.raw;
+  // trang mới → lên đầu; quay lại → về vị trí cũ; vẽ lại cùng trang → giữ nguyên
+  window.scrollTo(0, y);
+  afterRender.forEach((f) => f(host));
+}
+
+let lastRaw: string | null = null;
+let popY: number | null = null;
+const afterRender: ((host: HTMLElement) => void)[] = [];
+/** Chạy sau khi trang mới đã gắn vào DOM (vd gắn trình xem ảnh). */
+export const onRendered = (f: (host: HTMLElement) => void) => afterRender.push(f);
+
+function rememberScroll() {
+  try {
+    history.replaceState({ ...(history.state ?? {}), y: Math.round(window.scrollY) }, '');
+  } catch {
+    /* bỏ qua */
+  }
 }
 
 // Render tuần tự: view async (đọc IndexedDB) của trang cũ không được ghi đè trang mới
@@ -77,10 +99,26 @@ export function render(): Promise<void> {
 
 export function go(hash: string) {
   if (location.hash === hash) render();
-  else location.hash = hash;
+  else {
+    rememberScroll();
+    location.hash = hash;
+  }
 }
 
 export function start() {
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  // lưu vị trí cuộn vào mục lịch sử hiện tại; nút Quay lại (popstate) đọc lại
+  let t: number | undefined;
+  window.addEventListener('scroll', () => {
+    window.clearTimeout(t);
+    t = window.setTimeout(rememberScroll, 120);
+  }, { passive: true });
+  document.addEventListener('click', (e) => {
+    if ((e.target as Element).closest?.('a[href^="#"]')) rememberScroll();
+  }, true);
+  window.addEventListener('popstate', (e) => {
+    popY = typeof e.state?.y === 'number' ? e.state.y : null;
+  });
   window.addEventListener('hashchange', render);
   if (!location.hash) history.replaceState(null, '', '#/');
   render();

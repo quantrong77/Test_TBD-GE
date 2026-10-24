@@ -134,5 +134,6 @@ export const Search: View = (r, el) => {
     input.blur();
   });
   run();
-  if (!q0) input.focus();
+  // trang được dựng ngoài DOM rồi mới gắn vào → focus ở khung hình kế tiếp
+  if (!q0) requestAnimationFrame(() => input.focus());
 };
