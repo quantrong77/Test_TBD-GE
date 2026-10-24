@@ -299,7 +299,8 @@ test('top bar: help and about icons next to settings; about shows developer cont
   }
   await page.locator('#topbar a[aria-label="Giới thiệu"]').click();
   await expect(page.locator('#app')).toContainText('Hoàng Trọng');
-  await expect(page.locator('#app')).toContainText('PTC');
+  await expect(page.locator('#app')).toContainText('PTC3');
+  await expect(page.locator('#app')).toContainText('App là tiện ích để Nhân viên thí nghiệm tra cứu nhanh');
   await expect(page.locator('a[href="tel:0909813284"]')).toHaveText(/0909 813 284/);
   await expect(page.locator('a[href^="mailto:quantrong77@gmail.com"]')).toBeVisible();
   await expect(page.locator('#app')).toContainText(/Phiên bản \d+\.\d+\.\d+/);

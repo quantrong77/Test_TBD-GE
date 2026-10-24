@@ -14,7 +14,7 @@ export const help = helpJson as HelpSection[];
 
 export const DEVELOPER = {
   name: 'Hoàng Trọng',
-  org: 'PTC',
+  org: 'PTC3',
   phone: '0909813284',
   email: 'quantrong77@gmail.com',
 };
@@ -52,7 +52,7 @@ export const Info: View = (_r, el) => {
       <div><h1>Sổ tay TN Tụ bù dọc GE</h1>
       <p class="muted">Phiên bản ${esc(__APP_VERSION__)} · nội dung v${esc(CONTENT_VERSION)} · cập nhật ${esc(__BUILD_DATE__)}</p></div>
     </div>
-    <p>App giúp đội thí nghiệm tra cứu nhanh và ghi kết quả ngay tại hiện trường khi thí nghiệm nhất thứ <b>giàn tụ bù dọc 500 kV hãng GE</b>: 7 hạng mục từ hệ thống tụ tới bơm dòng nhất thứ, cổng an toàn bắt buộc, máy tính mất cân bằng điện dung, xuất biên bản PDF/Excel. Dùng được khi không có sóng.</p>
+    <p>App là tiện ích để Nhân viên thí nghiệm tra cứu nhanh và ghi kết quả ngay tại hiện trường khi thí nghiệm nhất thứ <b>giàn tụ bù dọc 500 kV hãng GE</b>: 7 hạng mục từ hệ thống tụ tới bơm dòng nhất thứ, cổng an toàn bắt buộc, máy tính mất cân bằng điện dung, xuất biên bản PDF/Excel. Dùng được khi không có sóng.</p>
 
     <h2>Người phát triển</h2>
     <div class="card dev-card">
