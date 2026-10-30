@@ -305,10 +305,70 @@ test('top bar: help and about icons next to settings; about shows developer cont
   await expect(page.locator('a[href^="mailto:quantrong77@gmail.com"]')).toBeVisible();
   await expect(page.locator('#app')).toContainText(/Phiên bản \d+\.\d+\.\d+/);
   await page.locator('#topbar a[aria-label="Hướng dẫn sử dụng"]').click();
-  await expect(page.locator('details.card')).toHaveCount(7);
+  await expect(page.locator('details.card')).toHaveCount(8);
   // nội dung hướng dẫn tìm được, mở đúng mục
   await page.goto('#/search');
   await page.locator('#q').fill('json');
   await page.locator('#res a', { hasText: 'File JSON: sao lưu' }).click();
   await expect(page.locator('#help-data')).toHaveAttribute('open', '');
+});
+
+test.describe('vai trò và ký biên bản', () => {
+  const asRole = (page: Page, role: string) =>
+    page.addInitScript((r) => {
+      if (!localStorage.getItem('tbd.auth.me')) localStorage.setItem('tbd.auth.me', JSON.stringify({ userId: `u-${r}`, email: `${r}@evn.vn`, name: `Người ${r}`, status: 'approved', role: r, teamId: 'T1', teamName: 'Đội 1' }));
+    }, role);
+  const setRole = (page: Page, role: string) =>
+    page.evaluate((r) => localStorage.setItem('tbd.auth.me', JSON.stringify({ userId: `u-${r}`, email: `${r}@evn.vn`, name: `Người ${r}`, status: 'approved', role: r, teamId: 'T1', teamName: 'Đội 1' })), role);
+
+  test('chế độ không đăng nhập: vẫn tạo phiên được, nhưng không có nút ký', async ({ page }) => {
+    await page.goto('#/sessions');
+    await expect(page.getByRole('link', { name: /Tạo phiên mới/ })).toBeVisible();
+    await page.goto('#/session-new');
+    await page.locator('input[name=leader]').fill('C');
+    await page.getByRole('button', { name: 'Tạo phiên' }).click();
+    await expect(page.locator('#app')).toContainText('để ký biên bản');
+    await expect(page.locator('[data-sign]')).toHaveCount(0);
+  });
+
+  test('Nhân viên TN và Chỉ xem không tạo được phiên; Chỉ xem không nhập số đo', async ({ page }) => {
+    await asRole(page, 'leader');
+    await page.goto('#/session-new');
+    await page.locator('input[name=leader]').fill('C');
+    await page.getByRole('button', { name: 'Tạo phiên' }).click();
+    await expect(page).toHaveURL(/#\/session\/[^/]+$/);
+    const url = page.url();
+    await setRole(page, 'tester');
+    await page.goto('#/sessions');
+    await page.reload();
+    await expect(page.getByRole('link', { name: /Tạo phiên mới/ })).toHaveCount(0);
+    await page.goto(url + '/form/4.1/unbalance');
+    await page.reload();
+    await expect(page.locator('[data-k="A.U"]')).toBeEnabled();
+    await setRole(page, 'viewer');
+    await page.reload();
+    await expect(page.locator('[data-k="A.U"]')).toBeDisabled();
+    await expect(page.locator('#app')).toContainText('chỉ xem');
+    await page.goto('#/users');
+    await expect(page.locator('#app')).toContainText('Chỉ tài khoản Quản trị');
+  });
+
+  test('Chỉ huy ký → biên bản khóa, biểu mẫu chỉ đọc; PDF xuất có chữ ký', async ({ page }) => {
+    page.on('dialog', (d) => d.accept());
+    await asRole(page, 'leader');
+    await page.goto('#/session-new');
+    await page.locator('input[name=leader]').fill('C');
+    await page.getByRole('button', { name: 'Tạo phiên' }).click();
+    await expect(page).toHaveURL(/#\/session\/[^/]+$/);
+    const url = page.url();
+    await page.locator('[data-sign="leader"]').click();
+    await expect(page.locator('#app')).toContainText('Biên bản đã khóa');
+    await expect(page.locator('#app')).toContainText('Nội dung khớp lúc ký');
+    await expect(page.locator('[data-sign="leader"]')).toHaveCount(0);
+    await expect(page.locator('#concl')).toBeDisabled();
+    await expect(page.locator('#del')).toHaveCount(0);
+    await page.goto(url + '/form/4.1/unbalance');
+    await expect(page.locator('[data-k="A.U"]')).toBeDisabled();
+    await expect(page.locator('[data-file]')).toHaveCount(0);
+  });
 });

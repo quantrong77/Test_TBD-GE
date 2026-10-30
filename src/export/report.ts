@@ -3,6 +3,8 @@ import { calibOverdue } from '../calc/evaluate';
 import { sessionInstruments, testState, type SessionData } from '../views/Session';
 import { TYPE_LABEL } from '../views/Sessions';
 import { db } from '../store/db';
+import { verifySignatures } from '../sign/sign';
+import { SLOT_LABEL } from '../auth/roles';
 import { fmtDate, fmtTime, resText } from '../ui';
 import type { ResultRow } from '../forms';
 import type { GateCheck } from '../types';
@@ -52,7 +54,16 @@ export async function buildReport(d: SessionData) {
     warn: all.filter((r) => r.result === 'warn').length,
     fail: all.filter((r) => r.result === 'fail').length,
   };
-  return { s, p, info, instruments, gates, sections, summary, resText, contentVersion: CONTENT_VERSION };
+  const signatures = (await verifySignatures(s.id)).map(({ sig, valid }) => ({
+    slot: sig.slot,
+    label: SLOT_LABEL[sig.slot],
+    name: sig.name,
+    email: sig.email,
+    time: fmtTime(sig.signedAt),
+    hash: sig.hash,
+    check: valid ? 'Khớp nội dung lúc ký' : 'NỘI DUNG ĐÃ THAY ĐỔI SAU KHI KÝ',
+  }));
+  return { s, p, info, instruments, gates, sections, summary, signatures, resText, contentVersion: CONTENT_VERSION };
 }
 
 export const fileBase = (d: SessionData) => `BB_TBD_${d.profile.bank}_${d.profile.station}_${d.session.date}`.replace(/[^\p{L}\p{N}_-]+/gu, '_');

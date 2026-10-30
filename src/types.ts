@@ -148,3 +148,20 @@ export interface Instrument {
   calibDue: string;
   note?: string;
 }
+
+export type Role = 'admin' | 'leader' | 'tester' | 'viewer';
+/** Ô ký trên biên bản: Người thí nghiệm, Chỉ huy trực tiếp (ký xong → khóa), Đại diện QLVH. */
+export type SignSlot = 'tester' | 'leader' | 'qlvh';
+
+/** Chữ ký xác nhận điện tử – gắn tài khoản đã duyệt, kèm mã kiểm tra nội dung (SHA-256). */
+export interface Signature {
+  id: string; // `${sessionId}|${slot}|${userId}`
+  sessionId: string;
+  slot: SignSlot;
+  userId: string;
+  email: string;
+  name: string;
+  role: Role;
+  signedAt: number;
+  hash: string;
+}

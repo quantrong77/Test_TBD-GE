@@ -1,4 +1,5 @@
 import { getGate } from '../content';
+import { can } from '../auth/roles';
 import { setTop } from '../components/Chrome';
 import { bindTimers, clearTimers, setTimerStart, timerHtml, timerRemaining } from '../components/Timer';
 import { parseIsolationTime } from '../calc/isolation';
@@ -27,6 +28,12 @@ export const SafetyGate: View = async (r, el) => {
     return;
   }
 
+  if (!can('gate.confirm')) {
+    el.innerHTML = `<h1>⚠️ ${esc(gate.title)}</h1>
+      ${callout({ level: 'info', text: 'Tài khoản này không xác nhận được cổng an toàn. Trình tự và ngưỡng vẫn xem được ở trang hạng mục.' })}
+      <ul class="clean">${gate.checks.map((c) => `<li>☐ ${rich(c.text)}</li>`).join('')}</ul>`;
+    return;
+  }
   const state = await getGateCheck(gate.id, scope);
   const session = scope !== LOCAL_SESSION ? await db.sessions.get(scope) : undefined;
   const people = session ? [session.leader, ...session.members].filter(Boolean) : [];

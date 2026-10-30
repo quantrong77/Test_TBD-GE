@@ -1,6 +1,6 @@
 import './styles/tokens.css';
 import './styles/base.css';
-import { onRendered, onRoute, route, setNotFound, start } from './router';
+import { go, onRendered, onRoute, route, setNotFound, start } from './router';
 import { renderNav, setTop } from './components/Chrome';
 import { bindViewer } from './components/ImageViewer';
 import { applySettings } from './settings';
@@ -18,6 +18,9 @@ import { SessionForm, SessionView } from './views/Session';
 import { CalcUnbalance } from './views/CalcUnbalance';
 import { Settings } from './views/Settings';
 import { Help, Info } from './views/Info';
+import { Users } from './views/Users';
+import { bootSync } from './sync/status';
+import { toast } from './ui';
 
 applySettings();
 
@@ -45,6 +48,7 @@ route('calc/unbalance', CalcUnbalance);
 route('settings', Settings);
 route('help', Help);
 route('info', Info);
+route('users', Users);
 setNotFound((_r, el) => {
   setTop('Không tìm thấy', { back: '#/' });
   el.innerHTML = '<p>Trang không tồn tại. <a href="#/">Về trang chủ</a></p>';
@@ -55,4 +59,10 @@ onRoute((r) => renderNav(r.raw));
 onRendered(() => bindViewer());
 start();
 initPwa();
+void bootSync();
+window.addEventListener('auth:error', (e) => toast('Đăng nhập không thành công: ' + (e as CustomEvent<string>).detail, undefined, 6000));
+window.addEventListener('sync:applied', (e) => {
+  const n = (e as CustomEvent<number>).detail;
+  toast(`Đã nhận ${n} thay đổi từ đội`, { label: 'Xem', run: () => go(location.hash) });
+});
 navigator.storage?.persist?.().catch(() => undefined);

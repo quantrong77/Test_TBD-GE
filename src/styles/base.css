@@ -512,6 +512,8 @@ input[type='text'],
 input[type='number'],
 input[type='date'],
 input[type='search'],
+input[type='email'],
+input[type='time'],
 input:not([type]),
 select,
 textarea {

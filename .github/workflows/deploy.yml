@@ -28,6 +28,10 @@ jobs:
       - run: npm test
       - run: npm run contrast
       - run: npm run build
+        env:
+          # Đặt ở GitHub → Settings → Secrets and variables → Actions → Variables (để trống = tắt đồng bộ)
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

@@ -138,7 +138,26 @@ export async function buildPdf(d: SessionData): Promise<Blob> {
   const cols = ['CHỈ HUY TRỰC TIẾP', 'NGƯỜI THÍ NGHIỆM', 'ĐẠI DIỆN ĐƠN VỊ QLVH'];
   cols.forEach((c, i) => doc.text(c, M + ((W - 2 * M) / 3) * (i + 0.5), 30, { align: 'center' }));
   doc.setFont(FONT, 'normal').setFontSize(9);
-  doc.text(r.s.leader, M + (W - 2 * M) / 6, 60, { align: 'center' });
+  const slots = ['leader', 'tester', 'qlvh'];
+  slots.forEach((slot, i) => {
+    const x = M + ((W - 2 * M) / 3) * (i + 0.5);
+    const signed = r.signatures.filter((g) => g.slot === slot);
+    if (signed.length) {
+      doc.setFont(FONT, 'bold').text('Đã ký điện tử', x, 38, { align: 'center' });
+      doc.setFont(FONT, 'normal');
+      signed.forEach((g, k) => doc.text(g.name, x, 46 + k * 6, { align: 'center' }));
+    } else if (slot === 'leader') doc.text(r.s.leader, x, 60, { align: 'center' });
+  });
+  if (r.signatures.length) {
+    autoTable(doc, {
+      ...base,
+      startY: 75,
+      head: [['Ô ký', 'Người ký', 'Thời điểm', 'Mã kiểm tra nội dung (SHA-256)', 'Kiểm tra']],
+      body: clean(r.signatures.map((g) => [g.label, `${g.name}\n${g.email}`, g.time, g.hash, g.check])),
+      styles: { ...base.styles, fontSize: 7.5 },
+      columnStyles: { 3: { cellWidth: 52 } },
+    });
+  }
 
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {

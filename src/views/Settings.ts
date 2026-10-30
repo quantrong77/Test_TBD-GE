@@ -7,6 +7,8 @@ import { CONTENT_VERSION } from '../content';
 import { callout, esc, toast } from '../ui';
 import type { View } from '../router';
 import { fmtFixed } from '../calc/units';
+import { renderSyncPanel } from './SyncPanel';
+import { can } from '../auth/roles';
 
 /** Chủ đề đặt theo điều kiện làm việc tại trạm. */
 const THEMES: { id: Theme; name: string; use: string }[] = [
@@ -62,12 +64,15 @@ export const Settings: View = async (_r, el) => {
     <p><span class="dot ${ready ? 'ok' : 'warn'}"></span>${ready ? 'Toàn bộ nội dung và hình ảnh đã sẵn sàng offline.' : 'Chưa sẵn sàng offline – mở app khi có mạng và chờ thông báo.'}</p>
     <div id="install"></div>
 
+    <h2>Tài khoản và đồng bộ</h2>
+    <div id="sync"></div>
+
     <h2>Dữ liệu trên máy</h2>
     ${warn ? callout({ level: 'warn', text: warn }) : ''}
-    <p class="small muted">Dữ liệu chỉ nằm trên máy này cho tới khi bạn chủ động xuất. ${usage ? `Đang dùng: ${esc(usage)}.` : ''}</p>
+    <p class="small muted">Dữ liệu nằm trên máy này; chỉ rời máy khi bạn chủ động xuất file hoặc bật đồng bộ đám mây. ${usage ? `Đang dùng: ${esc(usage)}.` : ''}</p>
     <div class="btn-row">
       <button class="btn" type="button" id="backup">💾 Sao lưu toàn bộ</button>
-      <label class="btn secondary">📂 Khôi phục / nhập JSON<input type="file" accept="application/json,.json" hidden id="restore"></label>
+      ${can('data.import') ? '<label class="btn secondary">📂 Khôi phục / nhập JSON<input type="file" accept="application/json,.json" hidden id="restore"></label>' : ''}
     </div>
 
     <h2>Thông tin</h2>
@@ -98,13 +103,15 @@ export const Settings: View = async (_r, el) => {
   drawInstall();
   onInstallable(drawInstall);
 
+  void renderSyncPanel(el.querySelector<HTMLElement>('#sync')!);
+
   el.querySelector('#backup')!.addEventListener('click', async () => {
     const { backupJson } = await import('../export/json');
     const d = new Date();
     const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
     download(new Blob([JSON.stringify(await backupJson())], { type: 'application/json' }), `tbdge-backup-${stamp}.json`);
   });
-  el.querySelector<HTMLInputElement>('#restore')!.addEventListener('change', async (e) => {
+  el.querySelector<HTMLInputElement>('#restore')?.addEventListener('change', async (e) => {
     const f = (e.target as HTMLInputElement).files?.[0];
     if (!f) return;
     if (!confirm(`Nhập "${f.name}"? Bản ghi trùng mã sẽ bị ghi đè.`)) return;

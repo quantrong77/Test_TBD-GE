@@ -57,13 +57,26 @@
     "title": "File JSON: sao lưu và chuyển dữ liệu",
     "points": [
       "File JSON là **dữ liệu cho máy đọc**, không phải để in. Muốn xem, in, gửi biên bản thì dùng **PDF** hoặc **Excel**.",
-      "Dữ liệu app **chỉ nằm trên điện thoại này**, không gửi lên máy chủ nào. Mất máy, xóa dữ liệu trình duyệt hay gỡ app là mất hết nếu chưa sao lưu.",
+      "Dữ liệu app **nằm trên điện thoại này**. Nếu chưa bật đồng bộ đám mây, mất máy, xóa dữ liệu trình duyệt hay gỡ app là mất hết khi chưa sao lưu.",
+      "**Đồng bộ đám mây** (⚙️ → Đồng bộ đám mây, tắt mặc định): đăng nhập bằng mã gửi qua email, bật đồng bộ → phiên, số đo, ảnh tự gửi lên và nhận về cho cả đội khi có mạng; không mạng vẫn dùng bình thường. Chỉ bật khi đơn vị cho phép.",
       "**Sao lưu toàn bộ** (⚙️ → Sao lưu toàn bộ): gom mọi phiên, hồ sơ giàn, máy TN và ảnh vào file **tbdge-backup-NgàyThángNăm.json**. Nên làm **sau mỗi đợt thí nghiệm**.",
       "**Đổi điện thoại:** sao lưu ở máy cũ, trên máy mới vào **⚙️ → Khôi phục / nhập JSON**.",
       "**JSON một phiên** (nút **{ } JSON** trong trang phiên): chứa thông tin phiên, ngưỡng hồ sơ giàn, máy TN, mọi số đo, xác nhận cổng an toàn và ảnh. Gửi cho đồng nghiệp để họ nhập vào máy mình, sửa và xuất PDF tiếp.",
       "**So sánh với lần trước:** nhập file phiên năm trước của cùng giàn, nút **↻ Lấy số lần trước** ở MOV, kháng cản dịu, sứ xuyên sẽ tự điền giá trị cũ để tính Δ %.",
       "File có kèm ảnh nên có thể **nặng** khi chụp nhiều ảnh.",
       "Khi nhập: app kiểm tra file và từ chối nếu sai định dạng. Bản ghi **trùng mã sẽ bị ghi đè** (app hỏi trước). Chỉ nhập file của chính bạn hoặc đồng nghiệp trong đội."
+    ]
+  },
+  {
+    "id": "account",
+    "title": "Tài khoản, vai trò và ký biên bản",
+    "points": [
+      "Vào **⚙️ → Tài khoản và đồng bộ** → **Tiếp tục với Google**. iPhone đã cài app hoặc không dùng Google: chọn đăng nhập bằng mã gửi qua email.",
+      "Tài khoản mới ở trạng thái **chờ duyệt**. Quản trị duyệt và gán vai trò ở **Quản lý tài khoản**.",
+      "**Vai trò:** Quản trị duyệt tài khoản, thu hồi chữ ký. Chỉ huy trực tiếp tạo phiên, sửa hồ sơ giàn, máy TN. Nhân viên TN nhập số đo, ảnh, xác nhận cổng an toàn. Chỉ xem được xem và xuất PDF.",
+      "**Ký:** mở trang phiên → **Ký biên bản** → **✍️ Ký xác nhận**. Chữ ký gắn với tài khoản, thời điểm và mã kiểm tra nội dung.",
+      "**Chỉ huy ký xong biên bản bị khóa**, không sửa được số liệu. Cần sửa thì nhờ Quản trị thu hồi chữ ký.",
+      "Dòng **Nội dung đã thay đổi sau khi ký** nghĩa là số liệu khác với lúc ký: kiểm tra lại và ký lại."
     ]
   },
   {

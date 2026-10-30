@@ -9,6 +9,9 @@ import { bindViewer } from '../components/ImageViewer';
 import { TYPE_LABEL } from './Sessions';
 import { getFontScale } from '../settings';
 import { stepsOf } from './StepMode';
+import { can, canSign, getMe, SLOT_LABEL } from '../auth/roles';
+import { isLocked, revokeSignature, signSession, verifySignatures, type SignatureCheck } from '../sign/sign';
+import type { SignSlot } from '../types';
 import type { Profile, Result, Session } from '../types';
 
 export interface SessionData {
@@ -68,7 +71,7 @@ async function compress(file: File, max = 1600): Promise<Blob> {
 const urls: string[] = [];
 window.addEventListener('route:leave', () => urls.splice(0).forEach((u) => URL.revokeObjectURL(u)));
 
-async function photosBlock(root: HTMLElement, sessionId: string, itemId: string) {
+async function photosBlock(root: HTMLElement, sessionId: string, itemId: string, readOnly: boolean) {
   const box = root.querySelector<HTMLElement>('[data-photos]')!;
   const draw = async () => {
     const list = await db.photos.where('[sessionId+itemId]').equals([sessionId, itemId]).toArray();
@@ -76,10 +79,10 @@ async function photosBlock(root: HTMLElement, sessionId: string, itemId: string)
       .map((p) => {
         const u = URL.createObjectURL(p.blob);
         urls.push(u);
-        return `<figure><a href="${u}" data-pswp-width="1600" data-pswp-height="1200" data-caption="${esc(p.caption)}"><img src="${u}" alt="${esc(p.caption)}"></a><figcaption>${esc(p.caption)} <button class="icon-btn" type="button" data-del="${esc(p.id)}" aria-label="Xóa ảnh" style="min-width:36px;min-height:36px;font-size:16px">🗑</button></figcaption></figure>`;
+        return `<figure><a href="${u}" data-pswp-width="1600" data-pswp-height="1200" data-caption="${esc(p.caption)}"><img src="${u}" alt="${esc(p.caption)}"></a><figcaption>${esc(p.caption)} ${readOnly ? '' : `<button class="icon-btn" type="button" data-del="${esc(p.id)}" aria-label="Xóa ảnh" style="min-width:36px;min-height:36px;font-size:16px">🗑</button>`}</figcaption></figure>`;
       })
       .join('')}</div>
-      <label class="btn secondary block" style="margin-top:10px">📷 Chụp / chọn ảnh<input type="file" accept="image/*" capture="environment" multiple hidden data-file></label>`;
+      ${readOnly ? '' : '<label class="btn secondary block" style="margin-top:10px">📷 Chụp / chọn ảnh<input type="file" accept="image/*" capture="environment" multiple hidden data-file></label>'}`;
     // kích thước thật cho trình xem
     box.querySelectorAll<HTMLAnchorElement>('a[data-pswp-width]').forEach((a) => {
       const img = a.querySelector('img')!;
@@ -90,7 +93,7 @@ async function photosBlock(root: HTMLElement, sessionId: string, itemId: string)
       if (img.complete) set();
       else img.addEventListener('load', set, { once: true });
     });
-    box.querySelector<HTMLInputElement>('[data-file]')!.addEventListener('change', async (e) => {
+    box.querySelector<HTMLInputElement>('[data-file]')?.addEventListener('change', async (e) => {
       const files = [...((e.target as HTMLInputElement).files ?? [])];
       for (const f of files) {
         try {
@@ -117,6 +120,28 @@ async function photosBlock(root: HTMLElement, sessionId: string, itemId: string)
   await draw();
 }
 
+// ---------- Ký biên bản ----------
+const SLOTS: SignSlot[] = ['tester', 'leader', 'qlvh'];
+
+function signBlock(sigs: SignatureCheck[]): string {
+  const me = getMe();
+  return SLOTS.map((slot) => {
+    const mine = sigs.filter((x) => x.sig.slot === slot);
+    const already = mine.some((x) => x.sig.userId === me?.userId) || (slot === 'leader' && mine.length > 0);
+    return `<div class="card"><b>${esc(SLOT_LABEL[slot])}</b>
+      ${mine
+        .map(
+          ({ sig, valid }) => `<div class="small" style="margin-top:6px">✍️ <b>${esc(sig.name)}</b> (${esc(sig.email)})<br>${esc(fmtTime(sig.signedAt))} · mã ${esc(sig.hash.slice(0, 12))}
+            <br>${valid ? resBadge('pass', '✓ Nội dung khớp lúc ký') : resBadge('fail', '⚠️ Nội dung đã thay đổi sau khi ký')}
+            ${can('sign.revoke') ? `<button class="btn secondary" type="button" data-revoke="${esc(sig.id)}" style="margin-top:6px">Thu hồi chữ ký</button>` : ''}</div>`,
+        )
+        .join('')}
+      ${!mine.length ? '<div class="small muted">Chưa ký</div>' : ''}
+      ${canSign(slot) && !already ? `<button class="btn block" type="button" data-sign="${slot}" style="margin-top:8px">✍️ Ký xác nhận</button>` : ''}
+    </div>`;
+  }).join('') + (me ? '' : '<p class="small muted">Đăng nhập tài khoản đã được duyệt (⚙️ Cài đặt) để ký biên bản.</p>');
+}
+
 // ---------- Chi tiết phiên ----------
 export const SessionView: View = async (_r, el) => {
   const id = params().id;
@@ -134,13 +159,16 @@ export const SessionView: View = async (_r, el) => {
   const all = items.flatMap((it) => it.tests.map((t) => ({ it, t, ...testState(d, it.id, t.id) })));
   const counts = { pass: 0, fail: 0, warn: 0 };
   for (const x of all) for (const r of x.rows) if (r.result in counts) counts[r.result as keyof typeof counts]++;
+  const sigs = await verifySignatures(s.id);
+  const locked = sigs.some((x) => x.sig.slot === 'leader');
+  const editable = !locked && can('session.edit');
 
   el.innerHTML = `
     <div class="card">
       <div class="row"><b>${esc(p.bank)} – ${esc(p.station)}</b>${isActive ? '<span class="pill">● Đang làm</span>' : ''}</div>
       <div class="small">Ngày: ${esc(fmtDate(s.date))} · ${esc(TYPE_LABEL[s.type])}<br>Chỉ huy: <b>${esc(s.leader)}</b>${s.members.length ? `<br>Thành viên: ${s.members.map(esc).join(', ')}` : ''}</div>
       ${insts.map((i) => `<div class="small">🔧 ${esc(i!.model)}${i!.serial ? ` · SN ${esc(i!.serial)}` : ''}${calibOverdue(i!.calibDue, s.date) ? ` <span class="res fail">QUÁ HẠN ${esc(fmtDate(i!.calibDue))}</span>` : ''}</div>`).join('')}
-      <div class="btn-row">${isActive ? '<button class="btn secondary" type="button" id="deact">Bỏ chọn phiên</button>' : '<button class="btn" type="button" id="act">Đặt làm phiên đang làm</button>'}<button class="btn secondary" type="button" id="resnap">↻ Cập nhật ngưỡng từ hồ sơ giàn</button></div>
+      <div class="btn-row">${isActive ? '<button class="btn secondary" type="button" id="deact">Bỏ chọn phiên</button>' : '<button class="btn" type="button" id="act">Đặt làm phiên đang làm</button>'}${editable ? '<button class="btn secondary" type="button" id="resnap">↻ Cập nhật ngưỡng từ hồ sơ giàn</button>' : ''}</div>
     </div>
     <a class="card row" href="#/gate/gate-platform" style="text-decoration:none;color:inherit" ${isActive ? '' : 'data-need-active'}>
       <span>${gp.confirmedBy ? '✅' : '⚠️'} Cổng an toàn lên sàn tụ</span><span class="small">${gp.confirmedBy ? `${esc(gp.confirmedBy)} · ${esc(fmtTime(gp.timestamp!))}` : 'Chưa xác nhận'}</span></a>
@@ -166,8 +194,11 @@ export const SessionView: View = async (_r, el) => {
             .join('')}</tbody></table></div>`
         : ''
     }
-    <label class="field"><span>Kết luận, kiến nghị</span><textarea id="concl" rows="4">${esc(s.conclusion ?? '')}</textarea></label>
-    <label class="check"><input type="checkbox" id="done"${s.status === 'done' ? ' checked' : ''}><span>Đã kết thúc phiên</span></label>
+    <label class="field"><span>Kết luận, kiến nghị</span><textarea id="concl" rows="4"${editable ? '' : ' disabled'}>${esc(s.conclusion ?? '')}</textarea></label>
+    <label class="check"><input type="checkbox" id="done"${s.status === 'done' ? ' checked' : ''}${editable ? '' : ' disabled'}><span>Đã kết thúc phiên</span></label>
+    <h2>Ký biên bản</h2>
+    ${locked ? callout({ level: 'info', text: '🔒 **Biên bản đã khóa** do Chỉ huy trực tiếp đã ký. Không sửa được số liệu.' }) : ''}
+    ${signBlock(sigs)}
     <h2>Xuất biên bản</h2>
     <div class="btn-row">
       <button class="btn" type="button" data-exp="pdf">📄 PDF</button>
@@ -175,14 +206,38 @@ export const SessionView: View = async (_r, el) => {
       <button class="btn secondary" type="button" data-exp="json">{ } JSON</button>
       ${'share' in navigator ? '<button class="btn secondary" type="button" data-exp="share">📤 Chia sẻ PDF</button>' : ''}
     </div>
-    <button class="btn danger block" type="button" id="del" style="margin-top:24px">Xóa phiên</button>`;
+    ${editable ? '<button class="btn danger block" type="button" id="del" style="margin-top:24px">Xóa phiên</button>' : ''}`;
 
+  el.querySelectorAll<HTMLButtonElement>('[data-sign]').forEach((b) =>
+    b.addEventListener('click', async () => {
+      const slot = b.dataset.sign as SignSlot;
+      const warn = slot === 'leader' ? '\nSau khi ký, biên bản bị KHÓA: không sửa được số liệu, chỉ Quản trị mới thu hồi được chữ ký.' : '';
+      if (!confirm(`Ký xác nhận "${SLOT_LABEL[slot]}" bằng tài khoản ${getMe()?.email}?${warn}`)) return;
+      try {
+        // kết luận vừa gõ phải nằm trong nội dung được ký
+        const concl = el.querySelector<HTMLTextAreaElement>('#concl')!;
+        if (!concl.disabled && concl.value !== (s.conclusion ?? '')) await db.sessions.update(s.id, { conclusion: concl.value });
+        await signSession(s.id, slot);
+        toast('✓ Đã ký xác nhận');
+        go(location.hash);
+      } catch (err) {
+        toast((err as Error).message, undefined, 6000);
+      }
+    }),
+  );
+  el.querySelectorAll<HTMLButtonElement>('[data-revoke]').forEach((b) =>
+    b.addEventListener('click', async () => {
+      if (!confirm('Thu hồi chữ ký này? Nếu là chữ ký Chỉ huy, biên bản sẽ mở khóa.')) return;
+      await revokeSignature(b.dataset.revoke!);
+      go(location.hash);
+    }),
+  );
   el.querySelector('#act')?.addEventListener('click', () => {
     setActiveSession(s.id);
     toast('Đã đặt làm phiên đang làm');
     go(location.hash);
   });
-  el.querySelector('#resnap')!.addEventListener('click', async () => {
+  el.querySelector('#resnap')?.addEventListener('click', async () => {
     const cur = await db.profiles.get(s.profileId);
     if (!cur) return toast('Hồ sơ giàn không còn trong danh mục');
     if (!confirm('Áp ngưỡng hiện tại của hồ sơ ' + cur.bank + ' và hạn kiểm định máy TN hiện tại cho phiên này? Kết quả Đạt/Không đạt sẽ được tính lại.')) return;
@@ -212,7 +267,7 @@ export const SessionView: View = async (_r, el) => {
       b.disabled = true;
       try {
         // kết luận vừa gõ (chưa qua debounce) phải có trong biên bản
-        await db.sessions.update(s.id, { conclusion: el.querySelector<HTMLTextAreaElement>('#concl')!.value });
+        if (editable) await db.sessions.update(s.id, { conclusion: el.querySelector<HTMLTextAreaElement>('#concl')!.value });
         const fresh = (await loadSessionData(s.id))!;
         const ex = await import('../export/exporters');
         await ex.exportSession(fresh, b.dataset.exp as 'pdf' | 'xlsx' | 'json' | 'share');
@@ -224,7 +279,7 @@ export const SessionView: View = async (_r, el) => {
       }
     }),
   );
-  el.querySelector('#del')!.addEventListener('click', async () => {
+  el.querySelector('#del')?.addEventListener('click', async () => {
     if (!confirm('Xóa phiên này cùng toàn bộ số đo và ảnh? Không thể hoàn tác.')) return;
     await deleteSession(s.id);
     go('#/sessions');
@@ -262,17 +317,20 @@ export const SessionForm: View = async (_r, el) => {
   const prev = prevS ? await getValues(prevS.id, itemId, testId) : undefined;
   const canPrev = !!prevS && ['mov', 'reactor', 'bushing'].includes(test.form!);
   const ctrlRoom = test.form === 'inject';
+  const locked = await isLocked(s.id);
+  const readOnly = locked || !can('measure.edit');
   const gateMissing = [];
   for (const g of gatesFor(itemId, testId)) if (!(await getGateCheck(g, s.id)).confirmedBy) gateMissing.push(getGate(g)?.title ?? g);
 
   el.innerHTML = `
-    ${gateMissing.length ? callout({ level: 'warn', text: `Chưa xác nhận: ${gateMissing.join('; ')}.` }) : ''}
+    ${locked ? callout({ level: 'info', text: '🔒 **Biên bản đã khóa** do Chỉ huy trực tiếp đã ký. Chỉ xem, không sửa được.' }) : !can('measure.edit') ? callout({ level: 'info', text: 'Tài khoản này **chỉ xem**, không nhập được số đo.' }) : ''}
+    ${gateMissing.length && !readOnly ? callout({ level: 'warn', text: `Chưa xác nhận: ${gateMissing.join('; ')}.` }) : ''}
     <div class="row" style="margin-top:12px">
       ${form.phased ? `<div class="seg" role="group" aria-label="Pha">${PHASES.map((x) => `<button type="button" data-ph="${x}" aria-pressed="${x === phase}">${x}</button>`).join('')}</div>` : '<span></span>'}
       ${stepsOf(test).length ? `<a class="btn secondary" href="#/item/${itemId}/test/${testId}/step/1">▶ Từng bước</a>` : ''}
     </div>
     <div class="btn-row">
-      ${canPrev ? `<button class="btn secondary" type="button" id="prev">↺ Lấy số lần trước (${esc(fmtDate(prevS!.date))})</button>` : ''}
+      ${canPrev && !readOnly ? `<button class="btn secondary" type="button" id="prev">↺ Lấy số lần trước (${esc(fmtDate(prevS!.date))})</button>` : ''}
       ${ctrlRoom ? '<button class="btn secondary" type="button" id="ctrl" aria-pressed="false">🖥 Phòng điều khiển</button>' : ''}
     </div>
     <div id="body"></div>
@@ -315,6 +373,7 @@ export const SessionForm: View = async (_r, el) => {
   };
   const draw = () => {
     body.innerHTML = form.render(values, p, phase, prev);
+    if (readOnly) body.querySelectorAll<HTMLInputElement>('input, select, textarea').forEach((x) => (x.disabled = true));
     refresh();
   };
   body.addEventListener('input', (e) => {
@@ -355,5 +414,5 @@ export const SessionForm: View = async (_r, el) => {
     window.addEventListener('route:leave', () => document.documentElement.style.setProperty('--fs-scale', String(getFontScale())), { once: true });
   });
   draw();
-  await photosBlock(el, s.id, itemId);
+  await photosBlock(el, s.id, itemId, readOnly);
 };

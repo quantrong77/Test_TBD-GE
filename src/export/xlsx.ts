@@ -25,6 +25,9 @@ export async function buildXlsx(d: SessionData): Promise<Blob> {
     [r.summary.pass, r.summary.warn, r.summary.fail],
     [],
     ['Kết luận, kiến nghị', r.s.conclusion ?? ''],
+    [],
+    ['Ô ký', 'Người ký', 'Thời điểm', 'Mã kiểm tra nội dung (SHA-256)', 'Kiểm tra'],
+    ...r.signatures.map((g) => [g.label, `${g.name} (${g.email})`, g.time, g.hash, g.check]),
   ]);
   info['!cols'] = [{ wch: 30 }, { wch: 50 }, { wch: 20 }];
   XLSX.utils.book_append_sheet(wb, info, 'Thông tin');

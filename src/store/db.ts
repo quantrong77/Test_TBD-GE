@@ -1,7 +1,8 @@
 import Dexie, { type Table } from 'dexie';
-import type { GateCheck, Instrument, Measurement, Photo, Profile, Session } from '../types';
+import type { GateCheck, Instrument, Measurement, Photo, Profile, Session, Signature } from '../types';
 import { seedProfiles } from '../content';
 import { clearTimers } from '../components/Timer';
+import { installTracking } from '../sync/meta';
 
 class TbdDb extends Dexie {
   sessions!: Table<Session, string>;
@@ -10,6 +11,7 @@ class TbdDb extends Dexie {
   photos!: Table<Photo, string>;
   profiles!: Table<Profile, string>;
   instruments!: Table<Instrument, string>;
+  signatures!: Table<Signature, string>;
 
   constructor() {
     super('tbd-ge-field');
@@ -21,17 +23,23 @@ class TbdDb extends Dexie {
       profiles: 'id',
       instruments: 'id',
     });
+    // v2: chữ ký điện tử biên bản
+    this.version(2).stores({ signatures: 'id, sessionId' });
     this.on('populate', (tx) => {
-      tx.table('profiles').bulkAdd(seedProfiles());
+      // dữ liệu mẫu: đánh dấu 'seed' → không tự gửi lên (không đè hồ sơ thật của đội); bản của đội kéo về sẽ thay thế
+      const seed = { _rv: 'seed', _dirty: 0 };
+      tx.table('profiles').bulkAdd(seedProfiles().map((p) => ({ ...p, ...seed })));
       tx.table('instruments').bulkAdd([
-        { id: 'vap-tester-31f246', model: 'VAP Tester GE 31F246', serial: '', calibDue: '', note: 'Nhập số serial và hạn hiệu chuẩn' },
-        { id: 'gamma-rr10', model: 'Nguồn cao thế GAMMA RR10-6R/220/M851', serial: '', calibDue: '', note: 'Nhập số serial và hạn kiểm định' },
+        { id: 'vap-tester-31f246', model: 'VAP Tester GE 31F246', serial: '', calibDue: '', note: 'Nhập số serial và hạn hiệu chuẩn', ...seed },
+        { id: 'gamma-rr10', model: 'Nguồn cao thế GAMMA RR10-6R/220/M851', serial: '', calibDue: '', note: 'Nhập số serial và hạn kiểm định', ...seed },
       ]);
     });
   }
 }
 
 export const db = new TbdDb();
+// đánh dấu thay đổi để đồng bộ (chạy kể cả khi đồng bộ đang tắt → bật sau vẫn gửi đủ)
+installTracking(db);
 
 /** Phiên "tra cứu" khi chưa chọn phiên TN – cổng an toàn lưu tạm tại đây. */
 export const LOCAL_SESSION = '_local';
@@ -91,7 +99,8 @@ export function putValue(sessionId: string, itemId: string, testId: string, key:
 }
 
 export async function deleteSession(id: string) {
-  await db.transaction('rw', [db.sessions, db.measurements, db.checks, db.photos], async () => {
+  await db.transaction('rw', [db.sessions, db.measurements, db.checks, db.photos, db.signatures], async () => {
+    await db.signatures.where('sessionId').equals(id).delete();
     await db.measurements.where('sessionId').equals(id).delete();
     await db.checks.where('sessionId').equals(id).delete();
     await db.photos.where('sessionId').equals(id).delete();

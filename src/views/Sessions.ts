@@ -1,4 +1,5 @@
 import { setTop } from '../components/Chrome';
+import { can } from '../auth/roles';
 import { activeSessionId, db, setActiveSession } from '../store/db';
 import { calibOverdue } from '../calc/evaluate';
 import { parseNum } from '../calc/units';
@@ -18,7 +19,7 @@ export const Sessions: View = async (_r, el) => {
   const list = (await db.sessions.toArray()).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
   const active = activeSessionId();
   el.innerHTML = `
-    <div class="btn-row"><a class="btn big" href="#/session-new">＋ Tạo phiên mới</a></div>
+    ${can('session.create') ? '<div class="btn-row"><a class="btn big" href="#/session-new">＋ Tạo phiên mới</a></div>' : ''}
     ${
       list.length
         ? list
@@ -41,6 +42,10 @@ export const Sessions: View = async (_r, el) => {
 
 export const SessionNew: View = async (_r, el) => {
   setTop('Tạo phiên thí nghiệm', { back: '#/sessions' });
+  if (!can('session.create')) {
+    el.innerHTML = '<p>Chỉ Quản trị và Chỉ huy trực tiếp được tạo phiên.</p>';
+    return;
+  }
   const profiles = await db.profiles.toArray();
   const instruments = await db.instruments.toArray();
   const last = (await db.sessions.toArray()).sort((a, b) => b.createdAt - a.createdAt)[0];
@@ -109,7 +114,7 @@ export const SessionNew: View = async (_r, el) => {
 export const Profiles: View = async (_r, el) => {
   setTop('Hồ sơ giàn tụ', { back: '#/sessions' });
   const list = await db.profiles.toArray();
-  el.innerHTML = `<div class="btn-row"><a class="btn" href="#/profile/new">＋ Hồ sơ mới</a></div>
+  el.innerHTML = `${can('profile.edit') ? '<div class="btn-row"><a class="btn" href="#/profile/new">＋ Hồ sơ mới</a></div>' : ''}
     ${list
       .map(
         (p) => `<a class="card" href="#/profile/${encodeURIComponent(p.id)}" style="display:block;text-decoration:none;color:inherit"><b>${esc(p.bank)} – ${esc(p.station)}</b>
@@ -158,8 +163,8 @@ export const ProfileEdit: View = async (_r, el) => {
   el.innerHTML = `<form id="f">
     ${PF.map(([k, l, t]) => `<label class="field"><span>${esc(l)}</span><input name="${k}" ${t === 'num' ? 'inputmode="decimal"' : 'type="text"'} value="${esc(flat[k] ?? '')}" required></label>`).join('')}
     <label class="field"><span>Ghi chú</span><textarea name="note">${esc(p.note ?? '')}</textarea></label>
-    <button class="btn block big" type="submit">Lưu hồ sơ</button>
-    ${isNew ? '' : '<button class="btn danger block" type="button" id="del" style="margin-top:10px">Xóa hồ sơ</button>'}
+    ${can('profile.edit') ? `<button class="btn block big" type="submit">Lưu hồ sơ</button>
+    ${isNew ? '' : '<button class="btn danger block" type="button" id="del" style="margin-top:10px">Xóa hồ sơ</button>'}` : '<p class="small muted">Tài khoản này chỉ xem hồ sơ giàn.</p>'}
   </form>`;
   const f = el.querySelector<HTMLFormElement>('#f')!;
   f.addEventListener('submit', async (e) => {
@@ -225,10 +230,10 @@ export const Instruments: View = async (_r, el) => {
           <label class="field"><span>Số serial</span><input type="text" name="serial" value="${esc(i.serial)}"></label>
           <label class="field"><span>Hạn hiệu chuẩn / kiểm định</span><input type="date" name="calibDue" value="${esc(i.calibDue)}"></label>
           <label class="field"><span>Ghi chú</span><input type="text" name="note" value="${esc(i.note ?? '')}"></label>
-          <div class="btn-row"><button class="btn" type="submit">Lưu</button><button class="btn secondary" type="button" data-del>Xóa</button></div></form>`,
+          ${can('instrument.edit') ? '<div class="btn-row"><button class="btn" type="submit">Lưu</button><button class="btn secondary" type="button" data-del>Xóa</button></div>' : ''}</form>`,
         )
         .join('')}
-      <button class="btn secondary block" type="button" id="add">＋ Thêm máy</button>`;
+      ${can('instrument.edit') ? '<button class="btn secondary block" type="button" id="add">＋ Thêm máy</button>' : ''}`;
     el.querySelectorAll<HTMLFormElement>('form[data-id]').forEach((f) => {
       f.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -238,13 +243,13 @@ export const Instruments: View = async (_r, el) => {
         toast('Đã lưu');
         draw();
       });
-      f.querySelector('[data-del]')!.addEventListener('click', async () => {
+      f.querySelector('[data-del]')?.addEventListener('click', async () => {
         if (!confirm('Xóa máy này?')) return;
         await db.instruments.delete(f.dataset.id!);
         draw();
       });
     });
-    el.querySelector('#add')!.addEventListener('click', async () => {
+    el.querySelector('#add')?.addEventListener('click', async () => {
       await db.instruments.add({ id: uid(), model: 'Máy mới', serial: '', calibDue: '' });
       draw();
     });
