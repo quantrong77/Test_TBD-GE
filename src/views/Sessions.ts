@@ -37,6 +37,7 @@ export const Sessions: View = async (_r, el) => {
       <a href="#/profiles"><span class="ico">${Icons.folder}</span>Hồ sơ giàn</a>
       <a href="#/instruments"><span class="ico">${Icons.testSet}</span>Máy TN</a>
       <a href="#/calc/unbalance"><span class="ico">${Icons.calculator}</span>Máy tính ΔC</a>
+      <a href="#/trend"><span class="ico">${Icons.chart}</span>Xu hướng</a>
     </div>
     <div class="btn-row"><a class="btn secondary" href="#/settings">💾 Sao lưu / Khôi phục / Nhập JSON</a></div>`;
 };

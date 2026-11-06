@@ -9,6 +9,7 @@ import { fmt } from '../calc/units';
 import { can } from '../auth/roles';
 import { isLocked } from '../sign/sign';
 import { go, type View } from '../router';
+import { openOcrScanner } from '../components/OcrModal';
 
 const KEY = 'tbd.calc.unbalance';
 const load = (): Values => {
@@ -87,6 +88,29 @@ export const CalcUnbalance: View = async (_r, el) => {
     }
     paintRows(body, values, profile);
     form.live!(body, values, profile, phase);
+  });
+  body.addEventListener('click', (e) => {
+    const btn = (e.target as Element).closest<HTMLButtonElement>('.btn-ocr-scan');
+    if (!btn) return;
+    const targetKey = btn.dataset.scanFor;
+    if (!targetKey) return;
+    const input = body.querySelector<HTMLInputElement>(`input[data-k="${targetKey}"]`);
+    if (!input) return;
+    openOcrScanner({
+      targetFieldLabel: input.getAttribute('aria-label') || targetKey,
+      initialValue: input.value,
+      onApply: (val) => {
+        input.value = val;
+        values[targetKey] = val;
+        try {
+          sessionStorage.setItem(KEY, JSON.stringify(values));
+        } catch {
+          /* bỏ qua */
+        }
+        paintRows(body, values, profile);
+        form.live!(body, values, profile, phase);
+      },
+    });
   });
   el.querySelectorAll<HTMLButtonElement>('[data-ph]').forEach((b) =>
     b.addEventListener('click', () => {

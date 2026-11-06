@@ -30,6 +30,7 @@ export const Home: View = async (_r, el) => {
       <a href="#/equipment"><span class="ico">${Icons.testSet}</span>Máy TN</a>
       <a href="#/cycle"><span class="ico">${Icons.cycle}</span>Chu kỳ</a>
       <a href="#/calc/unbalance"><span class="ico">${Icons.calc}</span>Máy tính ΔC</a>
+      <a href="#/trend"><span class="ico">${Icons.chart}</span>Xu hướng</a>
     </div>`;
   const onReady = () => {
     const st = el.querySelector('#offline-status');

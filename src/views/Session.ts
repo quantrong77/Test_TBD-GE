@@ -12,6 +12,8 @@ import { getFontScale } from '../settings';
 import { stepsOf } from './StepMode';
 import { can, canSign, getMe, SLOT_LABEL } from '../auth/roles';
 import { isLocked, revokeSignature, signSession, verifySignatures, type SignatureCheck } from '../sign/sign';
+import { compressWithWatermark, getGpsCoordinates, type WatermarkMeta } from '../calc/watermark';
+import { openOcrScanner } from '../components/OcrModal';
 import type { SignSlot } from '../types';
 import type { Profile, Result, Session } from '../types';
 
@@ -58,21 +60,23 @@ export function itemState(d: SessionData, itemId: string): State {
 export const STATE_ICON: Record<State, string> = { todo: '○', progress: '⏳', pass: '✅', fail: '❌', warn: '⚠️', na: '⏳' };
 
 // ---------- Ảnh hiện trường ----------
-async function compress(file: File, max = 1600): Promise<Blob> {
-  const bmp = await createImageBitmap(file);
-  const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
-  const c = document.createElement('canvas');
-  c.width = Math.round(bmp.width * k);
-  c.height = Math.round(bmp.height * k);
-  c.getContext('2d')!.drawImage(bmp, 0, 0, c.width, c.height);
-  bmp.close?.();
-  return new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('toBlob'))), 'image/jpeg', 0.8));
-}
-
 const urls: string[] = [];
 window.addEventListener('route:leave', () => urls.splice(0).forEach((u) => URL.revokeObjectURL(u)));
 
-async function photosBlock(root: HTMLElement, sessionId: string, itemId: string, readOnly: boolean) {
+interface PhotoMetaContext {
+  station?: string;
+  bank?: string;
+  phase?: string;
+  itemTitle?: string;
+}
+
+async function photosBlock(
+  root: HTMLElement,
+  sessionId: string,
+  itemId: string,
+  readOnly: boolean,
+  metaContext?: PhotoMetaContext,
+) {
   const box = root.querySelector<HTMLElement>('[data-photos]')!;
   const draw = async () => {
     const list = await db.photos.where('[sessionId+itemId]').equals([sessionId, itemId]).toArray();
@@ -83,7 +87,7 @@ async function photosBlock(root: HTMLElement, sessionId: string, itemId: string,
         return `<figure><a href="${u}" data-pswp-width="1600" data-pswp-height="1200" data-caption="${esc(p.caption)}"><img src="${u}" alt="${esc(p.caption)}"></a><figcaption>${esc(p.caption)} ${readOnly ? '' : `<button class="icon-btn" type="button" data-del="${esc(p.id)}" aria-label="Xóa ảnh" style="min-width:36px;min-height:36px;font-size:16px">🗑</button>`}</figcaption></figure>`;
       })
       .join('')}</div>
-      ${readOnly ? '' : '<label class="btn secondary block" style="margin-top:10px">📷 Chụp / chọn ảnh<input type="file" accept="image/*" capture="environment" multiple hidden data-file></label>'}`;
+      ${readOnly ? '' : '<label class="btn secondary block" style="margin-top:10px">📷 Chụp / chọn ảnh (Tự động đóng dấu Watermark kỹ thuật)<input type="file" accept="image/*" capture="environment" multiple hidden data-file></label>'}`;
     // kích thước thật cho trình xem
     box.querySelectorAll<HTMLAnchorElement>('a[data-pswp-width]').forEach((a) => {
       const img = a.querySelector('img')!;
@@ -96,13 +100,26 @@ async function photosBlock(root: HTMLElement, sessionId: string, itemId: string,
     });
     box.querySelector<HTMLInputElement>('[data-file]')?.addEventListener('change', async (e) => {
       const files = [...((e.target as HTMLInputElement).files ?? [])];
+      if (!files.length) return;
+      toast('Đang xử lý ảnh & đóng dấu tọa độ GPS...');
+      const gps = await getGpsCoordinates(2000);
       for (const f of files) {
         try {
-          const blob = await compress(f);
-          const caption = prompt('Chú thích ảnh:', `${itemId} – ${new Date().toLocaleTimeString('vi-VN')}`) ?? '';
+          const watermarkMeta: WatermarkMeta = {
+            station: metaContext?.station,
+            bank: metaContext?.bank,
+            phase: metaContext?.phase,
+            itemTitle: metaContext?.itemTitle || `Hạng mục ${itemId.slice(2)}`,
+            timestamp: new Date().toLocaleString('vi-VN'),
+            gps,
+          };
+          const blob = await compressWithWatermark(f, watermarkMeta);
+          const defaultCap = `${metaContext?.phase ? `Pha ${metaContext.phase} · ` : ''}${itemId.slice(2)} – ${new Date().toLocaleTimeString('vi-VN')}`;
+          const caption = prompt('Chú thích ảnh (đã đóng dấu kỹ thuật):', defaultCap) ?? '';
           await db.photos.add({ id: uid(), sessionId, itemId, blob, caption, ts: Date.now() });
-        } catch {
-          toast('Không đọc được ảnh ' + f.name);
+        } catch (err) {
+          console.error(err);
+          toast('Không xử lý được ảnh ' + f.name);
         }
       }
       const w = await storageWarning();
@@ -169,7 +186,7 @@ export const SessionView: View = async (_r, el) => {
       <div class="row"><b>${esc(p.bank)} – ${esc(p.station)}</b>${isActive ? '<span class="pill">● Đang làm</span>' : ''}</div>
       <div class="small">Ngày: ${esc(fmtDate(s.date))} · ${esc(TYPE_LABEL[s.type])}<br>Chỉ huy: <b>${esc(s.leader)}</b>${s.members.length ? `<br>Thành viên: ${s.members.map(esc).join(', ')}` : ''}</div>
       ${insts.map((i) => `<div class="small" style="display:flex;align-items:center;gap:6px">${Icons.testSet} <span>${esc(i!.model)}${i!.serial ? ` · SN ${esc(i!.serial)}` : ''}${calibOverdue(i!.calibDue, s.date) ? ` <span class="res fail">QUÁ HẠN ${esc(fmtDate(i!.calibDue))}</span>` : ''}</span></div>`).join('')}
-      <div class="btn-row">${isActive ? '<button class="btn secondary" type="button" id="deact">Bỏ chọn phiên</button>' : '<button class="btn" type="button" id="act">Đặt làm phiên đang làm</button>'}${editable ? '<button class="btn secondary" type="button" id="resnap">↻ Cập nhật ngưỡng từ hồ sơ giàn</button>' : ''}</div>
+      <div class="btn-row">${isActive ? '<button class="btn secondary" type="button" id="deact">Bỏ chọn phiên</button>' : '<button class="btn" type="button" id="act">Đặt làm phiên đang làm</button>'}${editable ? '<button class="btn secondary" type="button" id="resnap">↻ Cập nhật ngưỡng từ hồ sơ giàn</button>' : ''}<a class="btn secondary" href="#/trend/${esc(s.profileId)}">📈 Xem xu hướng giàn tụ</a></div>
     </div>
     <a class="card row" href="#/gate/gate-platform" style="text-decoration:none;color:inherit" ${isActive ? '' : 'data-need-active'}>
       <span>${gp.confirmedBy ? '✅' : '⚠️'} Cổng an toàn lên sàn tụ</span><span class="small">${gp.confirmedBy ? `${esc(gp.confirmedBy)} · ${esc(fmtTime(gp.timestamp!))}` : 'Chưa xác nhận'}</span></a>
@@ -386,6 +403,25 @@ export const SessionForm: View = async (_r, el) => {
     flush();
     refresh();
   });
+  body.addEventListener('click', (e) => {
+    const btn = (e.target as Element).closest<HTMLButtonElement>('.btn-ocr-scan');
+    if (!btn) return;
+    const targetKey = btn.dataset.scanFor;
+    if (!targetKey) return;
+    const input = body.querySelector<HTMLInputElement>(`input[data-k="${targetKey}"]`);
+    if (!input) return;
+    openOcrScanner({
+      targetFieldLabel: input.getAttribute('aria-label') || targetKey,
+      initialValue: input.value,
+      onApply: (val) => {
+        input.value = val;
+        values[targetKey] = val;
+        pending.set(targetKey, val);
+        flush();
+        refresh();
+      },
+    });
+  });
   el.querySelectorAll<HTMLButtonElement>('[data-ph]').forEach((b) =>
     b.addEventListener('click', () => {
       phase = b.dataset.ph as Phase;
@@ -415,5 +451,12 @@ export const SessionForm: View = async (_r, el) => {
     window.addEventListener('route:leave', () => document.documentElement.style.setProperty('--fs-scale', String(getFontScale())), { once: true });
   });
   draw();
-  await photosBlock(el, s.id, itemId, readOnly);
+  await photosBlock(el, s.id, itemId, readOnly, {
+    station: p.station,
+    bank: p.bank,
+    get phase() {
+      return phase;
+    },
+    itemTitle: `${item.id.slice(2)} ${item.short}`,
+  });
 };

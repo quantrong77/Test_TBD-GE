@@ -1120,3 +1120,33 @@ details.card > summary {
   color: var(--c-primary);
 }
 
+/* ---------- Nút quét OCR trên ô số liệu ---------- */
+.btn-ocr-scan {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 4px;
+  background: var(--c-surface-2, #334155);
+  color: var(--c-text, #f8fafc);
+  border: 1px solid var(--c-border, #475569);
+  border-radius: var(--radius);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.btn-ocr-scan:hover {
+  background: var(--c-primary, #0284c7);
+  color: #fff;
+  border-color: var(--c-primary, #0284c7);
+}
+
+/* ---------- Đồ thị Vector Xu hướng Trend Analytics ---------- */
+.trend-chart-svg {
+  filter: drop-shadow(0 4px 6px -1px rgba(0, 0, 0, 0.2));
+  transition: all 0.2s ease;
+}
+
+

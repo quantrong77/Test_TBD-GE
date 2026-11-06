@@ -43,8 +43,8 @@ const okRes = (s: string | undefined): Result => (s === 'ok' ? 'pass' : s === 'n
 const okTxt = (s: string | undefined) => (s === 'ok' ? '✓' : s === 'nok' ? '✗' : '');
 
 // ---------- Ô nhập ----------
-export function numRow(v: Values, k: string, label: string, sub = '', th = '', placeholder = ''): string {
-  return `<div class="inrow" data-row="${esc(k)}"${th ? ` data-th="${esc(th)}"` : ''}><span class="lbl">${rich(label)}${sub ? `<small>${rich(sub)}</small>` : ''}</span><input inputmode="decimal" data-k="${esc(k)}" value="${esc(v[k] ?? '')}" placeholder="${esc(placeholder)}" aria-label="${esc(label)}"></div>`;
+export function numRow(v: Values, k: string, label: string, sub = '', th = '', placeholder = '', ocr = true): string {
+  return `<div class="inrow" data-row="${esc(k)}"${th ? ` data-th="${esc(th)}"` : ''}><span class="lbl">${rich(label)}${sub ? `<small>${rich(sub)}</small>` : ''}</span><div style="display:flex;align-items:center;gap:4px;width:100%"><input inputmode="decimal" data-k="${esc(k)}" value="${esc(v[k] ?? '')}" placeholder="${esc(placeholder)}" aria-label="${esc(label)}" style="flex:1;min-width:0">${ocr ? `<button type="button" class="btn-ocr-scan" data-scan-for="${esc(k)}" title="Quét số đo bằng camera (OCR)" aria-label="Quét số cho ${esc(label)}">📷</button>` : ''}</div></div>`;
 }
 export function textRow(v: Values, k: string, label: string, sub = ''): string {
   return `<div class="inrow"><span class="lbl">${rich(label)}${sub ? `<small>${rich(sub)}</small>` : ''}</span><input type="text" data-k="${esc(k)}" value="${esc(v[k] ?? '')}" aria-label="${esc(label)}"></div>`;
@@ -150,7 +150,8 @@ const unbalanceForm: FormDef = {
       ${numRow(v, `${ph}.IG1`, 'IG1 (A)', 'Group 1 – vị trí 1')}
       ${numRow(v, `${ph}.IG2`, 'IG2 (A)', 'Group 2 – vị trí 2')}
       <div class="inrow"><span class="lbl">IΔ×10 đọc được<small>Vị trí 4 – = 10 × dòng vi sai thực</small></span>
-        <div style="display:grid;grid-template-columns:1fr 84px;gap:6px"><input inputmode="decimal" data-k="${ph}.Idx10" value="${esc(v[`${ph}.Idx10`] ?? '')}" aria-label="IΔ×10">
+        <div style="display:grid;grid-template-columns:1fr 38px 84px;gap:6px"><input inputmode="decimal" data-k="${ph}.Idx10" value="${esc(v[`${ph}.Idx10`] ?? '')}" aria-label="IΔ×10">
+        <button type="button" class="btn-ocr-scan" data-scan-for="${ph}.Idx10" title="Quét số đo bằng camera (OCR)" aria-label="Quét số cho IΔ×10">📷</button>
         <select data-k="${ph}.unit" aria-label="Đơn vị IΔ×10">${UNITS.map(([o, l]) => `<option value="${o}"${(v[`${ph}.unit`] || 'mA') === o ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>
       <div class="card calc-out" data-out="calc">—</div>
       <div data-out="warn"></div>
