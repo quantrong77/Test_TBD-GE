@@ -58,7 +58,7 @@ export const EquipmentView: View = (_r, el) => {
   const { eqId, section: secId } = params();
   if (!eqId) {
     setTop('Máy thí nghiệm chuyên dùng', { back: '#/' });
-    el.innerHTML = `<p>Thư viện <b>2 máy thí nghiệm</b> dùng trong hạng mục 4.5.</p>
+    el.innerHTML = `<p>Thư viện <b>2 máy thí nghiệm</b> dùng trong hạng mục 5.</p>
       ${equipment
         .map(
           (e) => `<a class="card" href="#/equipment/${e.id}" style="display:block;text-decoration:none;color:inherit">
