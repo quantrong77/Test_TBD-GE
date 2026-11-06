@@ -1,6 +1,7 @@
 import { getTest, getThreshold } from './content';
 import { bushingDeviation, combine, deltaPct, describeThreshold, evalCtPair, evalThreshold, evalTrigger, gapCheck, resolveThreshold } from './calc/evaluate';
-import { sanityChecks, stringOutliers, unbalance, unbalanceVerdict, type CurrentUnit } from './calc/unbalance';
+import { analyzeStrings, sanityChecks, stringLocation, stringOutliers, unbalance, unbalanceVerdict, type CurrentUnit } from './calc/unbalance';
+import { tempCorrectRcd, tempCorrectRdc } from './calc/temp-correction';
 import { fmt, parseNum } from './calc/units';
 import { esc, rich, resBadge } from './ui';
 import type { Profile, Result } from './types';
@@ -99,11 +100,44 @@ const unbOf = (v: Values, ph: string) =>
   unbalance({ U: n(v, `${ph}.U`), Isum: n(v, `${ph}.Isum`), IG1: n(v, `${ph}.IG1`), IG2: n(v, `${ph}.IG2`), Idx10: n(v, `${ph}.Idx10`), IdxUnit: ((v[`${ph}.unit`] || 'mA') as CurrentUnit) });
 const strings = (v: Values, ph: string, g: string) => Array.from({ length: 24 }, (_, i) => n(v, `${ph}.${g}.s${i + 1}`));
 
+function renderCapMatrix(g: 'G1' | 'G2', v: Values, ph: string): string {
+  const stackA = g === 'G1' ? 1 : 3;
+  const stackB = g === 'G1' ? 2 : 4;
+  const renderStack = (stackNum: number, startStr: number) => {
+    let racksHtml = '';
+    for (let r = 1; r <= 3; r++) {
+      let cellsHtml = '';
+      for (let s = 1; s <= 4; s++) {
+        const sIndex = startStr + (r - 1) * 4 + (s - 1); // 1..24
+        const valStr = v[`${ph}.${g}.s${sIndex}`] ?? '';
+        cellsHtml += `<div class="cap-cell" data-matrix-s="${g}:${sIndex}" title="Chuỗi S${sIndex} (Stack ${stackNum}, Rack ${r}, Chuỗi ${s})">
+          <b>S${sIndex}</b>
+          <span data-matrix-val="${g}:${sIndex}">${valStr ? `${valStr}A` : '—'}</span>
+        </div>`;
+      }
+      racksHtml += `<div class="cap-rack"><div class="cap-rack-title">Rack ${r} (Tầng ${r})</div><div class="cap-cells">${cellsHtml}</div></div>`;
+    }
+    return `<div class="cap-stack"><div class="cap-stack-head"><span>Stack ${stackNum}</span><span class="small muted">72 bình (12 chuỗi)</span></div>${racksHtml}</div>`;
+  };
+
+  return `
+    <div class="cap-matrix-wrap">
+      <div class="matrix-stats-box" data-stats="${g}">
+        <span class="muted">Nhập dòng điện chuỗi bên dưới để xem ma trận phân bố dòng và cảnh báo chuỗi lệch (> TB + 2σ).</span>
+      </div>
+      <div class="cap-matrix-stacks">
+        ${renderStack(stackA, 1)}
+        ${renderStack(stackB, 13)}
+      </div>
+    </div>`;
+}
+
 const unbalanceForm: FormDef = {
   phased: true,
   render(v, p, ph) {
     const grid = (g: string) =>
-      `<details class="card"><summary>Dòng từng string – ${g === 'G1' ? 'Group 1' : 'Group 2'} (A)</summary>
+      `<details class="card"><summary>Dòng từng string – ${g === 'G1' ? 'Group 1 (Stack 1+2)' : 'Group 2 (Stack 3+4)'} (A)</summary>
+        ${renderCapMatrix(g as 'G1' | 'G2', v, ph)}
         <div class="bars" data-bars="${g}" aria-hidden="true"></div>
         <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px">${Array.from(
           { length: p.stringsPerGroup || 24 },
@@ -141,13 +175,74 @@ const unbalanceForm: FormDef = {
     }
     for (const g of ['G1', 'G2']) {
       const vals = strings(v, ph, g);
-      const outl = stringOutliers(vals);
+      const analysis = analyzeStrings(vals);
+      const outl = analysis ? analysis.outliersHigh : [];
       const max = Math.max(...vals.filter(Number.isFinite), 0);
+
+      // Cập nhật thanh biểu đồ
       const bars = root.querySelector(`[data-bars="${g}"]`);
       if (bars) bars.innerHTML = vals.map((x, i) => `<i class="${outl.includes(i) ? 'out' : ''}" style="height:${Number.isFinite(x) && max ? (x / max) * 100 : 0}%"></i>`).join('');
+
+      // Cập nhật thông số thống kê ma trận
+      const statsBox = root.querySelector(`[data-stats="${g}"]`);
+      if (statsBox) {
+        if (analysis && analysis.count >= 3) {
+          statsBox.innerHTML = `Đã đo: <b>${analysis.count}/24</b> chuỗi · Dòng TB <b>Ī = ${fmt(analysis.mean, 2)} A</b> (σ = ${fmt(analysis.sd, 3)} A)<br>
+          Dải bình thường (Ī ± 2σ): <b>${fmt(analysis.lowerLimit, 2)} – ${fmt(analysis.upperLimit, 2)} A</b>
+          ${outl.length ? `<br><b style="color:var(--c-danger-fg)">⚠️ Có ${outl.length} chuỗi vượt ngưỡng bất thường (> ${fmt(analysis.upperLimit, 2)} A)</b>` : ''}`;
+        } else {
+          statsBox.innerHTML = '<span class="muted">Nhập tối thiểu 3 chuỗi để phân tích thống kê và hiển thị chuỗi bất thường (2σ).</span>';
+        }
+      }
+
+      // Cập nhật ô ma trận
+      for (let i = 0; i < 24; i++) {
+        const sIndex = i + 1;
+        const cell = root.querySelector<HTMLElement>(`[data-matrix-s="${g}:${sIndex}"]`);
+        const valEl = root.querySelector<HTMLElement>(`[data-matrix-val="${g}:${sIndex}"]`);
+        const val = vals[i];
+        const isOut = outl.includes(i);
+        if (cell && valEl) {
+          cell.classList.toggle('filled', Number.isFinite(val) && val > 0);
+          cell.classList.toggle('outlier', isOut);
+          valEl.textContent = Number.isFinite(val) && val > 0 ? `${fmt(val, 2)}A` : '—';
+          if (isOut) {
+            valEl.textContent = `⚠️ ${fmt(val, 2)}A`;
+          }
+        }
+      }
+
+      // Cảnh báo chi tiết vị trí chuỗi nghi ngờ
       const o = root.querySelector(`[data-out="${g}"]`);
-      if (o) o.innerHTML = outl.length ? `<b style="color:var(--c-danger-fg)">String nghi ngờ (> TB + 2σ): ${outl.map((i) => 'S' + (i + 1)).join(', ')}</b>` : vals.some(Number.isFinite) ? 'Không có string bất thường.' : '';
+      if (o) {
+        if (outl.length) {
+          const details = outl.map((i) => {
+            const loc = stringLocation(g as 'G1' | 'G2', i);
+            return `<b>S${i + 1}</b> (${loc.label}): ${vals[i]} A`;
+          });
+          o.innerHTML = `<div class="callout danger" style="margin-top:6px">
+            <b>⚠️ Chuỗi lệch dòng (> TB + 2σ):</b><br>${details.join('<br>')}
+            <div class="small" style="margin-top:4px">Kiểm tra ngay lực xiết bu-lông, mắt nối tiếp xúc và đo điện dung từng bình tụ trong chuỗi trên.</div>
+          </div>`;
+        } else {
+          o.innerHTML = vals.some(Number.isFinite) ? 'Không có string bất thường.' : '';
+        }
+      }
     }
+
+    // Gắn sự kiện click ô ma trận để cuộn nhanh đến ô nhập
+    root.querySelectorAll<HTMLElement>('[data-matrix-s]').forEach((c) => {
+      if (c.dataset.bound) return;
+      c.dataset.bound = '1';
+      c.addEventListener('click', () => {
+        const [grp, sNum] = c.dataset.matrixS!.split(':');
+        const input = root.querySelector<HTMLInputElement>(`input[data-k="${ph}.${grp}.s${sNum}"]`);
+        if (input) {
+          input.focus();
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    });
   },
   rows(v, p) {
     const rows: ResultRow[] = [];
@@ -174,17 +269,23 @@ const unbalanceForm: FormDef = {
   },
 };
 
-// ---------- So sánh lần trước (MOV, kháng) ----------
+// ---------- So sánh lần trước (MOV, kháng cản dịu) có tích hợp quy đổi nhiệt độ ----------
 function compareForm(fields: { k: string; label: string; unit: string; compare?: boolean }[]): FormDef {
   return {
     phased: true,
     render(v, _p, ph, prev) {
-      return `${numRow(v, 'flagPct', 'Ngưỡng cờ bất thường Δ (%)', 'So với lần trước – người dùng đặt', '', '20')}
+      return `
+        <div class="card" style="margin-bottom:10px">
+          ${numRow(v, `${ph}.t`, 'Nhiệt độ môi trường t (°C)', 'Dùng tự động quy đổi Rcd về 20°C và Rdc về 75°C', '', '25')}
+          ${numRow(v, 'flagPct', 'Ngưỡng cờ bất thường Δ (%)', 'So với lần trước – người dùng đặt', '', '20')}
+        </div>
         ${fields
+          .filter((f) => f.k !== 't')
           .map(
             (f) => `<div class="card" style="margin:8px 0"><b>${esc(f.label)} (${esc(f.unit)})</b>
             ${numRow(v, `${ph}.${f.k}`, 'Lần này')}
             ${f.compare === false ? '' : numRow(v, `${ph}.${f.k}_prev`, 'Lần trước', prev?.[`${ph}.${f.k}`] ? `Phiên trước: ${prev[`${ph}.${f.k}`]}` : '')}
+            <div data-temp-corr="${ph}.${f.k}"></div>
             <p class="small" data-out="${ph}.${f.k}"></p></div>`,
           )
           .join('')}
@@ -192,20 +293,58 @@ function compareForm(fields: { k: string; label: string; unit: string; compare?:
     },
     live(root, v, _p, ph) {
       const flag = n(v, 'flagPct') || 20;
+      const t = n(v, `${ph}.t`) || n(v, 't');
       for (const f of fields) {
-        const d = deltaPct(n(v, `${ph}.${f.k}`), n(v, `${ph}.${f.k}_prev`));
+        if (f.k === 't') continue;
+        const val = n(v, `${ph}.${f.k}`);
+        const prevVal = n(v, `${ph}.${f.k}_prev`);
+        const d = deltaPct(val, prevVal);
         const o = root.querySelector(`[data-out="${ph}.${f.k}"]`);
         if (o) o.innerHTML = d == null ? '' : `Δ = ${d >= 0 ? '+' : ''}${fmt(d, 1)} % ${Math.abs(d) > flag ? resBadge('warn', '⚠️ Bất thường') : resBadge('pass', '✓ Bình thường')}`;
+
+        // Cập nhật quy đổi nhiệt độ
+        const tempBox = root.querySelector(`[data-temp-corr="${ph}.${f.k}"]`);
+        if (tempBox) {
+          if (val > 0 && t != null && Number.isFinite(t)) {
+            if (f.k.startsWith('Rcd') || f.k.startsWith('Rmov') || f.k.startsWith('Rsu')) {
+              const corr = tempCorrectRcd(val, t);
+              if (corr) {
+                tempBox.innerHTML = `<div class="temp-calc-box">
+                  🌡️ Quy đổi về 20°C: <b>${fmt(corr.R_ref, 1)} MΩ</b> (hệ số Kt = ${fmt(corr.factor, 3)})
+                </div>`;
+              }
+            } else if (f.k === 'Rdc') {
+              const corr = tempCorrectRdc(val, t, 75, 'Al');
+              if (corr) {
+                tempBox.innerHTML = `<div class="temp-calc-box">
+                  🌡️ Quy đổi cuộn kháng (dây nhôm K=228):<br>
+                  • <b>R(75°C) = ${fmt(corr.R_75, 2)} mΩ</b> (hệ số = ${fmt(corr.factor, 3)})<br>
+                  • <b>R(20°C) = ${fmt(corr.R_20, 2)} mΩ</b>
+                </div>`;
+              }
+            } else {
+              tempBox.innerHTML = '';
+            }
+          } else {
+            tempBox.innerHTML = '';
+          }
+        }
       }
     },
     rows(v) {
       const flag = n(v, 'flagPct') || 20;
       const rows: ResultRow[] = [];
       for (const ph of PHASES) {
+        const t = n(v, `${ph}.t`) || n(v, 't');
+        if (t != null && Number.isFinite(t)) {
+          rows.push({ group: `Pha ${ph}`, label: 'Nhiệt độ môi trường', value: `${t} °C`, expected: '', result: 'na' });
+        }
         for (const f of fields) {
+          if (f.k === 't') continue;
           const k = `${ph}.${f.k}`;
           if (!has(v, k)) continue;
-          const d = f.compare === false ? null : deltaPct(n(v, k), n(v, `${k}_prev`));
+          const val = n(v, k);
+          const d = f.compare === false ? null : deltaPct(val, n(v, `${k}_prev`));
           rows.push({
             group: `Pha ${ph}`,
             label: `${f.label} (${f.unit})`,
@@ -213,6 +352,33 @@ function compareForm(fields: { k: string; label: string; unit: string; compare?:
             expected: d != null ? `|Δ| ≤ ${fmt(flag)} % so với lần trước (${v[`${k}_prev`]})` : '',
             result: d == null ? 'na' : Math.abs(d) > flag ? 'warn' : 'pass',
           });
+
+          // Quy đổi nhiệt độ trong kết quả xuất biên bản
+          if (val > 0 && t != null && Number.isFinite(t)) {
+            if (f.k.startsWith('Rcd') || f.k.startsWith('Rmov') || f.k.startsWith('Rsu')) {
+              const corr = tempCorrectRcd(val, t);
+              if (corr) {
+                rows.push({
+                  group: `Pha ${ph}`,
+                  label: `→ ${f.label} (quy đổi 20°C)`,
+                  value: `${fmt(corr.R_ref, 1)} MΩ`,
+                  expected: 'Kt = 1.5^((t-20)/10)',
+                  result: 'na',
+                });
+              }
+            } else if (f.k === 'Rdc') {
+              const corr = tempCorrectRdc(val, t, 75, 'Al');
+              if (corr) {
+                rows.push({
+                  group: `Pha ${ph}`,
+                  label: '→ Rdc kháng (quy đổi 75°C)',
+                  value: `${fmt(corr.R_75, 2)} mΩ`,
+                  expected: 'Kháng GE dây nhôm (K=228)',
+                  result: 'na',
+                });
+              }
+            }
+          }
         }
         if (has(v, `${ph}.note`)) rows.push({ group: `Pha ${ph}`, label: 'Ghi chú', value: v[`${ph}.note`], expected: '', result: 'na' });
       }
@@ -429,10 +595,9 @@ export const FORMS: Record<string, FormDef> = {
   ]),
   reactor: compareForm([
     { k: 'Rcd', label: 'R cách điện', unit: 'MΩ' },
+    { k: 'Rdc', label: 'Điện trở một chiều', unit: 'mΩ' },
     { k: 'Z', label: 'Tổng trở Z', unit: 'Ω' },
     { k: 'L', label: 'Điện cảm L', unit: 'mH' },
-    { k: 'Rdc', label: 'Điện trở một chiều', unit: 'mΩ' },
-    { k: 't', label: 'Nhiệt độ môi trường', unit: '°C', compare: false },
   ]),
   bushing: bushingForm,
   gap: gapForm,

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { unbalance, unbalanceVerdict, sanityChecks, stringOutliers, kFactor, bankCapacitance } from '../src/calc/unbalance';
+import { unbalance, unbalanceVerdict, sanityChecks, stringOutliers, analyzeStrings, stringLocation, kFactor, bankCapacitance } from '../src/calc/unbalance';
 import { evalThreshold, evalTrigger, bushingDeviation, evalCtPair, calibOverdue, gapCheck, deltaPct } from '../src/calc/evaluate';
+import { tempCorrectRcd, tempCorrectRdc, rDevPct } from '../src/calc/temp-correction';
 import { ftlbToNm, gammaKv, gammaMa, foldVi, parseNum } from '../src/calc/units';
 import { parseIsolationTime } from '../src/calc/isolation';
 import thresholds from '../content/thresholds.json';
@@ -172,5 +173,85 @@ describe('isolation time entered manually', () => {
   it('sai định dạng → từ chối', () => {
     expect(parseIsolationTime('25:00', now).ok).toBe(false);
     expect(parseIsolationTime('abc', now).ok).toBe(false);
+  });
+});
+
+describe('temperature correction (Rcd and Rdc)', () => {
+  it('Rcd temp correction to 20°C: at 20°C factor = 1', () => {
+    const r = tempCorrectRcd(1000, 20)!;
+    expect(r.R_ref).toBeCloseTo(1000, 1);
+    expect(r.factor).toBeCloseTo(1, 4);
+  });
+
+  it('Rcd temp correction to 20°C: at 30°C factor = 1.5', () => {
+    const r = tempCorrectRcd(1000, 30)!;
+    expect(r.R_ref).toBeCloseTo(1500, 1);
+    expect(r.factor).toBeCloseTo(1.5, 4);
+  });
+
+  it('Rcd temp correction: at 40°C factor = 2.25', () => {
+    const r = tempCorrectRcd(1000, 40)!;
+    expect(r.R_ref).toBeCloseTo(2250, 1);
+    expect(r.factor).toBeCloseTo(2.25, 4);
+  });
+
+  it('Rdc temp correction for Aluminium (K=228) to 75°C', () => {
+    // Đo ở 30°C: factor = (228 + 75) / (228 + 30) = 303 / 258 ≈ 1.1744
+    const r = tempCorrectRdc(10.0, 30, 75, 'Al')!;
+    expect(r.R_ref).toBeCloseTo(11.744, 3);
+    expect(r.R_75).toBeCloseTo(11.744, 3);
+    // Quy đổi về 20°C: (228 + 20) / (228 + 30) = 248 / 258 ≈ 0.9612
+    expect(r.R_20).toBeCloseTo(9.612, 3);
+  });
+
+  it('rDevPct calculates percentage deviation correctly', () => {
+    expect(rDevPct(10.5, 10.0)).toBeCloseTo(5.0, 2);
+    expect(rDevPct(9.5, 10.0)).toBeCloseTo(-5.0, 2);
+  });
+});
+
+describe('capacitor matrix & string analysis', () => {
+  it('stringLocation maps S1..S24 to physical Stack 1..4 and Racks 1..3', () => {
+    // Group 1:
+    // S1 (index 0) -> Stack 1, Rack 1, Chuỗi 1
+    const s1 = stringLocation('G1', 0);
+    expect(s1.stack).toBe(1);
+    expect(s1.rack).toBe(1);
+    expect(s1.stringInRack).toBe(1);
+
+    // S12 (index 11) -> Stack 1, Rack 3, Chuỗi 4
+    const s12 = stringLocation('G1', 11);
+    expect(s12.stack).toBe(1);
+    expect(s12.rack).toBe(3);
+    expect(s12.stringInRack).toBe(4);
+
+    // S13 (index 12) -> Stack 2, Rack 1, Chuỗi 1
+    const s13 = stringLocation('G1', 12);
+    expect(s13.stack).toBe(2);
+    expect(s13.rack).toBe(1);
+    expect(s13.stringInRack).toBe(1);
+
+    // Group 2:
+    // S1 (index 0) -> Stack 3
+    const g2s1 = stringLocation('G2', 0);
+    expect(g2s1.stack).toBe(3);
+
+    // S24 (index 23) -> Stack 4, Rack 3, Chuỗi 4
+    const g2s24 = stringLocation('G2', 23);
+    expect(g2s24.stack).toBe(4);
+    expect(g2s24.rack).toBe(3);
+    expect(g2s24.stringInRack).toBe(4);
+  });
+
+  it('analyzeStrings calculates mean, standard deviation and flags outliers', () => {
+    // 23 chuỗi bình thường (0.28 A), 1 chuỗi bị tăng vọt (0.45 A)
+    const vals = Array(23).fill(0.28);
+    vals.push(0.45); // index 23 (S24)
+
+    const analysis = analyzeStrings(vals)!;
+    expect(analysis).not.toBeNull();
+    expect(analysis.count).toBe(24);
+    expect(analysis.outliersHigh).toContain(23);
+    expect(analysis.outliers).toContain(23);
   });
 });

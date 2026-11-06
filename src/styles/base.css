@@ -1000,3 +1000,123 @@ details.card > summary {
   display: block;
   font-size: var(--fs-h2);
 }
+
+/* ---------- Ma trận trực quan bình tụ (Capacitor Matrix / Heatmap) ---------- */
+.cap-matrix-wrap {
+  margin: 12px 0 16px;
+}
+.matrix-stats-box {
+  background: var(--c-surface-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: var(--fs-small);
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+.cap-matrix-stacks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 580px) {
+  .cap-matrix-stacks {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.cap-stack {
+  background: var(--c-surface-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+.cap-stack-head {
+  font-size: var(--fs-small);
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--c-border);
+  padding-bottom: 4px;
+}
+.cap-rack {
+  margin-bottom: 8px;
+}
+.cap-rack:last-child {
+  margin-bottom: 0;
+}
+.cap-rack-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-muted);
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+}
+.cap-cells {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.cap-cell {
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  padding: 6px 2px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+.cap-cell:hover, .cap-cell:active {
+  border-color: var(--c-primary);
+  transform: translateY(-1px);
+}
+.cap-cell b {
+  display: block;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.cap-cell span {
+  font-size: 10px;
+  color: var(--c-muted);
+  display: block;
+  margin-top: 2px;
+}
+.cap-cell.filled {
+  background: rgba(14, 165, 233, 0.08);
+  border-color: rgba(14, 165, 233, 0.35);
+}
+.cap-cell.filled b {
+  color: var(--c-primary);
+}
+.cap-cell.outlier {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: var(--c-danger-fg, #ef4444) !important;
+  color: var(--c-danger-fg, #ef4444) !important;
+  animation: pulse-outlier 1.8s infinite;
+}
+.cap-cell.outlier b, .cap-cell.outlier span {
+  color: var(--c-danger-fg, #ef4444) !important;
+  font-weight: 700;
+}
+@keyframes pulse-outlier {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* ---------- Thẻ quy đổi nhiệt độ Rcd và Rdc ---------- */
+.temp-calc-box {
+  background: rgba(14, 165, 233, 0.06);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: var(--fs-small);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.temp-calc-box b {
+  color: var(--c-primary);
+}
+

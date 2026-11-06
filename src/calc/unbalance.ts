@@ -81,3 +81,64 @@ export function stringOutliers(values: number[]): number[] {
   if (sd === 0) return [];
   return v.filter(([x]) => x > mean + 2 * sd).map(([, i]) => i);
 }
+
+export interface StringAnalysis {
+  count: number;
+  mean: number;
+  sd: number;
+  min: number;
+  max: number;
+  upperLimit: number;
+  lowerLimit: number;
+  outliersHigh: number[];
+  outliersLow: number[];
+  outliers: number[];
+}
+
+export function analyzeStrings(values: number[]): StringAnalysis | null {
+  const v = values.map((x, i) => [x, i] as const).filter(([x]) => Number.isFinite(x) && x > 0);
+  if (v.length < 3) return null;
+  const nums = v.map(([x]) => x);
+  const mean = nums.reduce((s, x) => s + x, 0) / nums.length;
+  const variance = nums.reduce((s, x) => s + (x - mean) ** 2, 0) / nums.length;
+  const sd = Math.sqrt(variance);
+  const min = Math.min(...nums);
+  const max = Math.max(...nums);
+  const upperLimit = mean + 2 * sd;
+  const lowerLimit = Math.max(0, mean - 2 * sd);
+  const outliersHigh = v.filter(([x]) => x > upperLimit).map(([, i]) => i);
+  const outliersLow = v.filter(([x]) => sd > 0 && x < lowerLimit).map(([, i]) => i);
+  const outliers = [...outliersHigh, ...outliersLow];
+  return {
+    count: nums.length,
+    mean,
+    sd,
+    min,
+    max,
+    upperLimit,
+    lowerLimit,
+    outliersHigh,
+    outliersLow,
+    outliers,
+  };
+}
+
+/**
+ * Trả về thông tin vị trí vật lý của String trên giàn tụ GE 500 kV:
+ * - Group 1: S1..S12 thuộc Stack 1; S13..S24 thuộc Stack 2
+ * - Group 2: S1..S12 thuộc Stack 3; S13..S24 thuộc Stack 4
+ */
+export function stringLocation(group: 'G1' | 'G2', stringIndex: number): { stack: number; rack: number; stringInRack: number; label: string } {
+  const sNum = stringIndex + 1; // 1-based (1..24)
+  const isSecondHalf = sNum > 12;
+  const stack = group === 'G1' ? (isSecondHalf ? 2 : 1) : (isSecondHalf ? 4 : 3);
+  const localIndex = isSecondHalf ? sNum - 12 : sNum; // 1..12
+  const rack = Math.ceil(localIndex / 4); // 1..3 (4 strings per rack)
+  const stringInRack = ((localIndex - 1) % 4) + 1; // 1..4
+  return {
+    stack,
+    rack,
+    stringInRack,
+    label: `Stack ${stack} · Rack ${rack} · Chuỗi ${stringInRack}`,
+  };
+}
