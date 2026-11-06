@@ -33,7 +33,7 @@ function testBlock(itemId: string, t: Test, sid: string | null): string {
           ${s.note ? `<div class="small muted">ℹ️ ${rich(s.note)}</div>` : ''}
           ${s.record ? `<span class="rec">Ghi: ${esc(s.record)}</span> ` : ''}
           ${s.timer ? `<span class="rec">⏱ ${s.timer} s</span> ` : ''}
-          ${eq ? `<a class="rec" href="#/equipment/${esc(s.equip!)}">🧰 Xem máy</a>` : ''}</div></li>`;
+          ${eq ? `<a class="rec" href="#/equipment/${esc(s.equip!)}">Xem máy TN</a>` : ''}</div></li>`;
         })
         .join('')}</ol>`
     : '';
@@ -48,7 +48,7 @@ function testBlock(itemId: string, t: Test, sid: string | null): string {
     ${(t.tips ?? []).map((x) => callout({ level: 'info', text: x })).join('')}
     <div class="btn-row">
       ${stepsOf(t).length ? `<a class="btn big" href="#/item/${itemId}/test/${esc(t.id)}/step/1">▶ BẮT ĐẦU TỪNG BƯỚC</a>` : ''}
-      ${sid ? `<a class="btn secondary" href="#/session/${esc(sid)}/form/${itemId}/${esc(t.id)}">📝 Nhập kết quả</a>` : ''}
+      ${sid ? `<a class="btn secondary" href="#/session/${esc(sid)}/form/${itemId}/${esc(t.id)}">Nhập kết quả</a>` : ''}
     </div>
   </div>`;
 }
@@ -60,7 +60,7 @@ export const ItemView: View = async (_r, el) => {
     el.innerHTML = '<p>Hạng mục không tồn tại.</p>';
     return;
   }
-  setTop(`${item.id} ${item.title}`, { back: '#/items', sub: item.tab || undefined });
+  setTop(item.title, { back: '#/items', sub: item.tab || undefined });
   const sid = activeSessionId();
   const profile = await activeProfile();
   const gateIds = [...new Set(item.tests.flatMap((t) => gatesFor(item.id, t.id)))];

@@ -48,7 +48,7 @@ export const StepMode: View = async (_r, el) => {
     const sid0 = activeSessionId();
     setTop(test.title, { back: `#/item/${itemId}` });
     el.innerHTML = `<p>Phép thử này không có trình tự từng bước – xem bảng tra cứu và nhập kết quả.</p>
-      <div class="btn-row"><a class="btn" href="#/item/${itemId}?test=${testId}">Xem hạng mục</a>${sid0 ? `<a class="btn secondary" href="#/session/${esc(sid0)}/form/${itemId}/${testId}">📝 Nhập kết quả</a>` : ''}</div>`;
+      <div class="btn-row"><a class="btn" href="#/item/${itemId}?test=${testId}">Xem hạng mục</a>${sid0 ? `<a class="btn secondary" href="#/session/${esc(sid0)}/form/${itemId}/${testId}">Nhập kết quả</a>` : ''}</div>`;
     return;
   }
   const idx = Math.min(Math.max(Number(params().n) || 1, 1), steps.length) - 1;
@@ -63,7 +63,7 @@ export const StepMode: View = async (_r, el) => {
 
   document.body.classList.add('immersive');
   setTop(test.title.replace(/^[A-D]\.\s*/, ''), { close: `#/item/${itemId}`, sub: `${item.id} · Bước ${idx + 1}/${steps.length}` });
-  const eqLink = step.equip ? `<a class="btn secondary" href="#/equipment/${esc(step.equip)}">🧰 Xem máy</a>` : '';
+  const eqLink = step.equip ? `<a class="btn secondary" href="#/equipment/${esc(step.equip)}">Xem máy TN</a>` : '';
   el.innerHTML = `
     <div class="stepbar" role="progressbar" aria-valuemin="1" aria-valuemax="${steps.length}" aria-valuenow="${idx + 1}"><i style="width:${((idx + 1) / steps.length) * 100}%"></i></div>
     ${idx === 0 ? (test.callouts ?? []).map(callout).join('') : ''}
@@ -72,7 +72,7 @@ export const StepMode: View = async (_r, el) => {
     ${step.note ? callout({ level: 'info', text: step.note }) : ''}
     ${step.timer ? timerHtml(tKey, step.timer, step.lock ? 'Nút tiếp chỉ bấm được khi hết giờ' : 'Đếm thời gian chờ') : ''}
     ${step.record ? `<p><span class="rec">Ghi: ${esc(step.record)}</span></p>` : ''}
-    <div class="btn-row">${eqLink}${step.record && sid ? `<a class="btn secondary" href="#/session/${esc(sid)}/form/${itemId}/${testId}">📝 Nhập số đo</a>` : ''}</div>
+    <div class="btn-row">${eqLink}${step.record && sid ? `<a class="btn secondary" href="#/session/${esc(sid)}/form/${itemId}/${testId}">Nhập số đo</a>` : ''}</div>
     ${step.record && !sid ? '<p class="small muted">Tạo/chọn phiên TN (tab Phiên TN) để ghi số đo vào biên bản.</p>' : ''}
     <div class="step-foot">
       <a class="btn secondary big" ${idx === 0 ? 'aria-disabled="true" tabindex="-1"' : `href="${base}${idx}"`}>◀ Trước</a>

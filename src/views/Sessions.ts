@@ -1,4 +1,5 @@
 import { setTop } from '../components/Chrome';
+import { Icons } from '../components/Icons';
 import { can } from '../auth/roles';
 import { activeSessionId, db, setActiveSession } from '../store/db';
 import { calibOverdue } from '../calc/evaluate';
@@ -33,9 +34,9 @@ export const Sessions: View = async (_r, el) => {
     }
     <h2>Danh mục</h2>
     <div class="shortcuts">
-      <a href="#/profiles"><span class="ico">🗂</span>Hồ sơ giàn</a>
-      <a href="#/instruments"><span class="ico">🔧</span>Máy TN</a>
-      <a href="#/calc/unbalance"><span class="ico">🧮</span>Máy tính ΔC</a>
+      <a href="#/profiles"><span class="ico">${Icons.folder}</span>Hồ sơ giàn</a>
+      <a href="#/instruments"><span class="ico">${Icons.testSet}</span>Máy TN</a>
+      <a href="#/calc/unbalance"><span class="ico">${Icons.calculator}</span>Máy tính ΔC</a>
     </div>
     <div class="btn-row"><a class="btn secondary" href="#/settings">💾 Sao lưu / Khôi phục / Nhập JSON</a></div>`;
 };

@@ -13,7 +13,7 @@ export const Overview: View = (_r, el) => {
       return;
     }
     el.innerHTML = `<h1>${esc(d.name)}</h1><p>${rich(d.role)}</p>
-      <a class="btn block" href="#/item/${d.item}">🧪 Hạng mục thí nghiệm ${d.item}</a>
+      <a class="btn block" href="#/item/${d.item}">Hạng mục thí nghiệm ${d.item.slice(2)}</a>
       ${gallery(d.images, 'dev')}`;
     return;
   }
@@ -29,7 +29,7 @@ export const Overview: View = (_r, el) => {
     ${gallery(o.circuit.images, 'circuit')}
     <h2>Các thiết bị trên sàn tụ</h2>
     <div class="grid2">${o.devices
-      .map((d) => `<a class="tile" href="#/overview/${d.id}"><span class="name">${esc(d.name)}</span><span class="small muted">Hạng mục ${d.item}</span></a>`)
+      .map((d) => `<a class="tile" href="#/overview/${d.id}"><span class="name">${esc(d.name)}</span><span class="small muted">Hạng mục ${d.item.slice(2)}</span></a>`)
       .join('')}</div>
     <h2>${esc(o.config.title)}</h2>
     <ul class="clean">${o.config.points.map((p) => `<li>${rich(p)}</li>`).join('')}</ul>

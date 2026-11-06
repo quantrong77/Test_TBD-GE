@@ -1,11 +1,12 @@
 import { esc } from '../ui';
+import { Icons } from './Icons';
 
 const NAV = [
-  { href: '#/', ico: '🏠', label: 'Trang chủ', match: (p: string) => p === '' },
-  { href: '#/sessions', ico: '📝', label: 'Phiên TN', match: (p: string) => /^(session|profile|instrument|calc)/.test(p) },
-  { href: '#/items', ico: '🧪', label: 'Hạng mục', match: (p: string) => p.startsWith('item') || p.startsWith('gate') },
-  { href: '#/thresholds', ico: '📊', label: 'Ngưỡng', match: (p: string) => p.startsWith('thresholds') },
-  { href: '#/search', ico: '🔍', label: 'Tìm', match: (p: string) => p.startsWith('search') },
+  { href: '#/', ico: Icons.tower, label: 'Trang chủ', match: (p: string) => p === '' },
+  { href: '#/sessions', ico: Icons.report, label: 'Phiên TN', match: (p: string) => /^(session|profile|instrument|calc)/.test(p) },
+  { href: '#/items', ico: Icons.capacitor, label: 'Hạng mục', match: (p: string) => p.startsWith('item') || p.startsWith('gate') },
+  { href: '#/thresholds', ico: Icons.gauge, label: 'Ngưỡng', match: (p: string) => p.startsWith('thresholds') },
+  { href: '#/search', ico: Icons.search, label: 'Tìm', match: (p: string) => p.startsWith('search') },
 ];
 
 /** Thanh tab dựng một lần; mỗi lần chuyển trang chỉ đổi tab đang chọn (không chớp biểu tượng). */
@@ -34,9 +35,9 @@ export function setTop(title: string, opts: { back?: string | true; sub?: string
       : // giữ chỗ cho nút ← để tiêu đề không xô ngang giữa các trang
         '<span class="icon-btn" aria-hidden="true"></span>';
   top.innerHTML = `${left}<div class="title">${esc(title)}${opts.sub ? `<small>${esc(opts.sub)}</small>` : ''}</div>
-    <a class="icon-btn" href="#/help" aria-label="Hướng dẫn sử dụng" title="Hướng dẫn sử dụng">📖</a>
-    <a class="icon-btn" href="#/info" aria-label="Giới thiệu" title="Giới thiệu">ℹ️</a>
-    <a class="icon-btn" href="#/settings" aria-label="Cài đặt" title="Cài đặt">⚙️</a>`;
+    <a class="icon-btn" href="#/help" aria-label="Hướng dẫn sử dụng" title="Hướng dẫn sử dụng">${Icons.manual}</a>
+    <a class="icon-btn" href="#/info" aria-label="Giới thiệu" title="Giới thiệu">${Icons.info}</a>
+    <a class="icon-btn" href="#/settings" aria-label="Cài đặt" title="Cài đặt">${Icons.settings}</a>`;
   top.querySelector('[data-back]')?.addEventListener('click', () => history.back());
   document.title = `${title} – TBD-GE Field`;
 }

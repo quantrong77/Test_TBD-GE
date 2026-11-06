@@ -1,5 +1,6 @@
 import { equipment, getEquipment, type EquipSection } from '../content';
 import { setTop } from '../components/Chrome';
+import { Icons } from '../components/Icons';
 import { bindTimers, timerHtml, timerRemaining } from '../components/Timer';
 import { callout, esc, gallery, rich, table } from '../ui';
 import { fmt, gammaKv, gammaMa, parseNum } from '../calc/units';
@@ -30,7 +31,7 @@ function quickSteps(eqId: string, s: EquipSection): string {
 }
 
 function monitorTool(): string {
-  return `<div class="card" id="monitor"><b>🧮 Quy đổi giám sát (TB-1)</b>
+  return `<div class="card" id="monitor"><b>${Icons.calculator} Quy đổi giám sát (TB-1)</b>
     <div class="inrow"><span class="lbl">Vôn kế kẹp 8–4 (V)<small>5 V = 10 kV</small></span><input inputmode="decimal" id="m8" placeholder="vd 5,0"></div>
     <div class="inrow"><span class="lbl">Vôn kế kẹp 7–4 (V)<small>5 V = 6 mA</small></span><input inputmode="decimal" id="m7" placeholder="vd 2,5"></div>
     <p class="calc-out" id="mout">—</p></div>`;
@@ -61,7 +62,7 @@ export const EquipmentView: View = (_r, el) => {
       ${equipment
         .map(
           (e) => `<a class="card" href="#/equipment/${e.id}" style="display:block;text-decoration:none;color:inherit">
-          <b style="font-size:var(--fs-h2)">🔧 ${esc(e.name)}</b>
+          <b style="font-size:var(--fs-h2)">${Icons.testSet} ${esc(e.name)}</b>
           <div class="small muted">Dùng ở: ${e.usedIn.map((u) => esc(u.label)).join('; ')}</div>
           <div class="small muted">Nguồn: ${esc(e.docRef)}</div></a>`,
         )

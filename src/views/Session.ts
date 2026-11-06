@@ -1,5 +1,6 @@
 import { getItem, getTest, items, gatesFor, getGate } from '../content';
 import { setTop } from '../components/Chrome';
+import { Icons } from '../components/Icons';
 import { activeSessionId, db, deleteSession, getGateCheck, getValues, measId, previousSession, putValue, setActiveSession, storageWarning } from '../store/db';
 import { evaluateTest, formFor, paintRows, PHASES, type Phase, type ResultRow, type Values } from '../forms';
 import { calibOverdue, combine } from '../calc/evaluate';
@@ -167,7 +168,7 @@ export const SessionView: View = async (_r, el) => {
     <div class="card">
       <div class="row"><b>${esc(p.bank)} – ${esc(p.station)}</b>${isActive ? '<span class="pill">● Đang làm</span>' : ''}</div>
       <div class="small">Ngày: ${esc(fmtDate(s.date))} · ${esc(TYPE_LABEL[s.type])}<br>Chỉ huy: <b>${esc(s.leader)}</b>${s.members.length ? `<br>Thành viên: ${s.members.map(esc).join(', ')}` : ''}</div>
-      ${insts.map((i) => `<div class="small">🔧 ${esc(i!.model)}${i!.serial ? ` · SN ${esc(i!.serial)}` : ''}${calibOverdue(i!.calibDue, s.date) ? ` <span class="res fail">QUÁ HẠN ${esc(fmtDate(i!.calibDue))}</span>` : ''}</div>`).join('')}
+      ${insts.map((i) => `<div class="small" style="display:flex;align-items:center;gap:6px">${Icons.testSet} <span>${esc(i!.model)}${i!.serial ? ` · SN ${esc(i!.serial)}` : ''}${calibOverdue(i!.calibDue, s.date) ? ` <span class="res fail">QUÁ HẠN ${esc(fmtDate(i!.calibDue))}</span>` : ''}</span></div>`).join('')}
       <div class="btn-row">${isActive ? '<button class="btn secondary" type="button" id="deact">Bỏ chọn phiên</button>' : '<button class="btn" type="button" id="act">Đặt làm phiên đang làm</button>'}${editable ? '<button class="btn secondary" type="button" id="resnap">↻ Cập nhật ngưỡng từ hồ sơ giàn</button>' : ''}</div>
     </div>
     <a class="card row" href="#/gate/gate-platform" style="text-decoration:none;color:inherit" ${isActive ? '' : 'data-need-active'}>
