@@ -125,7 +125,7 @@ test('session: measurements autosave, survive reload, compute %ΔC, export', asy
   await page.waitForTimeout(800);
 
   await page.goto(sessionUrl);
-  await expect(page.locator('.progress-items')).toContainText('4.5 ❌');
+  await expect(page.locator('.progress-items')).toContainText('5 ❌');
   for (const [btn, ext] of [
     ['📄 PDF', '.pdf'],
     ['📊 Excel', '.xlsx'],

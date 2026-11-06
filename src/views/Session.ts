@@ -174,10 +174,10 @@ export const SessionView: View = async (_r, el) => {
     <a class="card row" href="#/gate/gate-platform" style="text-decoration:none;color:inherit" ${isActive ? '' : 'data-need-active'}>
       <span>${gp.confirmedBy ? '✅' : '⚠️'} Cổng an toàn lên sàn tụ</span><span class="small">${gp.confirmedBy ? `${esc(gp.confirmedBy)} · ${esc(fmtTime(gp.timestamp!))}` : 'Chưa xác nhận'}</span></a>
     <h2>Tiến độ</h2>
-    <div class="progress-items">${items.map((it) => `<a href="#/session/${esc(s.id)}/form/${it.id}/${it.tests[0].id}">${it.id} ${STATE_ICON[itemState(d, it.id)]}</a>`).join('')}</div>
+    <div class="progress-items">${items.map((it) => `<a href="#/session/${esc(s.id)}/form/${it.id}/${it.tests[0].id}">${it.id.slice(2)} ${STATE_ICON[itemState(d, it.id)]}</a>`).join('')}</div>
     ${items
       .map(
-        (it) => `<div class="card"><b>${it.id} ${esc(it.short)}</b>
+        (it) => `<div class="card"><b>${it.id.slice(2)} ${esc(it.short)}</b>
         ${it.tests
           .map((t) => {
             const st = testState(d, it.id, t.id).state;
@@ -191,7 +191,7 @@ export const SessionView: View = async (_r, el) => {
     ${
       counts.fail + counts.warn
         ? `<div class="table-wrap"><table><thead><tr><th>Hạng mục</th><th>Nội dung</th><th>Giá trị</th><th>KQ</th></tr></thead><tbody>${all
-            .flatMap((x) => x.rows.filter((r) => r.result === 'fail' || r.result === 'warn').map((r) => `<tr><td>${x.it.id}</td><td>${esc(r.group)} ${esc(r.label)}</td><td>${esc(r.value)}</td><td>${resBadge(r.result)}</td></tr>`))
+            .flatMap((x) => x.rows.filter((r) => r.result === 'fail' || r.result === 'warn').map((r) => `<tr><td>${x.it.id.slice(2)}</td><td>${esc(r.group)} ${esc(r.label)}</td><td>${esc(r.value)}</td><td>${resBadge(r.result)}</td></tr>`))
             .join('')}</tbody></table></div>`
         : ''
     }
@@ -310,7 +310,7 @@ export const SessionForm: View = async (_r, el) => {
     return;
   }
   const { session: s, profile: p } = d;
-  setTop(`${item.id} ${test.title.replace(/^[A-D]\.\s*/, '')}`, { back: `#/session/${s.id}`, sub: `${p.bank} · ${fmtDate(s.date)}` });
+  setTop(`${item.id.slice(2)} ${test.title.replace(/^[A-D]\.\s*/, '')}`, { back: `#/session/${s.id}`, sub: `${p.bank} · ${fmtDate(s.date)}` });
   const values: Values = { ...(await getValues(s.id, itemId, testId)), __item: itemId, __test: testId };
   let phase: Phase = ((sessionStorage.getItem(PHASE_KEY) as Phase) || 'A') as Phase;
   if (!PHASES.includes(phase)) phase = 'A';
@@ -336,7 +336,7 @@ export const SessionForm: View = async (_r, el) => {
     </div>
     <div id="body"></div>
     <h2>Kết quả</h2><div id="rows"></div>
-    <h2>Ảnh hiện trường – ${item.id}</h2><div data-photos></div>
+    <h2>Ảnh hiện trường – Hạng mục ${item.id.slice(2)}</h2><div data-photos></div>
     <div class="btn-row"><a class="btn block" href="#/session/${esc(s.id)}">✓ Xong – về phiên</a></div>`;
 
   const body = el.querySelector<HTMLElement>('#body')!;
