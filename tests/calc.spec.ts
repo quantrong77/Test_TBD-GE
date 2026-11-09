@@ -4,7 +4,18 @@ import { evalThreshold, evalTrigger, bushingDeviation, evalCtPair, calibOverdue,
 import { tempCorrectRcd, tempCorrectRdc, rDevPct } from '../src/calc/temp-correction';
 import { formatWatermarkLines } from '../src/calc/watermark';
 import { computeOtsuThreshold, findConnectedComponents, classify7Segment, type BoundingBox } from '../src/calc/ocr';
-import { METRIC_DEFS, analyzeTrendSeries, renderTrendSvg, getBenchmarkHistory, type TrendDataPoint } from '../src/calc/trend';
+import {
+  METRIC_DEFS,
+  analyzeTrendSeries,
+  renderTrendSvg,
+  extractTrendFromSessions,
+  historyToPoints,
+  mergeTrendPoints,
+  validateHistoryInput,
+  type TrendDataPoint,
+  type TrendHistoryRecord,
+} from '../src/calc/trend';
+import type { Measurement, Session } from '../src/types';
 import { ftlbToNm, gammaKv, gammaMa, foldVi, parseNum } from '../src/calc/units';
 import { parseIsolationTime } from '../src/calc/isolation';
 import thresholds from '../content/thresholds.json';
@@ -367,6 +378,7 @@ describe('on-device ocr module', () => {
   });
 });
 
+
 describe('trend analytics module', () => {
   const dummyProfile = {
     id: 'TBD503-PLEIKU2',
@@ -382,51 +394,139 @@ describe('trend analytics module', () => {
     nominalTotal_uF: 104.4,
     tagGap_mm: 14,
   };
+  const pt = (id: string, date: string, a: number | null, b: number | null = null, c: number | null = null): TrendDataPoint => ({
+    id,
+    date,
+    yearLabel: date.slice(0, 4),
+    sessionType: 'periodic',
+    phaseA: a,
+    phaseB: b,
+    phaseC: c,
+  });
+  const sess = (id: string, date: string, profileId = 'TBD503-PLEIKU2'): Session => ({
+    id,
+    profileId,
+    date,
+    type: 'periodic',
+    leader: 'X',
+    members: [],
+    instruments: [],
+    status: 'done',
+    createdAt: 0,
+  });
+  const meas = (sessionId: string, itemId: string, testId: string, kv: Record<string, string>): Measurement[] =>
+    Object.entries(kv).map(([key, value]) => ({ id: `${sessionId}|${itemId}|${testId}|${key}`, sessionId, itemId, testId, key, value, ts: 0 }));
 
-  it('loads benchmark history points for default profile', () => {
-    const pts = getBenchmarkHistory('TBD503-PLEIKU2');
-    expect(pts.length).toBeGreaterThanOrEqual(2);
-    expect(pts[0].phaseA).toBeDefined();
-    expect(pts[0].yearLabel).toContain('2023');
+  it('has no hardcoded sample data: no sessions & no history → empty, verdict na', () => {
+    expect(extractTrendFromSessions([], [], 'unbalance', dummyProfile)).toEqual([]);
+    const a = analyzeTrendSeries([], METRIC_DEFS.unbalance, dummyProfile);
+    expect(a.verdict).toBe('na');
+    expect(a.pointCount).toBe(0);
+    expect(renderTrendSvg([], METRIC_DEFS.unbalance, dummyProfile)).toContain('Chưa có dữ liệu');
+  });
+
+  it('extracts %ΔC from the unbalance form of the selected profile only, sorted by date', () => {
+    const sessions = [sess('s2', '2025-06-01'), sess('s1', '2024-06-01'), sess('other', '2024-07-01', 'TBD-KHAC')];
+    const base = { 'A.U': '250', 'A.Isum': '10', 'A.IG1': '5', 'A.IG2': '5', 'A.unit': 'mA' };
+    const ms = [
+      // I∑ = 10 A, IΔ×10 = 10 mA → IΔ = 1 mA → %ΔC = 0,01 %
+      ...meas('s1', '4.1', 'unbalance', { ...base, 'A.Idx10': '10' }),
+      ...meas('s2', '4.1', 'unbalance', { ...base, 'A.Idx10': '20' }),
+      ...meas('other', '4.1', 'unbalance', { ...base, 'A.Idx10': '99' }),
+    ];
+    const pts = extractTrendFromSessions(sessions, ms, 'unbalance', dummyProfile);
+    expect(pts.map((p) => p.sessionId)).toEqual(['s1', 's2']);
+    expect(pts[0].phaseA).toBeCloseTo(0.01, 3);
+    expect(pts[1].phaseA).toBeCloseTo(0.02, 3);
+    expect(pts[0].phaseB).toBeNull();
+    expect(pts[0].source).toBe('session');
+  });
+
+  it('reads only the source form (no key collision between items) and parses Vietnamese decimals', () => {
+    const ms = [
+      ...meas('s1', '4.3', 'measure', { 'A.Rcd': '5000', 'A.Rdc': '12,5' }),
+      ...meas('s1', '4.2', 'measure', { 'A.Rmov': '3000', 'A.t': '20' }),
+    ];
+    const mov = extractTrendFromSessions([sess('s1', '2025-01-01')], ms, 'mov_rcd', dummyProfile);
+    expect(mov[0].phaseA).toBe(3000); // Rcd của kháng (4.3) không bị lấy nhầm cho MOV
+    expect(mov[0].uncorrected).toBeUndefined();
+    const rdc = extractTrendFromSessions([sess('s1', '2025-01-01')], ms, 'reactor_rdc', dummyProfile);
+    expect(rdc[0].phaseA).toBe(12.5); // thiếu nhiệt độ → giữ nguyên, đánh dấu chưa quy đổi
+    expect(rdc[0].uncorrected).toBe(true);
+  });
+
+  it('merges manual history of the same profile + metric with session points', () => {
+    const rec = (id: string, profileId: string, metric: TrendHistoryRecord['metric'], phaseA: number): TrendHistoryRecord => ({
+      id,
+      profileId,
+      metric,
+      date: '2022-05-01',
+      label: 'Lắp đặt 2022',
+      sessionType: 'after_install',
+      phaseA,
+      phaseB: null,
+      phaseC: null,
+      createdAt: 0,
+    });
+    const hist = [rec('h1', 'TBD503-PLEIKU2', 'unbalance', 0.05), rec('h2', 'TBD503-PLEIKU2', 'bushing_c1', 300), rec('h3', 'TBD-KHAC', 'unbalance', 0.3)];
+    const manual = historyToPoints(hist, 'TBD503-PLEIKU2', 'unbalance');
+    expect(manual.map((p) => p.id)).toEqual(['h1']);
+    expect(manual[0].source).toBe('manual');
+    expect(mergeTrendPoints([pt('s1', '2024-01-01', 0.1)], manual).map((p) => p.id)).toEqual(['h1', 's1']);
+  });
+
+  it('validates manual history input', () => {
+    expect(validateHistoryInput('2024-01-01', [null, null, null], '2026-01-01')).toMatch(/ít nhất một pha/);
+    expect(validateHistoryInput('2027-01-01', [1, null, null], '2026-01-01')).toMatch(/tương lai/);
+    expect(validateHistoryInput('2024-01-01', [Number.NaN, null, null], '2026-01-01')).toMatch(/không âm/);
+    expect(validateHistoryInput('2024-01-01', [0.1, null, 0.2], '2026-01-01')).toBeNull();
+  });
+
+  it('single point: no drift, asks for more data', () => {
+    const a = analyzeTrendSeries([pt('1', '2024-01-01', 0.1, 0.1, 0.1)], METRIC_DEFS.unbalance, dummyProfile);
+    expect(a.annualDriftRate).toBeNull();
+    expect(a.verdictText).toMatch(/1 đợt/);
   });
 
   it('analyzes trend series and detects stable normal condition', () => {
-    const pts: TrendDataPoint[] = [
-      { id: '1', date: '2023-01-01', yearLabel: '2023', sessionType: 'after_install', phaseA: 0.08, phaseB: 0.09, phaseC: 0.07 },
-      { id: '2', date: '2024-01-01', yearLabel: '2024', sessionType: 'after_1y', phaseA: 0.09, phaseB: 0.10, phaseC: 0.08 },
-    ];
-    const analysis = analyzeTrendSeries(pts, METRIC_DEFS.unbalance, dummyProfile);
-    expect(analysis.verdict).toBe('pass');
-    expect(analysis.annualDriftRate).toBeCloseTo(0.01, 2);
+    const a = analyzeTrendSeries([pt('1', '2023-01-01', 0.08, 0.09, 0.07), pt('2', '2024-01-01', 0.09, 0.1, 0.08)], METRIC_DEFS.unbalance, dummyProfile);
+    expect(a.verdict).toBe('pass');
+    expect(a.annualDriftRate).toBeCloseTo(0.01, 2);
   });
 
   it('detects high drift rate and flags warning', () => {
-    const pts: TrendDataPoint[] = [
-      { id: '1', date: '2023-01-01', yearLabel: '2023', sessionType: 'after_install', phaseA: 0.10, phaseB: 0.10, phaseC: 0.10 },
-      { id: '2', date: '2024-01-01', yearLabel: '2024', sessionType: 'after_1y', phaseA: 0.28, phaseB: 0.12, phaseC: 0.11 },
-    ];
-    const analysis = analyzeTrendSeries(pts, METRIC_DEFS.unbalance, dummyProfile);
-    expect(analysis.verdict).toBe('warn');
-    expect(analysis.projectedAlarmYears).toBeDefined();
+    const a = analyzeTrendSeries([pt('1', '2023-01-01', 0.1, 0.1, 0.1), pt('2', '2024-01-01', 0.28, 0.12, 0.11)], METRIC_DEFS.unbalance, dummyProfile);
+    expect(a.verdict).toBe('warn');
+    expect(a.projectedAlarmYears).toBeGreaterThan(0);
   });
 
   it('flags fail when value exceeds bypass limit', () => {
-    const pts: TrendDataPoint[] = [
-      { id: '1', date: '2024-01-01', yearLabel: '2024', sessionType: 'periodic', phaseA: 0.68, phaseB: 0.10, phaseC: 0.10 },
-    ];
-    const analysis = analyzeTrendSeries(pts, METRIC_DEFS.unbalance, dummyProfile);
-    expect(analysis.verdict).toBe('fail');
+    expect(analyzeTrendSeries([pt('1', '2024-01-01', 0.68, 0.1, 0.1)], METRIC_DEFS.unbalance, dummyProfile).verdict).toBe('fail');
   });
 
-  it('renders SVG trend chart with responsive polylines and markers', () => {
-    const pts = getBenchmarkHistory('TBD503-PLEIKU2');
+  it('lower-direction metric (MOV Rcd) uses the minimum phase value', () => {
+    const a = analyzeTrendSeries([pt('1', '2024-01-01', 3000, 800, 2500)], METRIC_DEFS.mov_rcd, dummyProfile);
+    expect(a.headline.value).toBe(800);
+    expect(a.verdict).toBe('fail');
+    expect(analyzeTrendSeries([pt('1', '2024-01-01', 3000, 1500, 2500)], METRIC_DEFS.mov_rcd, dummyProfile).verdict).toBe('warn');
+  });
+
+  it('deviation metric (C1) compares the latest value with the first (baseline) per phase', () => {
+    const ok = analyzeTrendSeries([pt('1', '2020-01-01', 300), pt('2', '2024-01-01', 309)], METRIC_DEFS.bushing_c1, dummyProfile);
+    expect(ok.maxDeviationPct).toBeCloseTo(3, 2);
+    expect(ok.verdict).toBe('pass');
+    expect(analyzeTrendSeries([pt('1', '2020-01-01', 300), pt('2', '2024-01-01', 318)], METRIC_DEFS.bushing_c1, dummyProfile).verdict).toBe('warn');
+    expect(analyzeTrendSeries([pt('1', '2020-01-01', 300)], METRIC_DEFS.bushing_c1, dummyProfile).verdict).toBe('na');
+  });
+
+  it('renders SVG trend chart and escapes user-entered labels', () => {
+    const pts: TrendDataPoint[] = [pt('1', '2023-01-01', 0.08, 0.09, 0.07), { ...pt('2', '2024-01-01', 0.1, 0.1, 0.1), yearLabel: '<img onerror=x>', source: 'manual' }];
     const svg = renderTrendSvg(pts, METRIC_DEFS.unbalance, dummyProfile);
     expect(svg).toContain('<svg');
     expect(svg).toContain('Pha A');
-    expect(svg).toContain('Pha B');
-    expect(svg).toContain('Pha C');
     expect(svg).toContain('Alarm');
     expect(svg).toContain('class="trend-chart-svg"');
+    expect(svg).not.toContain('<img');
+    expect(svg).toContain('&lt;img');
   });
 });
-
