@@ -2,7 +2,7 @@ import type { Role, SignSlot } from '../types';
 
 /**
  * Tài khoản đang đăng nhập (lưu trên máy để giao diện dùng được khi offline).
- * Quyền THẬT do máy chủ quyết định (RLS – supabase/migrations/0002); ở đây chỉ để ẩn/khóa nút cho dễ dùng.
+ * Quyền THẬT do máy chủ quyết định (gas/Core.gs); ở đây chỉ để ẩn/khóa nút cho dễ dùng.
  */
 export interface Me {
   userId: string;
@@ -12,6 +12,13 @@ export interface Me {
   role: Role | null;
   teamId: string | null;
   teamName: string | null;
+  /** đã gửi hồ sơ đăng ký */
+  registered?: boolean;
+  title?: string;
+  unit?: string;
+  phone?: string;
+  /** lý do khóa (khi status = disabled) */
+  banReason?: string;
 }
 
 const KEY = 'tbd.auth.me';
@@ -53,18 +60,21 @@ export type Action =
   | 'instrument.edit'
   | 'data.import'
   | 'users.manage'
-  | 'sign.revoke';
+  | 'sign.revoke'
+  | 'admin.panel';
 
 const MATRIX: Record<Action, Role[]> = {
   'session.create': ['admin', 'leader'],
   'session.edit': ['admin', 'leader'],
   'measure.edit': ['admin', 'leader', 'tester'],
   'gate.confirm': ['admin', 'leader', 'tester'],
-  'profile.edit': ['admin', 'leader'],
-  'instrument.edit': ['admin', 'leader'],
-  'data.import': ['admin', 'leader'],
+  // cấu hình hệ thống: chỉ Quản trị
+  'profile.edit': ['admin'],
+  'instrument.edit': ['admin'],
+  'data.import': ['admin'],
   'users.manage': ['admin'],
   'sign.revoke': ['admin'],
+  'admin.panel': ['admin'],
 };
 
 /** Ô ký mà mỗi vai trò được ký (khớp hàm can_sign trên máy chủ). */

@@ -1,32 +1,16 @@
-import { getMe } from '../auth/roles';
+import { isMember } from '../auth/roles';
+import { hasSession } from '../auth/session';
 
 /**
- * Cấu hình + trạng thái đồng bộ. File nhẹ (không kéo thư viện Supabase) – app luôn tải.
- * Địa chỉ máy chủ gắn lúc build: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (khóa anon được phép công khai;
- * an toàn dựa vào RLS trên máy chủ). KHÔNG BAO GIỜ đặt service_role key vào app.
+ * Cấu hình + trạng thái đồng bộ. File nhẹ (không kéo mã máy chủ) – app luôn tải.
+ * Máy chủ gắn lúc build (xem gas/README.md):
+ *   VITE_GAS_URL – địa chỉ web app Apps Script (…/exec); VITE_GOOGLE_CLIENT_ID – OAuth Client ID (Web).
+ * Hai giá trị này công khai được. KHÔNG BAO GIỜ đặt Client secret hay khóa bí mật vào app.
+ * Không khai báo → chế độ dùng một mình: không đăng nhập, dữ liệu chỉ trên máy.
  */
-export const SB_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() || '';
-export const SB_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() || '';
-export const isConfigured = () => !!(SB_URL && SB_KEY);
-
-const ENABLED = 'tbd.sync.enabled';
-
-/** Đồng bộ TẮT mặc định: chỉ bật khi người dùng chủ động bật (cần đơn vị cho phép đưa dữ liệu lên đám mây). */
-export function isEnabled(): boolean {
-  try {
-    return localStorage.getItem(ENABLED) === '1';
-  } catch {
-    return false;
-  }
-}
-export function setEnabled(on: boolean) {
-  try {
-    if (on) localStorage.setItem(ENABLED, '1');
-    else localStorage.removeItem(ENABLED);
-  } catch {
-    /* bỏ qua */
-  }
-}
+export const GAS_URL = (import.meta.env.VITE_GAS_URL as string | undefined)?.trim() || '';
+export const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() || '';
+export const isConfigured = () => GAS_URL !== '';
 
 export interface SyncStatus {
   state: 'off' | 'idle' | 'syncing' | 'offline' | 'error';
@@ -46,21 +30,33 @@ export function onStatus(f: (s: SyncStatus) => void) {
   return () => listeners.delete(f);
 }
 
-/** Gọi khi mở app: chỉ tải thư viện Supabase khi đã cấu hình và có lý do dùng tới. */
-export async function bootSync() {
-  if (!isConfigured()) return;
-  const q = new URLSearchParams(location.search);
-  const oauthReturn = q.has('code') || q.has('error_description');
-  if (!oauthReturn && !isEnabled() && !getMe()) return;
-  const m = await import('./supabase');
-  if (oauthReturn) {
-    // quay về từ Google: thư viện tự đổi ?code= lấy phiên; dọn URL rồi mở Cài đặt
-    await m.sb().auth.getSession();
-    const err = q.get('error_description');
-    history.replaceState(null, '', `${location.pathname}#/settings`);
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
-    if (err) window.dispatchEvent(new CustomEvent('auth:error', { detail: err }));
+const fmtHM = (ts: number) => new Date(ts).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+/** Mô tả trạng thái đồng bộ cho người dùng. */
+export function statusText(s: SyncStatus): string {
+  const pend = s.pending ? ` · chờ gửi ${s.pending} thay đổi` : '';
+  switch (s.state) {
+    case 'off':
+      return 'Chưa đồng bộ.';
+    case 'syncing':
+      return 'Đang đồng bộ…';
+    case 'idle':
+      return `✓ Đã đồng bộ lúc ${s.lastSync ? fmtHM(s.lastSync) : '—'}${pend}${s.message ? `. ${s.message}` : ''}`;
+    case 'offline':
+      return `${s.message ?? 'Không có mạng'}${pend}`;
+    case 'error':
+      return `⚠️ ${s.message ?? 'Lỗi đồng bộ'}${pend}`;
   }
-  await m.refreshMe().catch(() => undefined); // vừa được duyệt / đổi vai trò thì cập nhật ngay
-  if (isEnabled()) m.startAuto();
+}
+
+/**
+ * Gọi khi mở app. Đã đăng nhập → đọc lại tài khoản (gia hạn phiên, cập nhật vai trò / trạng thái duyệt);
+ * tài khoản đã duyệt thì đồng bộ tự động với cả đội.
+ */
+export async function bootSync() {
+  if (!isConfigured() || !hasSession()) return;
+  const { loadBackend } = await import('./backend');
+  const m = await loadBackend();
+  const me = await m.refreshMe().catch(() => null);
+  if (isMember(me)) m.startAuto();
 }

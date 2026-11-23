@@ -39,7 +39,7 @@ export const Sessions: View = async (_r, el) => {
       <a href="#/calc/unbalance"><span class="ico">${Icons.calculator}</span>Máy tính ΔC</a>
       <a href="#/trend"><span class="ico">${Icons.chart}</span>Xu hướng</a>
     </div>
-    <div class="btn-row"><a class="btn secondary" href="#/settings">💾 Sao lưu / Khôi phục / Nhập JSON</a></div>`;
+    ${can('admin.panel') ? '<div class="btn-row"><a class="btn secondary" href="#/admin">🛡️ Quản trị: cấu hình, dữ liệu, người dùng</a></div>' : ''}`;
 };
 
 export const SessionNew: View = async (_r, el) => {

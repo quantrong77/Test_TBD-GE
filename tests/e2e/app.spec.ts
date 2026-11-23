@@ -179,7 +179,7 @@ test('equipment step lock: next step only after 60 s timer', async ({ page }) =>
 });
 
 test('import rejects malicious JSON (XSS in date, SVG photo) and unsafe ?next=', async ({ page }) => {
-  await page.goto('#/settings');
+  await page.goto('#/admin');
   page.on('dialog', (d) => d.accept());
   const bad = {
     format: 'tbd-ge-session',

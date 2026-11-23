@@ -30,8 +30,9 @@ jobs:
       - run: npm run build
         env:
           # Đặt ở GitHub → Settings → Secrets and variables → Actions → Variables (để trống = tắt đồng bộ)
-          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          # Máy chủ Google Apps Script – xem gas/README.md (để trống = chế độ dùng một mình, không đăng nhập)
+          VITE_GAS_URL: ${{ vars.GAS_URL }}
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

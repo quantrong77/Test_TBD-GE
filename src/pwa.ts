@@ -1,6 +1,6 @@
 import { registerSW } from 'virtual:pwa-register';
 import { toast } from './ui';
-import { markOfflineReady } from './settings';
+import { isOfflineReady, markOfflineReady } from './settings';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -44,5 +44,12 @@ export function initPwa() {
       toast('✓ Sẵn sàng dùng offline');
       window.dispatchEvent(new Event('offline-ready'));
     },
+  });
+  // onOfflineReady chỉ chạy lúc service worker cài LẦN ĐẦU. Các lần mở sau (hoặc khi cờ trên máy bị xóa
+  // trong khi service worker vẫn còn): có service worker đang hoạt động = đã precache xong → sẵn sàng.
+  void navigator.serviceWorker.ready.then(() => {
+    if (isOfflineReady() && navigator.serviceWorker.controller) return;
+    markOfflineReady();
+    window.dispatchEvent(new Event('offline-ready'));
   });
 }

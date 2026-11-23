@@ -1,7 +1,7 @@
 import { items } from '../content';
 import { setTop } from '../components/Chrome';
 import { Icons } from '../components/Icons';
-import { isOfflineReady } from '../settings';
+import { offlineStatus } from '../settings';
 import { activeSessionId, db } from '../store/db';
 import { esc, fmtDate } from '../ui';
 import type { View } from '../router';
@@ -10,9 +10,9 @@ export const Home: View = async (_r, el) => {
   setTop('Sổ tay TN Tụ bù dọc GE', { sub: 'TBD-GE Field' });
   const sid = activeSessionId();
   const s = sid ? await db.sessions.get(sid) : undefined;
-  const ready = isOfflineReady();
+  const off = offlineStatus();
   el.innerHTML = `
-    <p class="status-line" id="offline-status"><span class="dot ${ready ? 'ok' : 'warn'}"></span>${ready ? 'Sẵn sàng offline' : 'Đang tải dữ liệu offline… (mở app có mạng lần đầu)'}</p>
+    <p class="status-line" id="offline-status"><span class="dot ${off.ok ? 'ok' : 'warn'}"></span>${esc(off.text)}</p>
     <a class="banner-danger" href="#/safety"><span aria-hidden="true" style="display:flex;align-items:center;font-size:22px">${Icons.hvDanger}</span> AN TOÀN TRƯỚC KHI LÊN SÀN</a>
     ${s ? `<a class="card row" href="#/session/${esc(s.id)}" style="text-decoration:none;color:inherit"><span style="display:flex;align-items:center;gap:6px">${Icons.report} Phiên đang làm: <b>${esc(s.profileId)}</b> · ${esc(fmtDate(s.date))}</span><span class="pill">Mở</span></a>` : ''}
     <div class="grid2">

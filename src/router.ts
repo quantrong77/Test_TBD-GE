@@ -56,9 +56,21 @@ function match(r: Route): Entry | undefined {
   return undefined;
 }
 
+let guard: ((r: Route) => string | null) | null = null;
+/**
+ * Cổng kiểm tra trước mỗi trang: trả về route khác (không có '#/') để chuyển hướng, hoặc null để cho qua.
+ * Dùng cho bắt buộc đăng nhập.
+ */
+export const setGuard = (g: (r: Route) => string | null) => (guard = g);
+
 async function doRender() {
   const app = document.getElementById('app')!;
-  const r = parse();
+  let r = parse();
+  const to = guard?.(r);
+  if (to != null && to !== r.raw) {
+    history.replaceState(history.state, '', `#/${to}`);
+    r = parse();
+  }
   const samePage = r.raw === lastRaw;
   const y = samePage ? window.scrollY : popY ?? 0;
   popY = null;

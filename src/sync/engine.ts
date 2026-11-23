@@ -23,7 +23,7 @@ export interface RemoteRow {
   updated_at: string;
 }
 
-/** Máy chủ đồng bộ (Supabase, hoặc bản giả trong test). Mọi lệnh đã giới hạn trong một đội. */
+/** Máy chủ đồng bộ (Google Apps Script – gas.ts, hoặc bản giả trong test). Mọi lệnh đã giới hạn trong một đội. */
 export interface Remote {
   /** Các dòng có updated_at ≥ since, tăng dần. */
   pull(table: string, since: string | null): Promise<RemoteRow[]>;

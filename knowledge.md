@@ -17,7 +17,7 @@
   2. **Tra cứu & thao tác hiện trường:** Nhân viên thao tác trên sàn tụ (xe gàu), trong buồng TAG house, ngoài trời nắng gắt hoặc ban đêm, đeo găng tay, nơi không có sóng viễn thông và không thể mang vác laptop hay tài liệu giấy.
   3. **Bảo đảm an toàn nghiêm ngặt:** Cổng kiểm tra an toàn (Safety Gates) bắt buộc trước mọi phép thử; đếm ngược thời gian xả điện tích dư giàn tụ.
   4. **Tự động hóa tính toán & đánh giá:** Loại bỏ sai sót tính toán thủ công; tự động tính $C_\sum, C_{G1}, C_{G2}, \Delta C, \%\Delta C$, quy đổi nhiệt độ, phát hiện chuỗi tụ bất thường và đối chiếu ngưỡng Đạt / Cảnh báo / Không đạt.
-  5. **Biên bản điện tử & Đồng bộ:** Ghi nhận số đo (nhập tay hoặc quét OCR), lưu ảnh hiện trường có đóng dấu kỹ thuật, ký số điện tử (SHA-256), xuất báo cáo PDF/Excel/JSON và hỗ trợ đồng bộ đám mây (Supabase).
+  5. **Biên bản điện tử & Đồng bộ:** Ghi nhận số đo (nhập tay hoặc quét OCR), lưu ảnh hiện trường có đóng dấu kỹ thuật, ký số điện tử (SHA-256), xuất báo cáo PDF/Excel/JSON và đồng bộ với cả đội qua Google Drive của đơn vị (Apps Script + Google Sheets).
   6. **Theo dõi xu hướng thiết bị:** Phân tích biến thiên các thông số qua nhiều kỳ thí nghiệm để cảnh báo sớm.
 * **Tuyên bố an toàn (Disclaimer):** *Ứng dụng chỉ đóng vai trò hỗ trợ tra cứu và tính toán kỹ thuật tại hiện trường, không thay thế cho Phiếu công tác, Quy trình an toàn điện, Biện pháp kỹ thuật hay Mệnh lệnh của Chỉ huy trực tiếp.* Câu này bắt buộc phải còn trên giao diện (Giới thiệu, Hướng dẫn, An toàn, chân PDF).
 
@@ -168,10 +168,13 @@ Hệ thống đặt ra 6 nguyên tắc an toàn cốt lõi không bao giờ đư
   - `photos`: Ảnh chụp hiện trường (đã đóng dấu watermark, tự động nén $\le 1600\ \text{px}$).
   - `profiles`: Hồ sơ thông số kỹ thuật từng giàn tụ.
   - `instruments`: Danh mục thiết bị thí nghiệm và thời hạn kiểm định.
-  - `trendHistory` (v3): Mốc lịch sử xu hướng nhập tay theo hồ sơ giàn + chỉ số; chỉ lưu trên máy và trong file sao lưu JSON (chưa đồng bộ Supabase).
+  - `trendHistory` (v3): Mốc lịch sử xu hướng nhập tay theo hồ sơ giàn + chỉ số; chỉ lưu trên máy và trong file sao lưu JSON (chưa đồng bộ lên máy chủ).
 * **Tìm kiếm:** MiniSearch (toàn văn, không dấu).
 * **Xem ảnh:** PhotoSwipe v5 (pinch-zoom).
-* **Đồng bộ Đám mây & Phân quyền:** **Supabase** (PostgreSQL + Row Level Security + Storage, đăng nhập Google).
+* **Đồng bộ Đám mây & Phân quyền** (chọn lúc build, ưu tiên Google):
+  - **Google Drive** (máy chủ duy nhất từ 23/11/2026; Supabase đã gỡ bỏ): Google Apps Script web app + 1 file Google Sheets (mỗi bảng 1 tab) + 1 thư mục Drive chứa ảnh. Đăng nhập bằng Google Identity Services (mã ID Google → máy chủ kiểm tra → phiên ký HMAC 30 ngày) hoặc mã 6 số qua email. Biến: `VITE_GAS_URL`, `VITE_GOOGLE_CLIENT_ID`. Mã máy chủ & hướng dẫn: `gas/`.
+  - Không khai báo `VITE_GAS_URL` → **chế độ dùng một mình**: không đăng nhập, dữ liệu chỉ trên máy (dùng cho phát triển và test e2e).
+* **Bắt buộc đăng nhập** (khi có máy chủ – `auth/gate.ts`, `router.setGuard`): Đăng nhập Google/mã email → khai hồ sơ đăng ký (họ tên, chức danh, đơn vị) → chờ Quản trị duyệt → vào app. Trang công khai: Hướng dẫn, Giới thiệu.
 * **Xuất báo cáo:**
   - PDF: `jspdf` + `jspdf-autotable`, nhúng sẵn font tiếng Việt Unicode **Be Vietnam Pro**. Ký tự Hy Lạp không có glyph được tự động chuẩn hóa ($\Delta \to \text{Delta}, \sum \to \text{(tổng)}$).
   - Excel: SheetJS (`xlsx` v0.20.3 bản CDN, **không** dùng bản npm 0.18).
@@ -209,7 +212,9 @@ Hệ thống đặt ra 6 nguyên tắc an toàn cốt lõi không bao giờ đư
 | `#/trend/:profileId?` | `TrendView` | Phân tích xu hướng nhiều kỳ |
 | `#/settings` | `Settings` | Giao diện, cỡ chữ, sao lưu/khôi phục, dung lượng |
 | `#/help`, `#/info` | `Info.Help`, `Info.Info` | Hướng dẫn sử dụng, thông tin liên hệ |
-| `#/users` | `Users` | Quản lý tài khoản (Admin duyệt) |
+| `#/login`, `#/register`, `#/account` | `Auth.Login/Register/Account` | Đăng nhập, đăng ký / sửa hồ sơ, chờ duyệt / bị khóa (ẩn thanh điều hướng) |
+| `#/admin` | `Admin` | Quản trị hệ thống: người dùng, cấu hình, dữ liệu, máy chủ (chỉ Quản trị) |
+| `#/users?f=pending\|approved\|disabled\|all` | `Users` | Quản lý người dùng: phê duyệt, vai trò, khóa có lý do, mở khóa |
 
 ### 5.3. Bản đồ cấu trúc thư mục (`tbd-ge-field/`)
 
@@ -242,7 +247,9 @@ tbd-ge-field/
 │   ├── pwa.ts                   # Đăng ký service worker, thông báo cập nhật
 │   ├── forms.ts                 # TRUNG TÂM BIỂU MẪU: render / live / rows cho từng biểu mẫu
 │   ├── auth/
-│   │   └── roles.ts             # 4 vai trò, ma trận quyền, ô ký theo vai trò
+│   │   ├── roles.ts             # 4 vai trò, ma trận quyền, ô ký theo vai trò
+│   │   ├── session.ts           # Phiên đăng nhập trên máy (token 30 ngày, tự gia hạn)
+│   │   └── gate.ts              # Cổng bắt buộc đăng nhập: authState(), guard()
 │   ├── calc/                    # TOÁN THUẦN TÚY (Pure logic)
 │   │   ├── unbalance.ts         # Mất cân bằng điện dung, thống kê chuỗi (2σ)
 │   │   ├── evaluate.ts          # Đánh giá ngưỡng kỹ thuật
@@ -268,12 +275,14 @@ tbd-ge-field/
 │   │   └── sign.ts              # Ký số xác nhận điện tử (SHA-256 hash khóa biên bản)
 │   ├── store/
 │   │   ├── db.ts                # Khởi tạo Dexie IndexedDB
-│   │   └── validate.ts          # Kiểm định dữ liệu đầu vào (từ file hoặc Supabase)
+│   │   └── validate.ts          # Kiểm định dữ liệu đầu vào (từ file hoặc máy chủ)
 │   ├── sync/                    # ĐỒNG BỘ ĐÁM MÂY (OFFLINE-FIRST)
 │   │   ├── engine.ts            # Động cơ đẩy (push) và kéo (pull) dữ liệu
 │   │   ├── meta.ts              # Hook Dexie đánh dấu bản ghi thay đổi (_dirty, _mt)
-│   │   ├── status.ts            # Trạng thái kết nối và cấu hình đồng bộ
-│   │   └── supabase.ts          # Client Supabase kết nối máy chủ
+│   │   ├── status.ts            # Cấu hình máy chủ (BACKEND), trạng thái đồng bộ
+│   │   ├── backend.ts           # Giao diện Backend chung + loadBackend() chọn máy chủ
+│   │   ├── runner.ts            # Đồng bộ tự động dùng chung (syncNow/startAuto/stopAuto)
+│   │   └── gas.ts               # Máy chủ Google Apps Script + nút Google (GIS)
 │   ├── styles/
 │   │   ├── tokens.css           # Bảng màu các theme, biến kích thước
 │   │   └── base.css             # CSS giao diện cơ sở (gồm ma trận bình tụ)
@@ -283,17 +292,17 @@ tbd-ge-field/
 │       ├── Session.ts, Sessions.ts
 │       ├── CalcUnbalance.ts, Trend.ts
 │       ├── Thresholds.ts, Equipment.ts, Search.ts
-│       ├── SyncPanel.ts, Users.ts
+│       ├── Auth.ts              # Đăng nhập, Đăng ký, Chờ duyệt / Bị khóa
+│       ├── Admin.ts, Users.ts   # Quản trị hệ thống, Quản lý người dùng
+│       ├── SyncPanel.ts         # Mục Tài khoản & đồng bộ trong Cài đặt
 │       ├── Info.ts              # Hướng dẫn sử dụng + thông tin liên hệ
 │       └── Settings.ts
 ├── scripts/                     # contrast.mjs, image-manifest.mjs, make-icons.mjs
-├── supabase/
-│   ├── migrations/              # 0001_init.sql, 0002_roles_signatures.sql (bảng, RLS, Storage, chữ ký)
-│   └── seed-team.sql            # Dữ liệu khởi tạo thành viên mẫu
+├── gas/                         # MÁY CHỦ GOOGLE: Core.gs (phân quyền, khóa biên bản), Code.gs (Sheets/Drive/Gmail, setup()), appsscript.json, README.md
 └── tests/
     ├── calc.spec.ts             # Unit test công thức tính toán
     ├── sync.spec.ts             # Test cơ chế đồng bộ offline-first
-    ├── supabase-schema.spec.ts  # Test phân quyền RLS trên PostgreSQL ảo PGlite
+    ├── gas-core.spec.ts         # Test máy chủ Apps Script: đăng nhập, đăng ký, phân quyền, khóa biên bản
     └── e2e/                     # app.spec.ts, contrast-audit.spec.ts (Playwright, Pixel 7)
 ```
 
@@ -314,11 +323,11 @@ tbd-ge-field/
    | Tạo / sửa phiên (`session.create/edit`) | ✓ | ✓ | | |
    | Nhập số đo (`measure.edit`) | ✓ | ✓ | ✓ | |
    | Xác nhận cổng an toàn (`gate.confirm`) | ✓ | ✓ | ✓ | |
-   | Sửa hồ sơ giàn, thiết bị TN, nhập dữ liệu | ✓ | ✓ | | |
-   | Quản lý tài khoản, hủy chữ ký | ✓ | | | |
+   | **Cấu hình**: hồ sơ giàn, máy TN, mốc xu hướng, nhập/khôi phục JSON (`profile.edit`, `instrument.edit`, `data.import`) | ✓ | | | |
+   | Quản lý người dùng, hủy chữ ký, trang Quản trị (`users.manage`, `sign.revoke`, `admin.panel`) | ✓ | | | |
 
-   - **Chế độ dùng một mình (chưa đăng nhập):** mọi thao tác trên máy như bình thường, trừ ký số và quản lý tài khoản.
-   - Tài khoản đã đăng nhập nhưng chờ duyệt / bị khóa: chỉ xem.
+   - **Chế độ dùng một mình (không cấu hình máy chủ):** không đăng nhập; mọi thao tác trên máy, trừ ký số và quản lý người dùng.
+   - Có máy chủ: chưa đăng nhập / chờ duyệt / bị khóa **không vào được app** (cổng đăng nhập); Quản trị khóa tài khoản kèm lý do, người bị khóa thấy lý do.
 3. **Ký số điện tử (E-Signatures):**
    - Biên bản có **3 ô ký**: Người thí nghiệm (`tester`), Chỉ huy trực tiếp (`leader`), Đại diện đơn vị QLVH (`qlvh`).
    - Ô được ký theo vai trò (khớp hàm `can_sign` trên máy chủ): leader → cả 3 ô; tester → tester, qlvh; admin, viewer → qlvh.
@@ -392,7 +401,7 @@ npm install
 npm run dev              # Truy cập tại http://localhost:5173
 
 # Chạy toàn bộ Unit Tests (Tính toán + Đồng bộ + RLS DB)
-npm test                 # vitest run – 3 file, 86/86 tests (09/11/2026)
+npm test                 # vitest run – 3 file, 96/96 tests (23/11/2026; gồm tests/gas-core.spec.ts)
 
 # Kiểm tra độ tương phản màu sắc đạt chuẩn WCAG
 npm run contrast         # node scripts/contrast.mjs
@@ -422,6 +431,6 @@ Trích xuất từ `content/review.json` và phản hồi thực tế từ chuy�
 2. **Nguồn cao thế GAMMA (mục 5):** Máy phát điện áp tối đa $10\ \text{kV}$, trong khi phép thử kích hoạt TAG yêu cầu đúng $\pm 10,0\ \text{kV}$. Khuyến nghị kỹ sư đo giám sát qua kẹp chia áp số 8 ($5\ \text{V} = 10\ \text{kV}$) để tránh quá tải nguồn.
 3. **Thử nghiệm Trigger:** Đọc giá trị năng lượng tích lũy `ENERGY (mC)` trên VAP Tester phải ghi nhận ngay trong vòng **0,5 giây** sau khi kích xung; giữa các lần thử đánh lửa phải cách nhau tối thiểu **1 phút**.
 4. **Hồ sơ giàn (Profile Override):** Mỗi giàn tụ (Pleiku 2, Đắk Nông, Di Linh, Cầu Bông...) có số lượng bình tụ và giá trị đặt rơ le bảo vệ khác nhau. Bắt buộc phải chọn đúng Hồ sơ giàn trước khi tiến hành thí nghiệm và xuất biên bản.
-5. **Đồng bộ mốc lịch sử xu hướng:** Bảng `trendHistory` hiện chỉ lưu trên máy và trong file sao lưu JSON, chưa có bảng Supabase. Muốn cả đội dùng chung cần thêm migration + đưa vào `SYNC_TABLES`. (Dữ liệu mẫu viết cứng `getBenchmarkHistory` đã bị loại bỏ ngày 09/11/2026.)
+5. **Đồng bộ mốc lịch sử xu hướng:** Bảng `trendHistory` hiện chỉ lưu trên máy và trong file sao lưu JSON, chưa đồng bộ lên máy chủ. Muốn cả đội dùng chung cần thêm `trendHistory` vào `TABLES` (gas/Core.gs) và `SYNC_TABLES`. (Dữ liệu mẫu viết cứng `getBenchmarkHistory` đã bị loại bỏ ngày 09/11/2026.)
 6. **Ngưỡng tham chiếu trong Trend:** Ngưỡng tan δ (0,50 / 0,70 %), sai lệch Rdc (2 %), C1 (5 %), Rcd MOV (≥ 2000 MΩ / cảnh báo 1000 MΩ) đang viết cứng trong `METRIC_DEFS`, chưa nằm trong `thresholds.json` / hồ sơ giàn. Cần chuyên gia đối chiếu với QĐ 1901 và cân nhắc chuyển vào nội dung JSON.
 7. **Độ tin cậy OCR:** OCR chỉ là công cụ gợi ý; người dùng luôn phải đối chiếu giá trị với màn hình đồng hồ trước khi xác nhận. Chưa có bộ ảnh kiểm thử thực tế cho từng loại đồng hồ.

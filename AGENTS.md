@@ -58,10 +58,11 @@ src/
   views/            mỗi màn hình một View(route, el)
   components/       Chrome (topbar/nav), Timer, ImageViewer
   export/           report.ts (dữ liệu biên bản) → pdf.ts / xlsx.ts / json.ts (sao lưu, nhập)
-  store/validate.ts kiểm tra kiểu dữ liệu từ nguồn ngoài (file JSON, Supabase) – dùng chung
-  sync/             đồng bộ Supabase: meta.ts (hook Dexie đánh dấu thay đổi), engine.ts (đẩy/kéo, độc lập Supabase),
-                    status.ts (cấu hình + trạng thái, luôn tải), supabase.ts (client, đăng nhập, chạy tự động – tải lười)
-supabase/           migrations/0001_init.sql (bảng + RLS + Storage), seed-team.sql, README.md (hướng dẫn cài)
+  store/validate.ts kiểm tra kiểu dữ liệu từ nguồn ngoài (file JSON, máy chủ) – dùng chung
+  auth/             roles.ts (vai trò, ma trận quyền), session.ts (phiên 30 ngày trên máy), gate.ts (cổng bắt buộc đăng nhập)
+  sync/             meta.ts (hook Dexie đánh dấu thay đổi), engine.ts (đẩy/kéo, độc lập máy chủ), runner.ts (tự đồng bộ),
+                    status.ts (cấu hình + trạng thái, luôn tải), backend.ts (giao diện Backend), gas.ts (Apps Script + nút Google – tải lười)
+gas/                MÁY CHỦ Google Apps Script: Core.gs (phân quyền, khóa biên bản – có test), Code.gs (Sheets/Drive/Gmail, setup()), README.md
   styles/           tokens.css (chủ đề), base.css
 public/             images/ (34 ảnh), fonts/, icons/, theme-boot.js
 scripts/            contrast.mjs (WCAG), image-manifest.mjs, make-icons.mjs
@@ -78,7 +79,7 @@ Route chính: `#/`, `#/items`, `#/item/:id`, `#/item/:id/test/:tid/step/:n`, `#/
 
 **Phiên thí nghiệm:** tạo phiên (hồ sơ giàn, loại, ngày, chỉ huy, thành viên, máy TN – cảnh báo quá hạn kiểm định); biểu mẫu theo pha A/B/C, tự tô Đạt/Cảnh báo/Không đạt; phân tích string (> TB + 2σ); so sánh lần trước; ảnh hiện trường (nén ≤ 1600 px); tiến độ 4.1 ✅ 4.2 ⏳; kết luận; xuất **PDF / Excel / JSON**, chia sẻ PDF (Web Share).
 
-**Tài khoản, đồng bộ, ký (Supabase, đồng bộ TẮT mặc định):** ⚙️ → Tài khoản và đồng bộ → Google hoặc mã 6 số qua email (dự phòng cho iOS PWA) → admin duyệt ở `#/users` → bật đồng bộ. 4 vai trò: admin, leader, tester, viewer. Đồng bộ toàn bộ kể cả ảnh (Storage). Ký xác nhận điện tử ở trang phiên, Chỉ huy ký thì khóa biên bản; chữ ký in vào PDF/Excel. Không đăng nhập vẫn dùng được như trước, trừ ký. Cài đặt máy chủ: `supabase/README.md`.
+**Tài khoản, đồng bộ, ký (máy chủ Google Apps Script + Google Sheets/Drive):** khi có `VITE_GAS_URL`, app **bắt buộc đăng nhập** (`#/login` → Google hoặc mã 6 số qua email) → lần đầu khai hồ sơ `#/register` → chờ duyệt `#/account` → Quản trị duyệt ở `#/admin` → `#/users` (phê duyệt + vai trò, khóa có lý do, mở khóa) → vào app, đồng bộ tự động. 4 vai trò: admin, leader, tester, viewer. Cấu hình (hồ sơ giàn, máy TN, mốc xu hướng, nhập JSON) chỉ admin. Ký xác nhận điện tử ở trang phiên, Chỉ huy ký thì khóa biên bản; chữ ký in vào PDF/Excel. Không cấu hình máy chủ = chế độ dùng một mình (không đăng nhập). Cài đặt máy chủ: `gas/README.md`.
 
 **Khác:** 5 chủ đề (Theo máy, Tiêu chuẩn, Ca đêm, Nắng gắt, Đêm đỏ) chọn bằng thẻ xem trước; cỡ chữ; sao lưu/khôi phục JSON; Hướng dẫn (📖) và Giới thiệu (ℹ️) cạnh ⚙️; báo "Có phiên bản mới – Tải lại".
 
@@ -94,10 +95,11 @@ Route chính: `#/`, `#/items`, `#/item/:id`, `#/item/:id/test/:tid/step/:n`, `#/
 8. **Không mất số đo** (NF5): ghi debounce 500 ms + ghi ngay khi `visibilitychange`/`pagehide`/rời trang.
 9. **Đồng bộ là offline-first và tắt mặc định.** App luôn ghi IndexedDB trước. Đơn vị phải cho phép trước khi bật (dữ liệu rời máy, máy chủ Singapore) – giữ công tắc, cảnh báo và hộp xác nhận.
 10. **Theo dõi thay đổi bằng hook Dexie** (`sync/meta.ts`): mọi ghi của người dùng tự có `_dirty/_mt`; ghi từ máy chủ mang `_rv` nên không bị đánh dấu lại; xóa → tombstone. Không ghi DB bằng đường vòng né hook. Xóa cờ sau khi đẩy chỉ khi `_mt` không đổi (sửa trong lúc đẩy không mất). Bản ghi chưa gửi thắng bản kéo về.
-11. **Không xóa cứng trên máy chủ** (chỉ `deleted = true`); RLS không có chính sách DELETE. Dữ liệu kéo về **phải** qua `store/validate.ts`; ảnh chỉ nhận jpeg/png/webp và đường dẫn trong thư mục đội.
-12. **Chỉ anon/publishable key** trong app (biến `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, GitHub repository variables). Không bao giờ dùng service_role. File JSON xuất/nhập bỏ trường `_dirty/_mt/_rv` (`stripMeta`).
+11. **Không xóa cứng trên máy chủ** (chỉ `deleted = true`); Core.gs không có lệnh xóa dòng. Dữ liệu kéo về **phải** qua `store/validate.ts`; ảnh chỉ nhận jpeg/png/webp và đường dẫn trong thư mục đội.
+12. **Chỉ giá trị công khai** trong app: `VITE_GAS_URL`, `VITE_GOOGLE_CLIENT_ID` (GitHub repository variables). Không bao giờ đưa Client secret hay `SECRET` (Script properties) vào app. File JSON xuất/nhập bỏ trường `_dirty/_mt/_rv` (`stripMeta`).
 13. Cổng an toàn chế độ tra cứu (`sessionId = '_local'`) không bao giờ gửi lên.
-14. **Quyền thật nằm ở RLS** (`supabase/migrations/0002`), `src/auth/roles.ts` chỉ để ẩn nút; đổi quyền phải sửa cả hai và test `tests/supabase-schema.spec.ts`. Tài khoản mới luôn `pending`, trừ email trong `team_members`. Admin không sửa được chính mình.
+14. **Quyền thật nằm ở máy chủ** (`gas/Core.gs`), `src/auth/roles.ts` chỉ để ẩn nút; đổi quyền phải sửa cả hai và test `tests/gas-core.spec.ts`. Tài khoản mới luôn `pending` và phải gửi hồ sơ, trừ email trong tab `members`. Admin không sửa được chính mình. Sửa Core.gs/Code.gs xong phải dán lại vào Apps Script và tạo **New version** cho deployment.
+14b. **Cổng đăng nhập** (`auth/gate.ts` + `router.setGuard`): mọi route đi qua `guard()`; chỉ `help`, `info` công khai. Trạng thái tài khoản đổi → sự kiện `auth:changed` → vẽ lại qua cổng. Phiên 30 ngày tự gia hạn ở mỗi lần gọi `me` để dùng offline ngoài hiện trường.
 15. **Chữ ký:** `signSession` băm nội dung bằng SHA-256 (ô `tester` không gồm kết luận). Chữ ký Chỉ huy còn hiệu lực = biên bản khóa (`session_locked` trên máy chủ, `isLocked` trên máy). Chỉ admin thu hồi. Chữ ký gửi sau cùng trong `SYNC_TABLES`. Ký cần tài khoản đã duyệt; đây là xác nhận nội bộ, không phải chữ ký số pháp lý.
 16. Dữ liệu mẫu mang `_rv: 'seed'`, không tự gửi lên. Thay đổi bị máy chủ từ chối (`RefusedError`) thì bỏ và kéo lại bản máy chủ, không thử lại mãi.
 
@@ -116,10 +118,10 @@ Route chính: `#/`, `#/items`, `#/item/:id`, `#/item/:id/test/:tid/step/:n`, `#/
 
 ```bash
 npm run dev          # phát triển
-npm test             # 60 test: calc (34), lược đồ + RLS Supabase trên PGlite (12), đồng bộ + vai trò + ký với IndexedDB giả (14)
+npm test             # 96 test: calc, đồng bộ + vai trò + ký với IndexedDB giả, máy chủ Apps Script (gas-core: đăng nhập, đăng ký, phân quyền, khóa biên bản)
 npm run contrast     # WCAG cho mọi chủ đề – CI chạy bước này
 npm run build        # tsc + vite build → dist/
-npm run test:e2e     # Playwright, chạy trên bản build (nhớ build trước)
+npm run test:e2e     # Playwright – tự build bản dùng một mình (che VITE_GAS_URL) rồi chạy
 ```
 
 E2E gồm: offline (chế độ máy bay), cổng an toàn & đồng hồ, tự lưu + tính %ΔC + xuất file, tìm không dấu, khóa bước, nhập JSON độc hại bị từ chối, ổn định bố cục, **đo tương phản thật trên màn hình ở 4 chủ đề** (`contrast-audit.spec.ts`).
@@ -139,6 +141,6 @@ E2E gồm: offline (chế độ máy bay), cổng an toàn & đồng hồ, tự 
 - Tiêu chí đánh giá bơm CT10/CT11 (4.5.D) chưa có trong nguồn.
 - Danh sách đầy đủ: `content/review.json` (hiện ở `#/about`).
 - **Bản quyền:** ảnh/sơ đồ từ tài liệu GE và đào tạo nội bộ; đặc tả yêu cầu chỉ triển khai nội bộ – bản GitHub Pages hiện công khai theo quyết định của chủ dự án.
-- Supabase (đồng bộ, Google, duyệt, ký): code + SQL đã có và có test, nhưng **chưa có project thật** nên chưa thử luồng Google và đồng bộ với máy chủ thật.
+- Máy chủ Google (23/11/2026): đăng nhập Google với Apps Script thật đã chạy; luồng đăng ký/duyệt/khóa/đồng bộ đã thử đầu cuối với máy chủ giả lập chạy đúng Core.gs. Code.gs (Sheets/Drive) chưa có kiểm thử tự động.
 - Đổi tài khoản sang đội khác trên cùng máy: dữ liệu đang có trên máy sẽ được gửi lên đội mới; chưa xử lý.
-- Chưa làm (giai đoạn 3 đặc tả): quét QR thiết bị, trắc nghiệm đào tạo, quản lý thành viên trong app (hiện làm bằng SQL).
+- Chưa làm (giai đoạn 3 đặc tả): quét QR thiết bị, trắc nghiệm đào tạo, thêm/đổi đội trong app (hiện sửa tab `teams`/`members` trong Google Sheets).

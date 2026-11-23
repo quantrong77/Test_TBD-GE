@@ -1,14 +1,15 @@
 import { setTop } from '../components/Chrome';
-import { effectiveTheme, getFontScale, getTheme, isOfflineReady, setFontScale, setTheme, type EffectiveTheme, type Theme } from '../settings';
+import { effectiveTheme, getFontScale, getTheme, offlineStatus, setFontScale, setTheme, type EffectiveTheme, type Theme } from '../settings';
 import { canInstall, isStandalone, onInstallable, promptInstall } from '../pwa';
-import { download } from '../export/report';
 import { storageWarning } from '../store/db';
 import { CONTENT_VERSION } from '../content';
-import { callout, esc, toast } from '../ui';
+import { callout, esc } from '../ui';
 import type { View } from '../router';
 import { fmtFixed } from '../calc/units';
 import { renderSyncPanel } from './SyncPanel';
 import { can } from '../auth/roles';
+import { downloadBackup } from './Admin';
+import { isConfigured } from '../sync/status';
 
 /** Chủ đề đặt theo điều kiện làm việc tại trạm. */
 const THEMES: { id: Theme; name: string; use: string }[] = [
@@ -44,7 +45,7 @@ const SCALES: [number, string][] = [
 
 export const Settings: View = async (_r, el) => {
   setTop('Cài đặt', { back: true });
-  const ready = isOfflineReady();
+  const off = offlineStatus();
   let usage = '';
   try {
     const e = await navigator.storage?.estimate?.();
@@ -61,7 +62,7 @@ export const Settings: View = async (_r, el) => {
     <div class="seg" role="group" aria-label="Cỡ chữ">${SCALES.map(([s, l]) => `<button type="button" data-scale="${s}" aria-pressed="${getFontScale() === s}" style="padding:0 12px">${l}</button>`).join('')}</div>
 
     <h2>Offline & cài đặt app</h2>
-    <p><span class="dot ${ready ? 'ok' : 'warn'}"></span>${ready ? 'Toàn bộ nội dung và hình ảnh đã sẵn sàng offline.' : 'Chưa sẵn sàng offline – mở app khi có mạng và chờ thông báo.'}</p>
+    <p><span class="dot ${off.ok ? 'ok' : 'warn'}"></span>${esc(off.ok && !import.meta.env.DEV ? 'Toàn bộ nội dung và hình ảnh đã sẵn sàng offline.' : off.text)}</p>
     <div id="install"></div>
 
     <h2>Tài khoản và đồng bộ</h2>
@@ -69,10 +70,10 @@ export const Settings: View = async (_r, el) => {
 
     <h2>Dữ liệu trên máy</h2>
     ${warn ? callout({ level: 'warn', text: warn }) : ''}
-    <p class="small muted">Dữ liệu nằm trên máy này; chỉ rời máy khi bạn chủ động xuất file hoặc bật đồng bộ đám mây. ${usage ? `Đang dùng: ${esc(usage)}.` : ''}</p>
+    <p class="small muted">Dữ liệu luôn ghi vào máy này trước${isConfigured() ? ', rồi tự đồng bộ với cả đội khi có mạng' : '; chỉ rời máy khi bạn chủ động xuất file'}. ${usage ? `Đang dùng: ${esc(usage)}.` : ''}</p>
     <div class="btn-row">
       <button class="btn" type="button" id="backup">💾 Sao lưu toàn bộ</button>
-      ${can('data.import') ? '<label class="btn secondary">📂 Khôi phục / nhập JSON<input type="file" accept="application/json,.json" hidden id="restore"></label>' : ''}
+      ${can('admin.panel') ? '<a class="btn secondary" href="#/admin">🛡️ Khôi phục / nhập JSON (Quản trị)</a>' : ''}
     </div>
 
     <h2>Thông tin</h2>
@@ -105,21 +106,5 @@ export const Settings: View = async (_r, el) => {
 
   void renderSyncPanel(el.querySelector<HTMLElement>('#sync')!);
 
-  el.querySelector('#backup')!.addEventListener('click', async () => {
-    const { backupJson } = await import('../export/json');
-    const d = new Date();
-    const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
-    download(new Blob([JSON.stringify(await backupJson())], { type: 'application/json' }), `tbdge-backup-${stamp}.json`);
-  });
-  el.querySelector<HTMLInputElement>('#restore')?.addEventListener('change', async (e) => {
-    const f = (e.target as HTMLInputElement).files?.[0];
-    if (!f) return;
-    if (!confirm(`Nhập "${f.name}"? Bản ghi trùng mã sẽ bị ghi đè.`)) return;
-    try {
-      const { importJson } = await import('../export/json');
-      toast(await importJson(await f.text()), undefined, 5000);
-    } catch (err) {
-      toast('Lỗi: ' + (err as Error).message, undefined, 6000);
-    }
-  });
+  el.querySelector('#backup')!.addEventListener('click', () => void downloadBackup());
 };

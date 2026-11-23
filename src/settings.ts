@@ -58,3 +58,16 @@ export function setFontScale(s: number) {
 
 export const isOfflineReady = () => get('offlineReady') === '1' || !!navigator.serviceWorker?.controller;
 export const markOfflineReady = () => set('offlineReady', '1');
+
+/**
+ * Trạng thái bộ nhớ offline (service worker đã lưu toàn bộ app + ảnh), dùng ở Trang chủ và Cài đặt.
+ * Không liên quan tới đồng bộ dữ liệu với máy chủ.
+ */
+export function offlineStatus(): { ok: boolean; text: string } {
+  if (import.meta.env.DEV) return { ok: true, text: 'Bản phát triển (npm run dev) – không bật bộ nhớ offline; bản đã triển khai thì có' };
+  if (isOfflineReady()) return { ok: true, text: 'Sẵn sàng offline' };
+  if (!('serviceWorker' in navigator)) return { ok: false, text: 'Trình duyệt không hỗ trợ dùng offline' };
+  return navigator.onLine
+    ? { ok: false, text: 'Đang tải dữ liệu offline… (giữ app mở khi có mạng)' }
+    : { ok: false, text: 'Chưa tải xong dữ liệu offline – mở app khi có mạng' };
+}

@@ -1,5 +1,6 @@
 import { esc } from '../ui';
 import { Icons } from './Icons';
+import { userSlotHtml } from './UserMenu';
 
 const NAV = [
   { href: '#/', ico: Icons.tower, label: 'Trang chủ', match: (p: string) => p === '' },
@@ -37,7 +38,7 @@ export function setTop(title: string, opts: { back?: string | true; sub?: string
   top.innerHTML = `${left}<div class="title">${esc(title)}${opts.sub ? `<small>${esc(opts.sub)}</small>` : ''}</div>
     <a class="icon-btn" href="#/help" aria-label="Hướng dẫn sử dụng" title="Hướng dẫn sử dụng">${Icons.manual}</a>
     <a class="icon-btn" href="#/info" aria-label="Giới thiệu" title="Giới thiệu">${Icons.info}</a>
-    <a class="icon-btn" href="#/settings" aria-label="Cài đặt" title="Cài đặt">${Icons.settings}</a>`;
+    ${userSlotHtml()}`;
   top.querySelector('[data-back]')?.addEventListener('click', () => history.back());
   document.title = `${title} – TBD-GE Field`;
 }
