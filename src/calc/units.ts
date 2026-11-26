@@ -47,3 +47,8 @@ export function fmt(x: number | null | undefined, digits = 3): string {
   if (x == null || !Number.isFinite(x)) return '—';
   return x.toLocaleString('vi-VN', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
 }
+
+/** Ngày hôm nay theo giờ máy (YYYY-MM-DD). Không dùng toISOString(): đó là ngày UTC – trước 7 giờ sáng ở VN còn là hôm qua. */
+export function localISODate(d = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}

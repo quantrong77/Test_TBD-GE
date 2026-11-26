@@ -24,7 +24,7 @@ export const Units: View = async (_r, el) => {
     const d = today();
     const year = Number(d.slice(0, 4));
     const card = (u: Unit, isNew: boolean) => {
-      const next = nextReportNo(u, d, sessions);
+      const next = nextReportNo(u, d, sessions, list.length <= 1 ? u.id : null);
       return `<form class="card" data-id="${esc(u.id)}"${isNew ? ' data-new' : ''}>
         ${isNew ? '<p class="small muted mt-0">Chưa khai đơn vị – biên bản đang dùng tên mặc định dưới đây. Bấm Lưu để khai chính thức.</p>' : ''}
         <label class="field"><span>Tên đơn vị (cấp trên)</span><input name="orgName" required maxlength="200" value="${esc(u.orgName)}"></label>

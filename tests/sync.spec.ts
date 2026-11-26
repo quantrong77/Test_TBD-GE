@@ -273,6 +273,17 @@ describe('phân quyền và ký xác nhận điện tử', () => {
     expect((await S.verifySignatures('sg'))[0].valid).toBe(false);
   });
 
+  it('ký: bỏ chọn hạng mục / đổi số biên bản sau khi ký → chữ ký không còn khớp', async () => {
+    await D.db.sessions.put({ ...session('sc'), items: ['4.1', '4.5'], reportNo: 3 });
+    R.setMe(me('tester'));
+    await S.signSession('sc', 'tester');
+    expect((await S.verifySignatures('sc'))[0].valid).toBe(true);
+    await D.db.sessions.update('sc', { items: ['4.1'] });
+    expect((await S.verifySignatures('sc'))[0].valid).toBe(false);
+    await D.db.sessions.update('sc', { items: ['4.1', '4.5'], reportNo: 4 });
+    expect((await S.verifySignatures('sc'))[0].valid).toBe(false);
+  });
+
   it('Chỉ huy ký → khóa biên bản, phiên chuyển "đã kết thúc"; chỉ một chữ ký Chỉ huy', async () => {
     await D.db.sessions.put(session('sl'));
     expect(await S.isLocked('sl')).toBe(false);

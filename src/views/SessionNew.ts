@@ -79,6 +79,7 @@ export const SessionNew: View = async (_r, el) => {
   const f = el.querySelector<HTMLFormElement>('#f')!;
   const val = (k: string) => String(new FormData(f).get(k) ?? '').trim();
   const unit = () => units.find((u) => u.id === val('unitId')) ?? units[0];
+  const primary = units.length === 1 ? units[0].id : null;
   const staffOf = () =>
     staffAll
       .filter((s) => !s.inactive && (s.unitId === unit().id || (units.length === 1 && !units.some((u) => u.id === s.unitId))))
@@ -89,7 +90,7 @@ export const SessionNew: View = async (_r, el) => {
   let autoNo = true;
   const refreshNo = () => {
     const date = val('date') || today();
-    if (autoNo) noInput.value = String(nextReportNo(unit(), date, sessions));
+    if (autoNo) noInput.value = String(nextReportNo(unit(), date, sessions, primary));
     const n = Number(noInput.value);
     el.querySelector('#noPreview')!.textContent = Number.isInteger(n) && n > 0 ? `In trên biên bản: Số ${formatReportNo(unit().reportFormat, n, date)}` : 'Số không hợp lệ';
   };
@@ -144,7 +145,7 @@ export const SessionNew: View = async (_r, el) => {
               .join('')}</fieldset>`
           : ''
       }
-      <label class="field"><span>${staff.length ? 'Người ngoài danh sách' : 'Thành viên'} – mỗi dòng 1 người: Họ tên, chức danh, bậc an toàn</span><textarea name="extra" rows="3" placeholder="vd: Lê Văn D, Kỹ sư, 4"></textarea></label>
+      <label class="field"><span>${staff.length ? 'Người ngoài danh sách' : 'Thành viên'} – mỗi dòng 1 người: Họ tên, chức danh, bậc an toàn</span><textarea name="extra" rows="3" maxlength="2000" placeholder="vd: Lê Văn D, Kỹ sư, 4"></textarea></label>
       <label class="field"><span>Người chịu trách nhiệm thí nghiệm * (ký ô Người thí nghiệm)</span><select name="responsible"></select></label>`;
     drawResponsible();
   };
@@ -205,7 +206,7 @@ export const SessionNew: View = async (_r, el) => {
     const u = unit();
     const date = val('date');
     const draft = { id: uid(), unitId: u.id, date, ...(hist ? {} : { reportNo }) };
-    const dup = duplicateReportNo(draft, sessions);
+    const dup = duplicateReportNo(draft, sessions, primary);
     if (!hist && dup.length && !confirm(`Số biên bản ${formatReportNo(u.reportFormat, reportNo, date)} đã dùng cho phiên ngày ${fmtDate(dup[0].date)}. Vẫn dùng số này?`)) return;
     const ms = all.filter((m) => m.name !== ld?.name);
     const s: Session = {

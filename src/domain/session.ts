@@ -3,7 +3,8 @@ import { getItem } from '../content';
 import { db } from '../store/db';
 import { evaluateTest, formFor, type Phase, type ResultRow, type Values } from '../forms';
 import { combine } from '../calc/evaluate';
-import type { Profile, Result, Session } from '../types';
+import type { Profile, Result, Session, Unit } from '../types';
+import { DEFAULT_UNIT } from './units';
 
 export const TYPE_LABEL: Record<Session['type'], string> = {
   after_install: 'Sau lắp đặt',
@@ -76,3 +77,19 @@ export function phaseState(d: SessionData, itemId: string, ph: Phase): State {
 export const itemOn = (s: Pick<Session, 'items'>, itemId: string) => !s.items || s.items.includes(itemId);
 
 export const STATE_ICON: Record<State, string> = { todo: '○', progress: '⏳', pass: '✅', fail: '❌', warn: '⚠️', na: '⏳' };
+
+/**
+ * Đơn vị in trên biên bản: bản chụp lúc tạo phiên; phiên cũ (trước khi có đơn vị) lấy đơn vị đã khai
+ * (đúng mã, hoặc đơn vị duy nhất), chỉ dùng mặc định khi đội chưa khai đơn vị nào.
+ */
+export async function sessionUnit(s: Session): Promise<Pick<Unit, 'orgName' | 'name' | 'reportFormat'>> {
+  if (s.unitSnap) return s.unitSnap;
+  const units = await db.units.toArray();
+  return units.find((u) => u.id === s.unitId) ?? (units.length === 1 ? units[0] : DEFAULT_UNIT);
+}
+
+/** Mã đơn vị duy nhất của đội (để đánh số phiên tạo khi chưa khai đơn vị) – nhiều đơn vị thì null. */
+export async function primaryUnitId(): Promise<string | null> {
+  const units = await db.units.toArray();
+  return units.length === 1 ? units[0].id : units.length ? null : DEFAULT_UNIT.id;
+}

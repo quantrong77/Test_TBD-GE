@@ -1,6 +1,6 @@
 // Nhập mốc lịch sử xu hướng hàng loạt từ bảng (Excel/CSV) – hàm thuần, có test. Đọc file bằng SheetJS ở màn hình.
 import { METRIC_DEFS, METRIC_SOURCE, SESSION_TYPE_LABEL, TREND_METRICS, type TrendHistoryRecord, type TrendMetricKey, type TrendSessionType } from '../calc/trend';
-import { foldVi, parseNum } from '../calc/units';
+import { foldVi, localISODate, parseNum } from '../calc/units';
 import type { Profile } from '../types';
 
 export const IMPORT_HEADER = ['Ngày thí nghiệm', 'Mã hồ sơ giàn', 'Chỉ số', 'Loại đợt', 'Pha A', 'Pha B', 'Pha C', 'Tên đợt', 'Ghi chú / số biên bản giấy'] as const;
@@ -13,6 +13,8 @@ export interface ImportRow {
 export interface ImportResult {
   rows: ImportRow[];
   errors: { line: number; message: string }[];
+  /** dòng trùng giàn + chỉ số + ngày với dòng phía dưới trong cùng file – bỏ, lấy dòng sau */
+  duplicates: number[];
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -76,7 +78,7 @@ function num(x: unknown): number | null | 'bad' {
  * Bảng (dòng 1 = tiêu đề, theo IMPORT_HEADER) → mốc lịch sử hợp lệ + danh sách lỗi theo dòng.
  * Dòng trống bị bỏ qua. Không ghi gì – màn hình hiển thị xem trước rồi mới lưu.
  */
-export function parseTrendTable(table: unknown[][], profiles: Profile[], today = new Date().toISOString().slice(0, 10)): ImportResult {
+export function parseTrendTable(table: unknown[][], profiles: Profile[], today = localISODate()): ImportResult {
   const rows: ImportRow[] = [];
   const errors: ImportResult['errors'] = [];
   table.slice(1).forEach((r, i) => {
@@ -102,7 +104,11 @@ export function parseTrendTable(table: unknown[][], profiles: Profile[], today =
       rec: { profileId: prof.id, metric, date, label, sessionType: type, phaseA: vals[0] as number | null, phaseB: vals[1] as number | null, phaseC: vals[2] as number | null, ...(note ? { note } : {}) },
     });
   });
-  return { rows, errors };
+  // trong cùng file: dòng sau thay dòng trước (vd dòng sửa lại thêm ở cuối)
+  const last = new Map<string, number>();
+  rows.forEach((r, i) => last.set(historyKey(r.rec), i));
+  const duplicates = rows.filter((r, i) => last.get(historyKey(r.rec)) !== i).map((r) => r.line);
+  return { rows: rows.filter((r, i) => last.get(historyKey(r.rec)) === i), errors, duplicates };
 }
 
 /** Khóa trùng: cùng giàn + chỉ số + ngày → mốc nhập sau thay mốc cũ. */

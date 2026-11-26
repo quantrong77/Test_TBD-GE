@@ -112,6 +112,8 @@ for (const theme of THEMES) {
     await check('trang phiên (tổng kết)');
     // chế độ từng bước (gate-visual cho 4.2)
     await page.goto('#/gate/gate-visual');
+    // chờ trang cổng dựng xong (trang phiên trước đó còn tải phần rà soát) rồi mới liệt kê ô tích
+    await expect(page.locator('h1', { hasText: 'không cấp điện thử' })).toBeVisible();
     for (const b of await page.locator('#checks input[type=checkbox]').all()) await b.check();
     await page.locator('#who').selectOption('Trần Văn C');
     await page.getByRole('button', { name: /XÁC NHẬN/ }).click();

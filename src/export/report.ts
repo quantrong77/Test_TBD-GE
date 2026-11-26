@@ -1,7 +1,7 @@
 import { items, CONTENT_VERSION, getGate } from '../content';
 import { calibOverdue } from '../calc/evaluate';
-import { itemOn, sessionInstruments, testState, TYPE_LABEL, type SessionData } from '../domain/session';
-import { crewLabel, DEFAULT_UNIT, formatReportNo } from '../domain/units';
+import { itemOn, sessionInstruments, sessionUnit, testState, TYPE_LABEL, type SessionData } from '../domain/session';
+import { crewLabel, formatReportNo } from '../domain/units';
 import { db } from '../store/db';
 import { verifySignatures } from '../sign/sign';
 import { SLOT_LABEL } from '../auth/roles';
@@ -70,7 +70,7 @@ export async function buildReport(d: SessionData) {
       hash: sig.hash,
       check: valid ? 'Khớp nội dung lúc ký' : 'NỘI DUNG ĐÃ THAY ĐỔI SAU KHI KÝ',
     }));
-  const unit = s.unitSnap ?? DEFAULT_UNIT;
+  const unit = await sessionUnit(s);
   const header = {
     orgName: unit.orgName,
     unitName: unit.name,

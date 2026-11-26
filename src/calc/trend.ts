@@ -23,7 +23,7 @@
 import type { Profile, Session, Measurement, Result, Threshold } from '../types';
 import { unbalance, type CurrentUnit } from './unbalance';
 import { tempCorrectRcd, tempCorrectRdc } from './temp-correction';
-import { parseNum } from './units';
+import { localISODate, parseNum } from './units';
 import { evalThreshold, resolveThreshold } from './evaluate';
 import thresholdsJson from '../../content/thresholds.json';
 
@@ -434,7 +434,7 @@ export function mergeTrendPoints(...lists: TrendDataPoint[][]): TrendDataPoint[]
 }
 
 /** Kiểm tra một mốc nhập tay trước khi lưu. Trả về thông báo lỗi hoặc null. */
-export function validateHistoryInput(date: string, values: (number | null)[], today = new Date().toISOString().slice(0, 10)): string | null {
+export function validateHistoryInput(date: string, values: (number | null)[], today = localISODate()): string | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return 'Ngày thí nghiệm không hợp lệ.';
   if (date > today) return 'Ngày thí nghiệm không được ở tương lai.';
   if (values.every((v) => v === null)) return 'Cần nhập số liệu ít nhất một pha.';

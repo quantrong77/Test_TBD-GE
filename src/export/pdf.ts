@@ -4,7 +4,7 @@ import { buildReport, blobToDataUrl } from './report';
 import { db } from '../store/db';
 import { fmtDate } from '../ui';
 import { getItem } from '../content';
-import type { SessionData } from '../domain/session';
+import { itemOn, type SessionData } from '../domain/session';
 
 const FONT = 'BVP';
 
@@ -129,7 +129,8 @@ export async function buildPdf(d: SessionData): Promise<Blob> {
   }
 
   // Ảnh hiện trường
-  const photos = await db.photos.where('sessionId').equals(r.s.id).sortBy('ts');
+  // chỉ ảnh của hạng mục thực hiện (hạng mục bỏ chọn không đưa vào biên bản)
+  const photos = (await db.photos.where('sessionId').equals(r.s.id).sortBy('ts')).filter((ph) => itemOn(r.s, ph.itemId));
   if (photos.length) {
     doc.addPage();
     doc.setFont(FONT, 'bold').setFontSize(11).text('ẢNH HIỆN TRƯỜNG', M, 18);

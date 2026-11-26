@@ -31,6 +31,12 @@ describe('số biên bản', () => {
     expect(formatReportNo('BB{nn}-TNĐLĐ', 123, '2026-11-26')).toBe('BB123-TNĐLĐ');
     expect(formatReportNo('{nn}', undefined, '2026-11-26')).toBe('');
   });
+  it('phiên tạo khi chưa khai đơn vị thuộc đơn vị duy nhất của đội (không đánh lại từ 01, vẫn báo trùng)', () => {
+    const old = [{ id: 'a', date: '2026-01-02', reportNo: 1 }, { id: 'b', date: '2026-02-02', reportNo: 2, unitId: 'default' }];
+    expect(nextReportNo({ id: 'u9', numberStart: 1, numberYear: 2026 }, '2026-05-01', old)).toBe(1);
+    expect(nextReportNo({ id: 'u9', numberStart: 1, numberYear: 2026 }, '2026-05-01', old, 'u9')).toBe(3);
+    expect(duplicateReportNo({ id: 'n', unitId: 'u9', date: '2026-05-01', reportNo: 2 }, old, 'u9').map((x) => x.id)).toEqual(['b']);
+  });
   it('phát hiện trùng số (cùng đơn vị, cùng năm)', () => {
     const all = [ses('a', '2026-01-02', 7), ses('b', '2025-01-02', 7), ses('c', '2026-03-02', 7, 'khac')];
     expect(duplicateReportNo(ses('n', '2026-05-01', 7), all).map((x) => x.id)).toEqual(['a']);
@@ -49,6 +55,8 @@ describe('nhân sự', () => {
       { name: 'Phạm F', safetyGrade: 3 },
       { name: 'Ngô G', title: 'CN' },
     ]);
+    // dài hơn 200 ký tự bị cắt (máy khác sẽ từ chối khi đồng bộ nếu để nguyên)
+    expect(parseExtraCrew('x'.repeat(300))[0].name).toHaveLength(200);
   });
   it('kiểm tra dữ liệu đơn vị, nhân viên, phiên có nhân sự & hạng mục', () => {
     expect(() => vUnit({ id: 'u1', orgName: 'TT', name: 'Đội', reportFormat: '{nn}', numberStart: 1, numberYear: 2026 })).not.toThrow();

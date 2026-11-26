@@ -2,7 +2,7 @@
 
 > **Mục đích:** Nguồn tri thức duy nhất (Single Source of Truth) về nghiệp vụ, kiến trúc, quy tắc an toàn của **TBD-GE Field**, kèm **luồng sử dụng mục tiêu** và **kế hoạch refactor toàn bộ**. Dành cho kỹ sư phát triển, chuyên gia thí nghiệm và AI agent.
 >
-> **Cập nhật:** 26/11/2026 – nhánh `refactor/field-workflow` (tách từ `main` @ `54bb83d`), app `1.1.0`. Đã xong R0–R7 (trừ cảnh báo "nghi nhập sai" – để sau).
+> **Cập nhật:** 26/11/2026 – nhánh `refactor/field-workflow` (tách từ `main` @ `54bb83d`), app `1.1.0`. Đã xong R0–R8 và gợi ý kết luận (trừ cảnh báo "nghi nhập sai" – để sau).
 >
 > **Cách đọc:** Phần A = hiện trạng (đúng với mã nguồn). Phần B = đích đến (luồng, nhập liệu, mẫu BBTN). Phần C = kế hoạch refactor theo giai đoạn, mỗi giai đoạn có tiêu chí nghiệm thu.
 
@@ -129,6 +129,7 @@ src/
   main.ts router.ts content.ts types.ts ui.ts settings.ts pwa.ts
   domain/session.ts   # SessionData, loadSessionData, testState, itemState, phaseState, itemOn, TYPE_LABEL
   domain/trend-import.ts # đọc bảng Excel/CSV mốc lịch sử xu hướng, file mẫu
+  domain/review.ts    # rà soát ❌/⚠️, đề xuất xử lý (content/advice.json), nháp kết luận
   domain/units.ts     # DEFAULT_UNIT, nextReportNo, formatReportNo, duplicateReportNo, crewLabel, parseExtraCrew
   forms/              # index (FORMS, formFor, evaluateTest), types, inputs, checklist, unbalance,
                       # compare (mov, reactor), bushing, tag (gap, vap, trigger, ct10), inject (R2)
@@ -139,13 +140,13 @@ src/
   sign/ store/ sync/ styles/
   views/              # Org.ts (đơn vị, nhân viên), SessionNew.ts, Session.ts (biểu mẫu), session/ (SessionView, sign, photos), …
 gas/       Core.gs Code.gs appsscript.json README.md
-tests/     calc, sync, gas-core, auth-ui, signers, architecture, forms (snapshot), org, trend-import (.spec.ts) + e2e/ (app, contrast-audit, org, history – Playwright Pixel 7)
+tests/     calc, sync, gas-core, auth-ui, signers, architecture, forms (snapshot), org, trend-import, review (.spec.ts) + e2e/ (app, contrast-audit, org, history – Playwright Pixel 7)
 ```
 
 ### A5.8. Lệnh
 ```bash
 npm run dev        # http://localhost:5173
-npm test           # vitest – 9 file, 150 test (26/11/2026)
+npm test           # vitest – 10 file, 160 test (26/11/2026)
 npm run build      # tsc + vite build PWA
 npm run test:e2e   # Playwright tự build bản dùng-một-mình (VITE_GAS_URL rỗng); 27 test
 npm run contrast   # kiểm tra tương phản WCAG các chủ đề
@@ -250,7 +251,8 @@ VII. Xác nhận                                   <Trạm>, ngày …
 | **R5** ✅ (một phần) | **Luồng hiện trường:** tick hạng mục thực hiện (ẩn/hiện vùng nhập); bảng tiến độ hạng mục × pha (`phaseState`); tách `views/Session.ts` → `views/session/SessionView.ts`, `sign.ts`, `photos.ts`. **Để sau:** cảnh báo nghi nhập sai, “còn N ô trống”, Enter → ô kế | `domain/session.ts`, `views/session/*` | e2e org; unit test `phaseState`, `itemOn` |
 | **R6** ✅ (một phần) | **BBTN chuẩn:** đầu biên bản tên đơn vị + đơn vị TN + số BB (không quốc hiệu); chỉ hạng mục thực hiện; ô Người thí nghiệm = người chịu trách nhiệm. **Để sau:** gợi ý kết luận từ dòng ❌/⚠️ | `export/*` | PDF/Excel đúng mẫu B3 |
 | **R7** ✅ | **Xu hướng & số liệu lịch sử:** (1) đồng bộ `trendHistory` (bảng `trend_history`, Quản trị + Chỉ huy ghi); (2) xu hướng bỏ qua hạng mục không tick Thực hiện; (3) **nhập nhiều mốc từ Excel/CSV** – file mẫu 4 sheet, xem trước, báo lỗi theo dòng, trùng giàn+chỉ số+ngày thì thay (`domain/trend-import.ts`); (4) **14 chỉ số** (thêm MOV Rsu, P; kháng Rcd, Z, L; khe hở TAG; VAP mC, V, A) với kiểu đánh giá mới `range` (trong dải theo hồ sơ giàn + dự báo ra khỏi dải) và `step` (thay đổi > 20 % so với đợt trước); ngưỡng từ `thresholds.json`; (5) **phiên nhập lại biên bản giấy** (`historical`, `paperRef`): không số BB, không ký, không cổng an toàn, PDF ghi "bản nhập lại". Chưa tách phần vẽ SVG khỏi `calc/trend.ts` | `calc/trend.ts`, `domain/trend-import.ts`, `views/Trend.ts`, `views/SessionNew.ts`, `gas/Core.gs`, `content/help.json` | `tests/trend-import.spec.ts`, `tests/e2e/history.spec.ts` |
-| **R8** | **Dọn & tài liệu:** `/simplify`, `/code-review`, cập nhật `AGENTS.md`; tách vẽ SVG khỏi `calc/trend.ts`. (`knowledge.md`, `content/help.json` đã cập nhật theo luồng mới) | toàn bộ | Review không còn lỗi mức quan trọng |
+| **R8** ✅ | **Dọn & tài liệu:** tách vẽ SVG → `calc/trend-chart.ts`; cập nhật `AGENTS.md`, `knowledge.md`, `content/help.json`; `/code-review` toàn nhánh → sửa 7 lỗi quan trọng + 1 lỗi có sẵn: số BB phiên tạo trước khi khai đơn vị, chữ ký không phủ hạng mục/số BB/nhân sự, PDF còn ảnh & Excel còn số liệu hạng mục bỏ chọn, ngày UTC khi nhập Excel trước 7 giờ, dòng trùng trong cùng file, tên nhân sự > 200 ký tự làm hỏng đồng bộ, phiên cũ in đơn vị mặc định, máy chủ nhận 2 chữ ký cùng ô trong 1 lô | toàn bộ | 160 unit + 27 e2e xanh |
+| **R9** ✅ | **Rà soát & gợi ý kết luận:** `domain/review.ts` gom dòng ❌/⚠️ theo phép thử + đề xuất xử lý (`content/advice.json`, chuyên gia sửa), cảnh báo máy quá hạn, cổng an toàn chưa xác nhận, hạng mục chưa có số liệu, xu hướng (khi phiên là đợt mới nhất); nút **💡 Gợi ý kết luận, kiến nghị** (xem trước → Thay / Thêm vào cuối, không tự ghi); nhắc khi ký | `domain/review.ts`, `views/session/review.ts`, `content/advice.json` | `tests/review.spec.ts`, e2e session |
 
 **Thứ tự khuyến nghị:** R1 → R2 → R3 (thuần kỹ thuật, không đổi hành vi) rồi R4 → R5 → R6 (đổi trải nghiệm, cần người dùng thử ngoài hiện trường) → R7 → R8.
 

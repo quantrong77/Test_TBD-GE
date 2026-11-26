@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { matchMetric, matchProfile, matchType, parseDateCell, parseTrendTable, historyKey, IMPORT_HEADER, templateSheets } from '../src/domain/trend-import';
 import { METRIC_DEFS, TREND_METRICS, analyzeTrendSeries, extractTrendFromSessions, type TrendDataPoint } from '../src/calc/trend';
 import { PROFILE_DEFAULTS } from '../src/content';
+import { localISODate } from '../src/calc/units';
 import type { Measurement, Profile, Session } from '../src/types';
 
 const prof = { id: 'TBD503-PLEIKU2', station: 'T500 Pleiku 2', bank: 'TBD503', tagGap_mm: 161, gapTol_mm: 2, ...PROFILE_DEFAULTS } as Profile;
@@ -58,6 +59,19 @@ describe('nhập bảng mốc lịch sử', () => {
     });
     expect(r.errors.map((e) => e.line)).toEqual([4, 5, 6, 7, 8]);
     expect(r.errors[0].message).toContain('tương lai');
+  });
+  it('dòng trùng giàn + chỉ số + ngày trong cùng file: lấy dòng sau, báo dòng bị bỏ', () => {
+    const r = parseTrendTable(
+      [[...IMPORT_HEADER], ['15/03/2022', 'TBD503', 'mov_rcd', '', 3000], ['15/03/2022', 'TBD503', 'mov_rcd', '', 3100], ['15/03/2022', 'TBD503', 'mov_rsu', '', 9]],
+      [prof],
+      '2026-11-26',
+    );
+    expect(r.rows.map((x) => x.line)).toEqual([3, 4]);
+    expect(r.rows[0].rec.phaseA).toBe(3100);
+    expect(r.duplicates).toEqual([2]);
+  });
+  it('ngày hôm nay theo giờ máy, không theo UTC', () => {
+    expect(localISODate(new Date(2026, 2, 15, 6, 30))).toBe('2026-03-15');
   });
   it('khóa trùng: cùng giàn + chỉ số + ngày', () => {
     expect(historyKey({ profileId: 'p', metric: 'vap_mC', date: '2022-01-01' })).toBe('p|vap_mC|2022-01-01');

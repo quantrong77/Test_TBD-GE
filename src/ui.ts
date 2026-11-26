@@ -1,3 +1,4 @@
+import { localISODate } from './calc/units';
 import type { Callout, Result } from './types';
 import imagesMeta from '../content/images.json';
 
@@ -75,10 +76,7 @@ export const uid = () =>
   (crypto as Crypto & { randomUUID?: () => string }).randomUUID?.() ??
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 
-export const today = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
+export const today = () => localISODate();
 
 export const fmtDate = (iso: string) => (iso ? iso.split('-').reverse().join('/') : '');
 export const fmtTime = (ts: number) => new Date(ts).toLocaleString('vi-VN');

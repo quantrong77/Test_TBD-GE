@@ -9,7 +9,7 @@ import { callout, debounce, esc, fmtDate, fmtTime, resBadge, toast } from '../..
 import { go, params, type View } from '../../router';
 import { can } from '../../auth/roles';
 import { verifySignatures } from '../../sign/sign';
-import { itemOn, itemState, loadSessionData, phaseState, sessionInstruments, STATE_ICON, testState, TYPE_LABEL, type SessionData } from '../../domain/session';
+import { itemOn, itemState, loadSessionData, phaseState, primaryUnitId, sessionInstruments, sessionUnit, STATE_ICON, testState, TYPE_LABEL, type SessionData } from '../../domain/session';
 import { crewLabel, DEFAULT_UNIT, duplicateReportNo, formatReportNo } from '../../domain/units';
 import { bindSignActions, saveConclusionNow, signBlock } from './sign';
 import { bindDraft, reviewContext, reviewHtml, signReminder } from './review';
@@ -58,8 +58,8 @@ export const SessionView: View = async (_r, el) => {
   const sigs = await verifySignatures(s.id);
   const locked = sigs.some((x) => x.sig.slot === 'leader');
   const editable = !locked && can('session.edit');
-  const dup = duplicateReportNo(s, await db.sessions.toArray());
-  const unit = s.unitSnap ?? DEFAULT_UNIT;
+  const dup = duplicateReportNo(s, await db.sessions.toArray(), await primaryUnitId());
+  const unit = await sessionUnit(s);
   const issues = reviewSession(d, await reviewContext(d, insts));
 
   const hist = !!s.historical;
@@ -151,7 +151,7 @@ export const SessionView: View = async (_r, el) => {
     if (v === null) return;
     const n = Number(v.trim());
     if (!Number.isInteger(n) || n < 1 || n > 99999) return toast('Số không hợp lệ');
-    const clash = duplicateReportNo({ ...s, reportNo: n }, await db.sessions.toArray());
+    const clash = duplicateReportNo({ ...s, reportNo: n }, await db.sessions.toArray(), await primaryUnitId());
     if (clash.length && !confirm(`Số này đã dùng cho phiên ngày ${fmtDate(clash[0].date)}. Vẫn dùng?`)) return;
     await db.sessions.update(s.id, { reportNo: n });
     go(location.hash);

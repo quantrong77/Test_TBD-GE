@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import { buildReport, type SignerBlock } from './report';
 import { items } from '../content';
-import type { SessionData } from '../domain/session';
+import { itemOn, type SessionData } from '../domain/session';
 
 /** Bảng ký: mỗi cột một ô ký, mỗi dòng một người ("Họ tên – đã ký điện tử lúc …" hoặc để trống ký tay). */
 function signerRows(bs: SignerBlock[]): string[][] {
@@ -68,6 +68,7 @@ export async function buildXlsx(d: SessionData): Promise<Blob> {
   const raw: (string | number)[][] = [['Hạng mục', 'Phép thử', 'Khóa', 'Giá trị']];
   for (const [k, v] of d.values) {
     const [itemId, testId] = k.split('|');
+    if (!itemOn(d.session, itemId)) continue; // hạng mục bỏ chọn không đưa vào biên bản
     for (const [key, value] of Object.entries(v)) raw.push([itemId, testId, key, value]);
   }
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(raw), 'Số liệu thô');

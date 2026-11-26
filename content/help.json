@@ -43,7 +43,9 @@
       "Mọi phép thử làm trên sàn tụ, thứ tự tùy ý; các nhóm có thể làm **song song ở 3 pha**. Mở phép thử → chọn pha A/B/C → nhập số. Ô tự tô xanh (Đạt) / đỏ (Không đạt); số lưu ngay, tắt app không mất.",
       "Theo dõi **bảng tiến độ hạng mục × pha** ở trang phiên (○ chưa · ⏳ đang làm · ✅ ⚠️ ❌).",
       "Chụp ảnh hiện trường ở cuối mỗi biểu mẫu (tự đóng dấu trạm, giàn, pha, GPS, giờ).",
-      "Ghi **Kết luận, kiến nghị** → người chịu trách nhiệm ký ô **Người thí nghiệm** → Chỉ huy trực tiếp ký (biên bản khóa).",
+      "Xem khung **Cảnh báo & đề xuất xử lý**: các nội dung ❌ Không đạt / ⚠️ Cảnh báo (kèm giá trị, yêu cầu và đề xuất xử lý), máy quá hạn kiểm định, cổng an toàn chưa xác nhận, hạng mục chưa có số liệu, cảnh báo xu hướng của giàn.",
+      "Bấm **💡 Gợi ý kết luận, kiến nghị** → xem bản nháp (sửa được) → **Thay kết luận** hoặc **Thêm vào cuối**. Đây chỉ là gợi ý từ số liệu – Chỉ huy trực tiếp xem xét, sửa trước khi ký.",
+      "Người chịu trách nhiệm ký ô **Người thí nghiệm** → Chỉ huy trực tiếp ký (biên bản khóa). Khi ký, app nhắc nếu còn hạng mục chưa có số liệu hoặc có nội dung không đạt mà chưa ghi kết luận.",
       "Xuất **📄 PDF**, **📊 Excel** hoặc **JSON**; hoặc **📤 Chia sẻ PDF**. Đầu biên bản có tên đơn vị, đơn vị thí nghiệm và số biên bản; cuối biên bản có chỗ ký Người thí nghiệm – Chỉ huy trực tiếp (ký tay được trên bản in)."
     ]
   },

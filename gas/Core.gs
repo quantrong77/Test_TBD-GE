@@ -340,6 +340,7 @@ function upsert(req, env) {
     if (r.team_id === u.team_id) existing[r.id] = r;
   });
   var locked = table === 'signatures' ? null : lockedSessions(u.team_id, env);
+  var batchSlots = {}; // phiên|ô đã có chữ ký trong chính lô gửi này
 
   rows.forEach(function (r) {
     if (!r || typeof r.id !== 'string' || !r.id || r.id.length > 300) fail('bad_request', 'Mã bản ghi không hợp lệ');
@@ -360,7 +361,9 @@ function upsert(req, env) {
         var dup = all.some(function (s) {
           return s.team_id === u.team_id && s.id !== r.id && !s.deleted && s.data && s.data.slot === r.data.slot && s.data.sessionId === r.data.sessionId;
         });
-        if (dup) fail('refused', r.data.slot === 'leader' ? 'Phiên đã có chữ ký Chỉ huy trực tiếp' : 'Phiên đã có chữ ký Người thí nghiệm');
+        var bk = r.data.sessionId + '|' + r.data.slot;
+        if (dup || batchSlots[bk]) fail('refused', r.data.slot === 'leader' ? 'Phiên đã có chữ ký Chỉ huy trực tiếp' : 'Phiên đã có chữ ký Người thí nghiệm');
+        batchSlots[bk] = true;
       }
       return;
     }

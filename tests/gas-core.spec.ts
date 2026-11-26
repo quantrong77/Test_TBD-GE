@@ -222,6 +222,9 @@ describe('chữ ký và khóa biên bản', () => {
     // ô Người thí nghiệm chỉ 1 chữ ký (người chịu trách nhiệm)
     const t2 = member('tn2@evn.vn', 'tester');
     expect(up(t2.token, 'signatures', [sig('x6', t2.me.userId, 'tester')]).code).toBe('refused');
+    // 2 chữ ký cùng ô trong CÙNG một lô gửi (phiên mới) cũng bị chặn
+    const l2 = member('ch2@evn.vn', 'leader');
+    expect(up(l2.token, 'signatures', [sig('b1', l2.me.userId, 'tester', 's9'), { ...sig('b2', l2.me.userId, 'tester', 's9') }]).code).toBe('refused');
   });
 
   it('chữ ký Chỉ huy khóa phiên, số đo, kể cả lệnh xóa; mỗi phiên chỉ 1 chữ ký Chỉ huy', () => {

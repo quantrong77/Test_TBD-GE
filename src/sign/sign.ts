@@ -45,6 +45,13 @@ export async function contentHash(sessionId: string, slot: SignSlot): Promise<st
       profileSnap: s.profileSnap,
       instrumentSnap: s.instrumentSnap,
       conclusion: slot === 'tester' ? undefined : (s.conclusion ?? ''),
+      // các trường quyết định nội dung biên bản (thiếu → undefined → bỏ khỏi chuỗi băm: chữ ký phiên cũ vẫn khớp)
+      items: s.items,
+      reportNo: s.reportNo,
+      crew: s.crew,
+      unitSnap: s.unitSnap,
+      historical: s.historical,
+      paperRef: s.paperRef,
     },
     measurements: ms
       .filter((m) => (m.value ?? '').trim() !== '')

@@ -7,7 +7,7 @@ import { can } from '../auth/roles';
 import { historyKey, parseTrendTable, templateSheets, type ImportResult } from '../domain/trend-import';
 import { download } from '../export/report';
 import { renderTrendSvg } from '../calc/trend-chart';
-import { fmt, parseNum } from '../calc/units';
+import { fmt, localISODate, parseNum } from '../calc/units';
 import {
   METRIC_DEFS,
   METRIC_GROUPS,
@@ -165,7 +165,7 @@ export const TrendView: View = async (_r, el) => {
             ['mov_rcd', 'mov_rsu', 'reactor_rcd'].includes(selectedMetric) ? 'Giá trị đã quy đổi về 20°C.' : selectedMetric === 'reactor_rdc' ? 'Giá trị đã quy đổi về 75°C.' : selectedMetric === 'vap_A' ? 'Ghi trị tuyệt đối.' : ''
           } Để trống pha không có số liệu.</p>
           <form id="hist-form" novalidate>
-            <label class="field"><span>Ngày thí nghiệm:</span><input type="date" name="date" required max="${new Date().toISOString().slice(0, 10)}"></label>
+            <label class="field"><span>Ngày thí nghiệm:</span><input type="date" name="date" required max="${localISODate()}"></label>
             <label class="field"><span>Loại đợt:</span>
               <select name="type">${(Object.keys(SESSION_TYPE_LABEL) as TrendSessionType[]).map((t) => `<option value="${t}"${t === 'periodic' ? ' selected' : ''}>${SESSION_TYPE_LABEL[t]}</option>`).join('')}</select>
             </label>
@@ -293,6 +293,7 @@ function bindImport(el: HTMLElement, profiles: Profile[], active: Profile, done:
     const prof = (id: string) => profiles.find((p) => p.id === id)?.bank ?? id;
     box.innerHTML = `<div class="card">
       <b>Xem trước: ${res.rows.length} mốc hợp lệ${replaced ? ` (${replaced} mốc thay mốc cũ cùng ngày)` : ''}${res.errors.length ? `, ${res.errors.length} dòng lỗi` : ''}</b>
+      ${res.duplicates.length ? `<p class="small muted">Dòng trùng giàn + chỉ số + ngày trong file (đã bỏ, lấy dòng phía dưới): ${res.duplicates.join(', ')}</p>` : ''}
       ${res.errors.length ? `<ul class="small text-danger">${res.errors.slice(0, 20).map((x) => `<li>Dòng ${x.line}: ${esc(x.message)}</li>`).join('')}${res.errors.length > 20 ? `<li>… và ${res.errors.length - 20} dòng khác</li>` : ''}</ul>` : ''}
       ${
         res.rows.length
