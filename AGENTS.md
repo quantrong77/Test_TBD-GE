@@ -1,7 +1,7 @@
 # AGENTS.md – Ngữ cảnh dự án cho AI agent
 
 > Đọc file này trước khi sửa code. Mô tả **app làm gì, vì sao làm vậy, và những gì không được phá**.
-> Chi tiết lệnh chạy, cách sửa nội dung: `README.md`. Đặc tả gốc (ngoài repo): `../TRIEN_KHAI_WEBAPP_THI_NGHIEM_TBD_GE.md`.
+> Chi tiết lệnh chạy, cách sửa nội dung: `README.md`. Tri thức nghiệp vụ + kế hoạch refactor R0–R8: `knowledge.md`. Đặc tả gốc (ngoài repo): `../TRIEN_KHAI_WEBAPP_THI_NGHIEM_TBD_GE.md`.
 
 ## 1. App là gì
 
@@ -28,7 +28,10 @@
 | CT rack, PFOI, GFOI, HMI | Biến dòng trên sàn → truyền quang → tủ dưới đất → PLC → màn hình HMI |
 | Mất cân bằng điện dung (%ΔC) | Thử 4.1.B: cấp 200–300 Vac, đo I∑, IG1, IG2, IΔ×10 (cuộn 10 vòng) |
 | Hồ sơ giàn (profile) | Bộ ngưỡng riêng từng giàn (ΔC alarm/bypass, VAP, khe hở TAG…) |
-| Phiên thí nghiệm (session) | Một đợt thí nghiệm một giàn: thành viên, máy TN, số đo, ảnh, biên bản |
+| Phiên thí nghiệm (session) | Một đợt thí nghiệm một giàn: số biên bản, nhân sự, hạng mục thực hiện, máy TN, số đo, ảnh, biên bản |
+| Đơn vị (unit) | Tên đơn vị + đơn vị thí nghiệm ở đầu biên bản, mẫu và số bắt đầu đánh số biên bản (về 01 mỗi năm) |
+| Người chịu trách nhiệm | Thành viên duy nhất ký ô Người thí nghiệm |
+| Phiên nhập lại (historical) | Số liệu từ biên bản giấy cũ cho xu hướng: không số BB, không ký, không cổng an toàn |
 
 7 hạng mục (mã dùng khắp nơi): **4.1** Tụ & group · **4.2** MOV · **4.3** Kháng cản dịu · **4.4** Sứ xuyên TAG house · **4.5** VAP & TAG ⚡ (nguy hiểm nhất) · **4.6** CT rack · **4.7** Bơm dòng nhất thứ.
 
@@ -41,10 +44,11 @@ Vite 8 + **TypeScript thuần (không framework)**, render bằng template strin
 ```text
 content/            NỘI DUNG (sửa không cần lập trình) – JSON, chữ hỗ trợ **đậm**
   items.json        7 hạng mục → tests → steps/checklist/table/tips; field `form` chọn biểu mẫu, `gate` chọn cổng an toàn
-  thresholds.json   ngưỡng: op < <= >= range approx0; profileOverride; abs
+  thresholds.json   ngưỡng: op < <= >= range approx0; profileOverride; abs; dòng `trend_*` cho xu hướng
   safety.json       5 cổng an toàn (checks, timer giây) + rủi ro + disclaimer
   equipment.json    2 máy TN; section `quick` có steps với timer/lock
-  help.json         Hướng dẫn sử dụng (7 mục); overview/tools/cycle/review/profiles.seed/images.json
+  help.json         Hướng dẫn sử dụng (9 mục); overview/tools/cycle/review/profiles.seed/images.json
+  advice.json       đề xuất xử lý theo phép thử (gợi ý kết luận) – chuyên gia sửa không cần lập trình
 src/
   main.ts           đăng ký route
   router.ts         hash router, render TUẦN TỰ vào khung tách rời, quản lý cuộn
@@ -52,10 +56,12 @@ src/
   types.ts          kiểu dữ liệu
   ui.ts             esc(), rich(), callout(), gallery(), toast()…
   settings.ts       chủ đề + cỡ chữ (đồng bộ với public/theme-boot.js)
-  forms.ts          FORMS: render / live / rows cho từng biểu mẫu – nguồn duy nhất cho đánh giá + biên bản
-  calc/             hàm THUẦN có unit test: unbalance, evaluate, units (parseNum, foldVi), isolation
-  store/db.ts       Dexie: sessions, measurements, checks, photos, profiles, instruments
-  views/            mỗi màn hình một View(route, el)
+  forms/            mỗi biểu mẫu 1 file; index.ts: FORMS, formFor, evaluateTest – nguồn duy nhất cho đánh giá + biên bản
+  domain/           nghiệp vụ dùng chung cho màn hình và xuất biên bản: session.ts (SessionData, testState, phaseState, itemOn),
+                    units.ts (số biên bản, nhân sự), review.ts (rà soát ❌/⚠️, đề xuất, nháp kết luận), trend-import.ts (Excel/CSV)
+  calc/             hàm THUẦN có unit test: unbalance, evaluate, units (parseNum, foldVi), isolation, trend (14 chỉ số), trend-chart (SVG)
+  store/db.ts       Dexie v4: sessions, measurements, checks, photos, signatures, profiles, instruments, trendHistory, units, staff
+  views/            mỗi màn hình một View(route, el); session/ (SessionView, sign, photos, review), SessionNew, Org (đơn vị, nhân viên)
   components/       Chrome (topbar/nav), Timer, ImageViewer
   export/           report.ts (dữ liệu biên bản) → pdf.ts / xlsx.ts / json.ts (sao lưu, nhập)
   store/validate.ts kiểm tra kiểu dữ liệu từ nguồn ngoài (file JSON, máy chủ) – dùng chung
@@ -66,10 +72,11 @@ gas/                MÁY CHỦ Google Apps Script: Core.gs (phân quyền, khóa
   styles/           tokens.css (chủ đề), base.css
 public/             images/ (34 ảnh), fonts/, icons/, theme-boot.js
 scripts/            contrast.mjs (WCAG), image-manifest.mjs, make-icons.mjs
-tests/              calc.spec.ts, e2e/app.spec.ts, e2e/contrast-audit.spec.ts
+tests/              calc, sync, gas-core, auth-ui, signers, architecture (phân tầng), forms (snapshot), org, trend-import, review
+                    e2e/: app, contrast-audit, org, history
 ```
 
-Route chính: `#/`, `#/items`, `#/item/:id`, `#/item/:id/test/:tid/step/:n`, `#/gate/:gateId?next=`, `#/thresholds`, `#/search?q=`, `#/equipment/:eqId/:section`, `#/sessions`, `#/session-new`, `#/session/:id`, `#/session/:id/form/:item/:test`, `#/profiles`, `#/profile/:id`, `#/instruments`, `#/calc/unbalance`, `#/settings`, `#/help?s=`, `#/info`, `#/about` (= ghi chú rà soát nội dung, không phải trang giới thiệu).
+Route chính: `#/`, `#/items`, `#/item/:id`, `#/item/:id/test/:tid/step/:n`, `#/gate/:gateId?next=`, `#/thresholds`, `#/search?q=`, `#/equipment/:eqId/:section`, `#/sessions`, `#/session-new`, `#/session/:id`, `#/session/:id/form/:item/:test`, `#/profiles`, `#/profile/:id`, `#/instruments`, `#/units`, `#/staff`, `#/trend/:profileId?`, `#/calc/unbalance`, `#/settings`, `#/help?s=`, `#/info`, `#/about` (= ghi chú rà soát nội dung, không phải trang giới thiệu).
 
 ## 5. Tính năng
 
@@ -77,9 +84,11 @@ Route chính: `#/`, `#/items`, `#/item/:id`, `#/item/:id/test/:tid/step/:n`, `#/
 
 **Cổng an toàn + chế độ từng bước:** bấm "Bắt đầu từng bước" → app buộc qua `gate-platform` rồi cổng riêng của phép thử (`gate-hv`, `gate-tag`, `gate-visual`, `gate-inject`) mới vào trình tự. Bước chữ to, nút đáy, đồng hồ chờ; bước có `lock` khóa nút tiếp tới khi hết giờ.
 
-**Phiên thí nghiệm:** tạo phiên (hồ sơ giàn, loại, ngày, chỉ huy, thành viên, máy TN – cảnh báo quá hạn kiểm định); biểu mẫu theo pha A/B/C, tự tô Đạt/Cảnh báo/Không đạt; phân tích string (> TB + 2σ); so sánh lần trước; ảnh hiện trường (nén ≤ 1600 px); tiến độ 4.1 ✅ 4.2 ⏳; kết luận; xuất **PDF / Excel / JSON**, chia sẻ PDF (Web Share).
+**Phiên thí nghiệm:** tạo phiên (đơn vị, số biên bản tự tăng, hồ sơ giàn, loại, ngày; Chỉ huy + thành viên chọn từ danh sách nhân viên, người chịu trách nhiệm; tick hạng mục thực hiện; máy TN – cảnh báo quá hạn); biểu mẫu theo pha A/B/C (3 nhóm làm song song, bảng tiến độ hạng mục × pha), tự tô Đạt/Cảnh báo/Không đạt; phân tích string (> TB + 2σ); so sánh lần trước; ảnh hiện trường (nén ≤ 1600 px); **Cảnh báo & đề xuất xử lý** + **💡 Gợi ý kết luận** (chỉ là nháp, Chỉ huy sửa); ký 2 ô (Người thí nghiệm = người chịu trách nhiệm, Chỉ huy trực tiếp); xuất **PDF / Excel / JSON**. Phiên **nhập lại biên bản giấy** cho số liệu lịch sử.
 
-**Tài khoản, đồng bộ, ký (máy chủ Google Apps Script + Google Sheets/Drive):** khi có `VITE_GAS_URL`, app **bắt buộc đăng nhập** (`#/login` → Google hoặc mã 6 số qua email) → lần đầu khai hồ sơ `#/register` → chờ duyệt `#/account` → Quản trị duyệt ở `#/admin` → `#/users` (phê duyệt + vai trò, khóa có lý do, mở khóa) → vào app, đồng bộ tự động. 4 vai trò: admin, leader, tester, viewer. Cấu hình (hồ sơ giàn, máy TN, mốc xu hướng, nhập JSON) chỉ admin. Ký xác nhận điện tử ở trang phiên, Chỉ huy ký thì khóa biên bản; chữ ký in vào PDF/Excel. Không cấu hình máy chủ = chế độ dùng một mình (không đăng nhập). Cài đặt máy chủ: `gas/README.md`.
+**Xu hướng (`#/trend`):** 14 chỉ số từ phiên + mốc lịch sử (nhập tay hoặc Excel/CSV có xem trước); kiểu đánh giá higher / lower / deviation / step / range; ngưỡng từ `thresholds.json` + hồ sơ giàn.
+
+**Tài khoản, đồng bộ, ký (máy chủ Google Apps Script + Google Sheets/Drive):** khi có `VITE_GAS_URL`, app **bắt buộc đăng nhập** (`#/login` → Google hoặc mã 6 số qua email) → lần đầu khai hồ sơ `#/register` → chờ duyệt `#/account` → Quản trị duyệt ở `#/admin` → `#/users` (phê duyệt + vai trò, khóa có lý do, mở khóa) → vào app, đồng bộ tự động. 4 vai trò: admin, leader, tester, viewer. Cấu hình (hồ sơ giàn, máy TN, đơn vị & số biên bản, nhập JSON) chỉ admin; nhân viên và mốc xu hướng: admin + leader. Ký xác nhận điện tử ở trang phiên, Chỉ huy ký thì khóa biên bản; chữ ký in vào PDF/Excel. Không cấu hình máy chủ = chế độ dùng một mình (không đăng nhập). Cài đặt máy chủ: `gas/README.md`.
 
 **Khác:** 5 chủ đề (Theo máy, Tiêu chuẩn, Ca đêm, Nắng gắt, Đêm đỏ) chọn bằng thẻ xem trước; cỡ chữ; sao lưu/khôi phục JSON; Hướng dẫn (📖) và Giới thiệu (ℹ️) cạnh ⚙️; báo "Có phiên bản mới – Tải lại".
 
@@ -91,17 +100,20 @@ Route chính: `#/`, `#/items`, `#/item/:id`, `#/item/:id/test/:tid/step/:n`, `#/
 4. **Công thức mất cân bằng** (mục 9.1 đặc tả): C[µF] = 10⁶/(2πf)·I/U = 3183,1·I/U ở 50 Hz; IΔ thực = IΔ×10 / 10 (có bộ chọn A/mA/µA); %ΔC = IΔ/I∑·100; < alarm → Đạt, alarm ≤ x < bypass → Cảnh báo, ≥ bypass → Không đạt. Có unit test – đổi công thức phải sửa test có lý do.
 5. `abs: true` chỉ cho VAP CURRENT (DPM hiển thị số âm). Số CT âm (đảo cực) **phải** là Không đạt.
 6. `parseNum`: "4,36" và "4.36" = 4,36; một dấu chấm = thập phân (bàn phím Android); nhiều dấu chấm hoặc có cả `.` lẫn `,` = phân cách nghìn.
-7. `forms.ts` là **nguồn duy nhất** cho đánh giá: giao diện, trang tổng kết, PDF, Excel đều đi qua `FormDef.rows()`. Đừng tính lại ở chỗ khác.
+7. `src/forms/` là **nguồn duy nhất** cho đánh giá: giao diện, tổng kết, rà soát/gợi ý kết luận, PDF, Excel đều đi qua `FormDef.rows()`. Đừng tính lại ở chỗ khác. `tests/forms.spec.ts` chụp đặc tính render + rows của mọi biểu mẫu – snapshot đổi nghĩa là hành vi biên bản đổi.
 8. **Không mất số đo** (NF5): ghi debounce 500 ms + ghi ngay khi `visibilitychange`/`pagehide`/rời trang.
-9. **Đồng bộ là offline-first và tắt mặc định.** App luôn ghi IndexedDB trước. Đơn vị phải cho phép trước khi bật (dữ liệu rời máy, máy chủ Singapore) – giữ công tắc, cảnh báo và hộp xác nhận.
+9. **Đồng bộ là offline-first.** App luôn ghi IndexedDB trước; tài khoản đã duyệt tự đồng bộ khi có mạng. Bảng mới chỉ có ở máy chủ bản mới phải khai trong `V3_TABLES` (`sync/gas.ts`) để máy chủ cũ bỏ qua, không làm hỏng đồng bộ.
 10. **Theo dõi thay đổi bằng hook Dexie** (`sync/meta.ts`): mọi ghi của người dùng tự có `_dirty/_mt`; ghi từ máy chủ mang `_rv` nên không bị đánh dấu lại; xóa → tombstone. Không ghi DB bằng đường vòng né hook. Xóa cờ sau khi đẩy chỉ khi `_mt` không đổi (sửa trong lúc đẩy không mất). Bản ghi chưa gửi thắng bản kéo về.
 11. **Không xóa cứng trên máy chủ** (chỉ `deleted = true`); Core.gs không có lệnh xóa dòng. Dữ liệu kéo về **phải** qua `store/validate.ts`; ảnh chỉ nhận jpeg/png/webp và đường dẫn trong thư mục đội.
 12. **Chỉ giá trị công khai** trong app: `VITE_GAS_URL`, `VITE_GOOGLE_CLIENT_ID` (GitHub repository variables). Không bao giờ đưa Client secret hay `SECRET` (Script properties) vào app. File JSON xuất/nhập bỏ trường `_dirty/_mt/_rv` (`stripMeta`).
 13. Cổng an toàn chế độ tra cứu (`sessionId = '_local'`) không bao giờ gửi lên.
 14. **Quyền thật nằm ở máy chủ** (`gas/Core.gs`), `src/auth/roles.ts` chỉ để ẩn nút; đổi quyền phải sửa cả hai và test `tests/gas-core.spec.ts`. Tài khoản mới luôn `pending` và phải gửi hồ sơ, trừ email trong tab `members`. Admin không sửa được chính mình. Sửa Core.gs/Code.gs xong phải dán lại vào Apps Script và tạo **New version** cho deployment.
 14b. **Cổng đăng nhập** (`auth/gate.ts` + `router.setGuard`): mọi route đi qua `guard()`; chỉ `help`, `info` công khai. Trạng thái tài khoản đổi → sự kiện `auth:changed` → vẽ lại qua cổng. Phiên 30 ngày tự gia hạn ở mỗi lần gọi `me` để dùng offline ngoài hiện trường.
-15. **Chữ ký:** `signSession` băm nội dung bằng SHA-256 (ô `tester` không gồm kết luận). Chữ ký Chỉ huy còn hiệu lực = biên bản khóa (`session_locked` trên máy chủ, `isLocked` trên máy). Chỉ admin thu hồi. Chữ ký gửi sau cùng trong `SYNC_TABLES`. Ký cần tài khoản đã duyệt; đây là xác nhận nội bộ, không phải chữ ký số pháp lý.
+15. **Chữ ký:** 2 ô `tester`, `leader` (đã bỏ ô QLVH), **mỗi ô 1 chữ ký** (máy + máy chủ). `signSession` băm nội dung bằng SHA-256 (ô `tester` không gồm kết luận). Chữ ký Chỉ huy còn hiệu lực = biên bản khóa (`session_locked` trên máy chủ, `isLocked` trên máy). Chỉ admin thu hồi. Chữ ký gửi sau cùng trong `SYNC_TABLES`. Ký cần tài khoản đã duyệt; đây là xác nhận nội bộ, không phải chữ ký số pháp lý.
 16. Dữ liệu mẫu mang `_rv: 'seed'`, không tự gửi lên. Thay đổi bị máy chủ từ chối (`RefusedError`) thì bỏ và kéo lại bản máy chủ, không thử lại mãi.
+17. **Phân tầng:** chỉ `main.ts` và `views/` được import `views/` (`tests/architecture.spec.ts`). Nghiệp vụ dùng chung để ở `domain/`.
+18. **Gợi ý kết luận chỉ là nháp:** không tự ghi vào biên bản; người dùng bấm Thay / Thêm vào cuối rồi sửa. Đề xuất xử lý lấy từ `content/advice.json`.
+19. **Không viết `style=""` nội tuyến** (trừ kích thước tính động); màu luôn qua token theme. Thuộc tính `hidden` thắng mọi lớp `display` (`[hidden] { display: none !important }`).
 
 ## 7. Quyết định kỹ thuật cần biết
 
@@ -118,13 +130,13 @@ Route chính: `#/`, `#/items`, `#/item/:id`, `#/item/:id/test/:tid/step/:n`, `#/
 
 ```bash
 npm run dev          # phát triển
-npm test             # 96 test: calc, đồng bộ + vai trò + ký với IndexedDB giả, máy chủ Apps Script (gas-core: đăng nhập, đăng ký, phân quyền, khóa biên bản)
+npm test             # ~156 test: calc, đồng bộ + vai trò + ký với IndexedDB giả, máy chủ Apps Script (gas-core), biểu mẫu (snapshot), số biên bản, nhập Excel, rà soát
 npm run contrast     # WCAG cho mọi chủ đề – CI chạy bước này
 npm run build        # tsc + vite build → dist/
 npm run test:e2e     # Playwright – tự build bản dùng một mình (che VITE_GAS_URL) rồi chạy
 ```
 
-E2E gồm: offline (chế độ máy bay), cổng an toàn & đồng hồ, tự lưu + tính %ΔC + xuất file, tìm không dấu, khóa bước, nhập JSON độc hại bị từ chối, ổn định bố cục, **đo tương phản thật trên màn hình ở 4 chủ đề** (`contrast-audit.spec.ts`).
+E2E gồm: offline (chế độ máy bay), cổng an toàn & đồng hồ, tự lưu + tính %ΔC + gợi ý kết luận + xuất file, tìm không dấu, khóa bước, nhập JSON độc hại bị từ chối, ổn định bố cục, đơn vị → nhân viên → phiên → hạng mục → PDF (`org.spec.ts`), phiên nhập lại + nhập CSV (`history.spec.ts`), **đo tương phản thật trên màn hình ở 4 chủ đề** (`contrast-audit.spec.ts`). Test tương phản đôi khi quá giờ khi chạy song song nặng – chạy lại riêng.
 
 **Quy ước làm việc:** viết test trước khi sửa logic (calc → Vitest, hành vi UI → Playwright); chạy cả 3 bộ (test, contrast, e2e) trước khi commit. Giao diện, comment và nội dung bằng **tiếng Việt**, giọng ngắn gọn, động từ chủ động.
 
@@ -139,6 +151,9 @@ E2E gồm: offline (chế độ máy bay), cổng an toàn & đồng hồ, tự 
 - Ngưỡng các giàn khác ngoài TBD503 Pleiku 2 mới có khe hở TAG đúng; còn lại lấy mặc định TBD503 – phải nhập theo biên bản.
 - CT3 & CT30 cùng 1 vòng "≈ 0": app tạm dùng |x| ≤ 0,2 A.
 - Tiêu chí đánh giá bơm CT10/CT11 (4.5.D) chưa có trong nguồn.
+- Ngưỡng xu hướng tạm đặt: thay đổi > 20 % so với đợt trước (Rsu, P, Rcd kháng, Z, L); tan δ 0,5/0,7 %; Rcd MOV 2000/1000 MΩ – cần chuyên gia đối chiếu QĐ 1901. Đề xuất xử lý trong `content/advice.json` cũng cần chuyên gia duyệt.
+- Chưa làm: cảnh báo "nghi nhập sai" (ngưỡng chưa chốt).
+- Số biên bản cấp trên máy khi tạo phiên – 2 máy offline có thể trùng; app báo trùng, Chỉ huy sửa tay.
 - Danh sách đầy đủ: `content/review.json` (hiện ở `#/about`).
 - **Bản quyền:** ảnh/sơ đồ từ tài liệu GE và đào tạo nội bộ; đặc tả yêu cầu chỉ triển khai nội bộ – bản GitHub Pages hiện công khai theo quyết định của chủ dự án.
 - Máy chủ Google (23/11/2026): đăng nhập Google với Apps Script thật đã chạy; luồng đăng ký/duyệt/khóa/đồng bộ đã thử đầu cuối với máy chủ giả lập chạy đúng Core.gs. Code.gs (Sheets/Drive) chưa có kiểm thử tự động.

@@ -7,7 +7,6 @@ import { computeOtsuThreshold, findConnectedComponents, classify7Segment, type B
 import {
   METRIC_DEFS,
   analyzeTrendSeries,
-  renderTrendSvg,
   extractTrendFromSessions,
   historyToPoints,
   mergeTrendPoints,
@@ -15,6 +14,7 @@ import {
   type TrendDataPoint,
   type TrendHistoryRecord,
 } from '../src/calc/trend';
+import { renderTrendSvg } from '../src/calc/trend-chart';
 import type { Measurement, Session } from '../src/types';
 import { ftlbToNm, gammaKv, gammaMa, foldVi, parseNum } from '../src/calc/units';
 import { parseIsolationTime } from '../src/calc/isolation';

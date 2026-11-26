@@ -6,6 +6,7 @@ import type { Profile } from '../types';
 import { can } from '../auth/roles';
 import { historyKey, parseTrendTable, templateSheets, type ImportResult } from '../domain/trend-import';
 import { download } from '../export/report';
+import { renderTrendSvg } from '../calc/trend-chart';
 import { fmt, parseNum } from '../calc/units';
 import {
   METRIC_DEFS,
@@ -19,7 +20,6 @@ import {
   extractTrendFromSessions,
   historyToPoints,
   mergeTrendPoints,
-  renderTrendSvg,
   validateHistoryInput,
 } from '../calc/trend';
 
