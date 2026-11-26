@@ -9,11 +9,7 @@ import { callout, esc, fmtDate, today, toast, uid } from '../ui';
 import { go, params, type View } from '../router';
 import type { Instrument, Profile, Session } from '../types';
 
-export const TYPE_LABEL: Record<Session['type'], string> = {
-  after_install: 'Sau lắp đặt',
-  after_1y: 'Sau 1 năm',
-  periodic: 'Định kỳ',
-};
+import { TYPE_LABEL } from '../domain/session';
 
 export const Sessions: View = async (_r, el) => {
   setTop('Phiên thí nghiệm', { back: '#/' });

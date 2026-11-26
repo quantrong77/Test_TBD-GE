@@ -1,7 +1,6 @@
 import { items, CONTENT_VERSION, getGate } from '../content';
 import { calibOverdue } from '../calc/evaluate';
-import { sessionInstruments, testState, type SessionData } from '../views/Session';
-import { TYPE_LABEL } from '../views/Sessions';
+import { sessionInstruments, testState, TYPE_LABEL, type SessionData } from '../domain/session';
 import { db } from '../store/db';
 import { verifySignatures } from '../sign/sign';
 import { SLOT_LABEL } from '../auth/roles';

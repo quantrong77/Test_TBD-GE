@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import { buildReport, type SignerBlock } from './report';
 import { items } from '../content';
-import type { SessionData } from '../views/Session';
+import type { SessionData } from '../domain/session';
 
 /** Bảng ký: mỗi cột một ô ký, mỗi dòng một người ("Họ tên – đã ký điện tử lúc …" hoặc để trống ký tay). */
 function signerRows(bs: SignerBlock[]): string[][] {

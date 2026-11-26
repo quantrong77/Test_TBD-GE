@@ -1,6 +1,6 @@
 import { download, fileBase } from './report';
 import { toast } from '../ui';
-import type { SessionData } from '../views/Session';
+import type { SessionData } from '../domain/session';
 
 export async function exportSession(d: SessionData, kind: 'pdf' | 'xlsx' | 'json' | 'share') {
   const name = fileBase(d);

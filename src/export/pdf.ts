@@ -4,7 +4,7 @@ import { buildReport, blobToDataUrl } from './report';
 import { db } from '../store/db';
 import { fmtDate } from '../ui';
 import { getItem } from '../content';
-import type { SessionData } from '../views/Session';
+import type { SessionData } from '../domain/session';
 
 const FONT = 'BVP';
 
