@@ -1,3 +1,4 @@
+import './polyfills';
 import './styles/tokens.css';
 import './styles/base.css';
 import { go, onRendered, onRoute, render, route, setGuard, setNotFound, start } from './router';

@@ -11,7 +11,12 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_DATE__: JSON.stringify(BUILD_DATE),
   },
-  build: { chunkSizeWarningLimit: 1500 },
+  build: {
+    chunkSizeWarningLimit: 1500,
+    // hạ cú pháp cho WebView cũ (mở link từ Zalo/Facebook trên Android lâu không cập nhật WebView);
+    // API thiếu được bổ sung ở src/polyfills.ts
+    target: ['es2019', 'chrome79', 'safari13', 'firefox72', 'edge79'],
+  },
   plugins: [
     VitePWA({
       registerType: 'prompt',

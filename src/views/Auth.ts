@@ -4,6 +4,7 @@ import { getAuth } from '../auth/session';
 import { callout, esc, fmtTime, toast } from '../ui';
 import { go, type View } from '../router';
 import type { Backend } from '../sync/backend';
+import { chromeIntentUrl, inAppBrowser, isAndroid, openOutsideHint } from '../inapp';
 
 const backend = async (): Promise<Backend> => (await import('../sync/backend')).loadBackend();
 
@@ -30,10 +31,25 @@ const DISCLAIMER =
   '<p class="small muted auth-foot">Ứng dụng chỉ hỗ trợ tra cứu và tính toán, không thay thế Phiếu công tác, Quy trình an toàn điện, Biện pháp kỹ thuật và mệnh lệnh của Chỉ huy trực tiếp. · <a href="#/help">Hướng dẫn</a> · <a href="#/info">Giới thiệu</a></p>';
 
 /** Đăng nhập / đăng ký bằng Google (hoặc mã email). Tài khoản mới chờ Quản trị duyệt. */
+/** Khối hướng dẫn khi mở link trong Zalo/Facebook: Google không cho đăng nhập trong trình duyệt nhúng. */
+function inAppBlock(app: string): string {
+  const android = isAndroid();
+  return `${callout({
+    level: 'warn',
+    text: `Bạn đang mở app trong **${app}**. Google **không cho đăng nhập** trong trình duyệt của ${app}. ${openOutsideHint(app, android)} Hoặc đăng nhập bằng **mã gửi qua email** bên dưới.`,
+  })}
+    <div class="btn-row">
+      ${android ? `<a class="btn" href="${esc(chromeIntentUrl(location.href))}">🌐 Mở bằng Chrome</a>` : ''}
+      <button class="btn secondary" type="button" id="copy-link">📋 Sao chép đường link</button>
+    </div>
+    <input class="mt-8" id="link-text" readonly value="${esc(location.href.split('#')[0])}" aria-label="Đường link app">`;
+}
+
 export const Login: View = async (_r, el) => {
   setTop('Đăng nhập');
   const m = await backend();
   let pendingEmail = '';
+  const inApp = inAppBrowser();
 
   const draw = () => {
     el.innerHTML = `
@@ -43,9 +59,12 @@ export const Login: View = async (_r, el) => {
           <h2>Đăng nhập / Đăng ký</h2>
           <p class="small muted">Dùng tài khoản Google của bạn. Lần đầu đăng nhập là <b>đăng ký</b>: khai hồ sơ và chờ <b>Quản trị phê duyệt</b> rồi mới vào được ứng dụng.</p>
           ${navigator.onLine ? '' : callout({ level: 'warn', text: 'Đang **không có mạng**. Đăng nhập lần đầu cần mạng; sau đó dùng được offline 30 ngày.' })}
-          <div id="gsi" class="auth-gsi"><p class="small muted">Đang tải nút đăng nhập Google…</p></div>
-          <div class="auth-or"><span>hoặc</span></div>
-          <details class="card"${pendingEmail ? ' open' : ''}><summary>Nhận mã đăng nhập qua email</summary>
+          ${
+            inApp
+              ? inAppBlock(inApp)
+              : '<div id="gsi" class="auth-gsi"><p class="small muted">Đang tải nút đăng nhập Google…</p></div><div class="auth-or"><span>hoặc</span></div>'
+          }
+          <details class="card"${pendingEmail || inApp ? ' open' : ''}><summary>Nhận mã đăng nhập qua email</summary>
             <p class="small muted">Dùng khi không đăng nhập được bằng Google (iPhone đã cài app, máy không có tài khoản Google…).</p>
             ${
               pendingEmail
@@ -60,12 +79,25 @@ export const Login: View = async (_r, el) => {
         ${DISCLAIMER}
       </div>`;
 
-    const host = el.querySelector<HTMLElement>('#gsi')!;
-    m.renderGoogleButton(
-      host,
-      () => undefined, // lời chào do auth/notify.ts hiện
-      (msg) => toast(msg, undefined, 6000),
-    ).catch((e: Error) => (host.innerHTML = `<p class="small">⚠️ ${esc(e.message)}</p>`));
+    const host = el.querySelector<HTMLElement>('#gsi');
+    if (host)
+      m.renderGoogleButton(
+        host,
+        () => undefined, // lời chào do auth/notify.ts hiện
+        (msg) => toast(msg, undefined, 6000),
+      ).catch((e: Error) => (host.innerHTML = `<p class="small">⚠️ ${esc(e.message)}</p>`));
+    el.querySelector('#copy-link')?.addEventListener('click', async () => {
+      const input = el.querySelector<HTMLInputElement>('#link-text')!;
+      try {
+        await navigator.clipboard.writeText(input.value);
+        toast('Đã sao chép – dán vào Chrome/Safari để mở');
+      } catch {
+        // trình duyệt nhúng / trang http có thể chặn clipboard → bôi đen để người dùng tự sao chép
+        input.focus();
+        input.select();
+        toast('Giữ vào ô link → Sao chép, rồi dán vào Chrome/Safari');
+      }
+    });
 
     el.querySelector<HTMLButtonElement>('#send')?.addEventListener('click', (e) =>
       busy(e.currentTarget as HTMLButtonElement, async () => {
