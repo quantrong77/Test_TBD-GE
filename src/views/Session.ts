@@ -57,7 +57,7 @@ export const SessionForm: View = async (_r, el) => {
   const locked = await isLocked(s.id);
   const readOnly = locked || !can('measure.edit');
   const gateMissing = [];
-  for (const g of gatesFor(itemId, testId)) if (!(await getGateCheck(g, s.id)).confirmedBy) gateMissing.push(getGate(g)?.title ?? g);
+  if (!s.historical) for (const g of gatesFor(itemId, testId)) if (!(await getGateCheck(g, s.id)).confirmedBy) gateMissing.push(getGate(g)?.title ?? g);
 
   el.innerHTML = `
     ${locked ? callout({ level: 'info', text: '🔒 **Biên bản đã khóa** do Chỉ huy trực tiếp đã ký. Chỉ xem, không sửa được.' }) : !can('measure.edit') ? callout({ level: 'info', text: 'Tài khoản này **chỉ xem**, không nhập được số đo.' }) : ''}

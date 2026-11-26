@@ -199,6 +199,13 @@ describe('đơn vị & nhân viên', () => {
     expect(up(l.token, 'staff', [staff]).ok).toBe(true);
     expect(up(t.token, 'staff', [staff]).code).toBe('refused');
   });
+  it('mốc lịch sử xu hướng: Quản trị và Chỉ huy ghi, Nhân viên TN không', () => {
+    const l = member('ch@evn.vn', 'leader');
+    const t = member('tn@evn.vn', 'tester');
+    const h = { id: 'h1', data: { id: 'h1', profileId: 'p', metric: 'mov_rcd' }, deleted: false };
+    expect(up(l.token, 'trend_history', [h]).ok).toBe(true);
+    expect(up(t.token, 'trend_history', [h]).code).toBe('refused');
+  });
 });
 
 describe('chữ ký và khóa biên bản', () => {

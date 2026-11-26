@@ -59,6 +59,7 @@ export type Action =
   | 'instrument.edit'
   | 'unit.edit'
   | 'staff.edit'
+  | 'trend.edit'
   | 'data.import'
   | 'users.manage'
   | 'sign.revoke'
@@ -75,6 +76,8 @@ const MATRIX: Record<Action, Role[]> = {
   'unit.edit': ['admin'],
   // danh sách nhân viên: Chỉ huy cũng thêm được người khi chuẩn bị phiên
   'staff.edit': ['admin', 'leader'],
+  // mốc lịch sử xu hướng (nhập tay / từ Excel)
+  'trend.edit': ['admin', 'leader'],
   'data.import': ['admin'],
   'users.manage': ['admin'],
   'sign.revoke': ['admin'],

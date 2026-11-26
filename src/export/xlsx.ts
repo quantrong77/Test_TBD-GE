@@ -26,6 +26,7 @@ export async function buildXlsx(d: SessionData): Promise<Blob> {
     [r.header.orgName.toUpperCase()],
     [r.header.unitName.toUpperCase()],
     ...(r.header.reportNo ? [[`Số: ${r.header.reportNo}`]] : []),
+    ...(r.header.note ? [[r.header.note]] : []),
     [],
     ['BIÊN BẢN THÍ NGHIỆM NHẤT THỨ GIÀN TỤ BÙ DỌC 500 kV – HÃNG GE'],
     [],

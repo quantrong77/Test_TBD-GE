@@ -5,11 +5,14 @@
  * - Sau 1 năm (After 1 Year)
  * - Định kỳ hàng năm (Periodic)
  *
- * Tham số theo dõi:
- * 1. %ΔC Mất cân bằng qua TAG (Mục 1.B)
- * 2. Rcd Chống sét van MOV quy đổi 20°C (Mục 2)
- * 3. Rdc Cuộn kháng quy đổi 75°C (Mục 3)
- * 4. Điện dung C1 và tan δ Sứ xuyên (Mục 4)
+ * Tham số theo dõi (14 chỉ số – mọi số đo có ý nghĩa theo thời gian):
+ * 1. %ΔC mất cân bằng (1.B)
+ * 2. MOV: Rcd, Rsu (quy đổi 20°C), tổn hao P (2)
+ * 3. Kháng cản dịu: Rdc (75°C), Rcd (20°C), Z, L (3)
+ * 4. Sứ xuyên: C1, tan δ (4)
+ * 5. Khe hở TAG, VAP ENERGY mC / V, VAP CURRENT A (5)
+ * Thử Trigger, bơm dòng CT là phép thử đạt/không đạt theo lần – không có xu hướng.
+ * Ngưỡng lấy từ content/thresholds.json (và hồ sơ giàn khi ngưỡng có profileOverride).
  *
  * NGUỒN DỮ LIỆU – chỉ dùng số liệu thật, KHÔNG có dữ liệu mẫu viết cứng:
  * - Tự động: số đo trong các phiên thí nghiệm của hồ sơ giàn (IndexedDB `measurements`).
@@ -17,13 +20,37 @@
  * Chưa có số liệu → đồ thị trống; có 1 đợt → 1 điểm; từ 2 đợt → tự vẽ đường xu hướng.
  */
 
-import type { Profile, Session, Measurement, Result } from '../types';
+import type { Profile, Session, Measurement, Result, Threshold } from '../types';
 import { unbalance, type CurrentUnit } from './unbalance';
 import { tempCorrectRcd, tempCorrectRdc } from './temp-correction';
 import { parseNum } from './units';
+import { evalThreshold, resolveThreshold } from './evaluate';
+import thresholdsJson from '../../content/thresholds.json';
 
-export type TrendMetricKey = 'unbalance' | 'mov_rcd' | 'reactor_rdc' | 'bushing_c1' | 'bushing_tan';
-export const TREND_METRICS: TrendMetricKey[] = ['unbalance', 'mov_rcd', 'reactor_rdc', 'bushing_c1', 'bushing_tan'];
+const TH = thresholdsJson as Threshold[];
+const th = (id: string): Threshold => {
+  const t = TH.find((x) => x.id === id);
+  if (!t) throw new Error('Thiếu ngưỡng ' + id + ' trong content/thresholds.json');
+  return t;
+};
+
+export const TREND_METRICS = [
+  'unbalance',
+  'mov_rcd',
+  'mov_rsu',
+  'mov_p',
+  'reactor_rdc',
+  'reactor_rcd',
+  'reactor_z',
+  'reactor_l',
+  'bushing_c1',
+  'bushing_tan',
+  'tag_gap',
+  'vap_mC',
+  'vap_V',
+  'vap_A',
+] as const;
+export type TrendMetricKey = (typeof TREND_METRICS)[number];
 
 export type TrendSessionType = Session['type'];
 
@@ -69,74 +96,197 @@ export interface MetricDefinition {
   bypass?: number;
   /** Giới hạn sai lệch (%) so với đợt đầu tiên (baseline) – dùng cho warningDirection 'deviation' */
   deviationPct?: number;
-  warningDirection: 'higher' | 'lower' | 'deviation';
+  /** Giới hạn thay đổi (%) so với đợt liền trước – warningDirection 'step' */
+  stepPct?: number;
+  /** Ngưỡng trong thresholds.json (dải cho phép – 'range'; mức tối thiểu – 'lower' theo hồ sơ giàn) */
+  thresholdId?: string;
+  /**
+   * 'higher': càng cao càng xấu (alarm/bypass) · 'lower': càng thấp càng xấu
+   * 'deviation': sai lệch so với đợt đầu · 'step': thay đổi so với đợt trước · 'range': phải nằm trong dải
+   */
+  warningDirection: 'higher' | 'lower' | 'deviation' | 'step' | 'range';
   description: string;
 }
 
-export const METRIC_DEFS: Record<TrendMetricKey, MetricDefinition> = {
-  unbalance: {
+const STEP = th('trend_step').value!;
+const defs: MetricDefinition[] = [
+  {
     key: 'unbalance',
     title: 'Dòng mất cân bằng %ΔC qua TAG',
     shortTitle: '%ΔC Mất cân bằng',
     itemCode: '1.B',
     unit: '%',
-    alarm: 0.40,
-    bypass: 0.65,
+    alarm: th('unb_alarm').value,
+    bypass: th('unb_bypass').value,
     warningDirection: 'higher',
     description: 'Theo dõi độ lệch dòng vi sai qua TAG. Ngưỡng Alarm / Bypass lấy theo hồ sơ giàn.',
   },
-  mov_rcd: {
+  {
     key: 'mov_rcd',
     title: 'Điện trở cách điện MOV (Rcd quy đổi 20°C)',
     shortTitle: 'MOV Rcd (20°C)',
     itemCode: '2',
     unit: 'MΩ',
-    nominal: 2000,
-    alarm: 1000,
+    nominal: th('trend_mov_rcd').value,
+    alarm: th('trend_mov_rcd_alarm').value,
     warningDirection: 'lower',
-    description: 'Điện trở cách điện cột chống sét van MOV quy đổi về 20°C. Tiêu chuẩn ≥ 2000 MΩ.',
+    description: `Điện trở cách điện cột chống sét van MOV quy đổi về 20°C. Tiêu chuẩn ≥ ${th('trend_mov_rcd').value} MΩ, cảnh báo < ${th('trend_mov_rcd_alarm').value} MΩ.`,
   },
-  reactor_rdc: {
+  {
+    key: 'mov_rsu',
+    title: 'Điện trở cách điện sứ đỡ MOV (Rsu quy đổi 20°C)',
+    shortTitle: 'MOV Rsu (20°C)',
+    itemCode: '2',
+    unit: 'MΩ',
+    stepPct: STEP,
+    warningDirection: 'step',
+    description: `Điện trở cách điện sứ đỡ quy đổi về 20°C. Cảnh báo khi thay đổi > ${STEP} % so với đợt trước.`,
+  },
+  {
+    key: 'mov_p',
+    title: 'Tổn hao công suất MOV (P)',
+    shortTitle: 'MOV tổn hao P',
+    itemCode: '2',
+    unit: 'W',
+    stepPct: STEP,
+    warningDirection: 'step',
+    description: `Tổn hao công suất cột MOV. Cảnh báo khi thay đổi > ${STEP} % so với đợt trước.`,
+  },
+  {
     key: 'reactor_rdc',
     title: 'Điện trở một chiều cuộn kháng (Rdc quy đổi 75°C)',
     shortTitle: 'Kháng Rdc (75°C)',
     itemCode: '3',
     unit: 'mΩ',
-    deviationPct: 2,
+    deviationPct: th('trend_rdc_dev').value,
     warningDirection: 'deviation',
-    description: 'Điện trở một chiều cuộn kháng cản dịu (Al) quy đổi về 75°C. Sai lệch ≤ 2% so với đợt đầu tiên (xuất xưởng / lắp đặt).',
+    description: `Điện trở một chiều cuộn kháng cản dịu (Al) quy đổi về 75°C. Sai lệch ≤ ${th('trend_rdc_dev').value}% so với đợt đầu tiên (xuất xưởng / lắp đặt).`,
   },
-  bushing_c1: {
+  {
+    key: 'reactor_rcd',
+    title: 'Điện trở cách điện cuộn kháng (Rcd quy đổi 20°C)',
+    shortTitle: 'Kháng Rcd (20°C)',
+    itemCode: '3',
+    unit: 'MΩ',
+    stepPct: STEP,
+    warningDirection: 'step',
+    description: `Điện trở cách điện cuộn kháng quy đổi về 20°C. Cảnh báo khi thay đổi > ${STEP} % so với đợt trước.`,
+  },
+  {
+    key: 'reactor_z',
+    title: 'Tổng trở cuộn kháng Z',
+    shortTitle: 'Kháng Z',
+    itemCode: '3',
+    unit: 'Ω',
+    stepPct: STEP,
+    warningDirection: 'step',
+    description: `Tổng trở cuộn kháng cản dịu. Cảnh báo khi thay đổi > ${STEP} % so với đợt trước.`,
+  },
+  {
+    key: 'reactor_l',
+    title: 'Điện cảm cuộn kháng L',
+    shortTitle: 'Kháng L',
+    itemCode: '3',
+    unit: 'mH',
+    stepPct: STEP,
+    warningDirection: 'step',
+    description: `Điện cảm cuộn kháng cản dịu. Cảnh báo khi thay đổi > ${STEP} % so với đợt trước.`,
+  },
+  {
     key: 'bushing_c1',
     title: 'Điện dung sứ xuyên C1',
     shortTitle: 'Sứ C1',
     itemCode: '4',
     unit: 'pF',
-    deviationPct: 5,
+    deviationPct: th('bushing_c1').value,
     warningDirection: 'deviation',
-    description: 'Điện dung C1 sứ xuyên nền tảng. Giới hạn sai lệch ≤ 5% so với đợt đầu tiên.',
+    description: `Điện dung C1 sứ xuyên. Giới hạn sai lệch ≤ ${th('bushing_c1').value}% so với đợt đầu tiên.`,
   },
-  bushing_tan: {
+  {
     key: 'bushing_tan',
     title: 'Tổn hao điện môi sứ xuyên tan δ',
     shortTitle: 'Sứ tan δ',
     itemCode: '4',
     unit: '%',
-    alarm: 0.50,
-    bypass: 0.70,
+    alarm: th('trend_tan').value,
+    bypass: th('trend_tan_bypass').value,
     warningDirection: 'higher',
-    description: 'Hệ số tổn hao điện môi tan δ của sứ xuyên. Giới hạn tiêu chuẩn EVN ≤ 0.50%.',
+    description: `Hệ số tổn hao điện môi tan δ của sứ xuyên. Cảnh báo > ${th('trend_tan').value}%, không đạt > ${th('trend_tan_bypass').value}%.`,
   },
-};
+  {
+    key: 'tag_gap',
+    title: 'Khe hở điện cực TAG',
+    shortTitle: 'Khe hở TAG',
+    itemCode: '5.A',
+    unit: 'mm',
+    thresholdId: 'tag_gap',
+    warningDirection: 'range',
+    description: 'Khe hở điện cực TAG phải nằm trong dải theo hồ sơ giàn (danh định ± dung sai).',
+  },
+  {
+    key: 'vap_mC',
+    title: 'VAP ENERGY (mC)',
+    shortTitle: 'VAP mC',
+    itemCode: '5.B',
+    unit: 'mC',
+    thresholdId: 'vap_mC',
+    warningDirection: 'range',
+    description: 'Ngưỡng năng lượng VAP (mC) theo hồ sơ giàn. Mỗi pha lấy bộ VAP (A/B) lệch xa danh định nhất.',
+  },
+  {
+    key: 'vap_V',
+    title: 'VAP ENERGY (V)',
+    shortTitle: 'VAP V',
+    itemCode: '5.B',
+    unit: 'V',
+    thresholdId: 'vap_V',
+    warningDirection: 'lower',
+    description: 'Điện áp ngưỡng năng lượng VAP – không thấp hơn mức tối thiểu theo hồ sơ giàn. Mỗi pha lấy bộ VAP thấp hơn.',
+  },
+  {
+    key: 'vap_A',
+    title: 'VAP CURRENT (A)',
+    shortTitle: 'VAP A',
+    itemCode: '5.B',
+    unit: 'A',
+    thresholdId: 'vap_A',
+    warningDirection: 'range',
+    description: 'Ngưỡng dòng VAP (trị tuyệt đối) theo hồ sơ giàn. Mỗi pha lấy bộ VAP (A/B) lệch xa danh định nhất.',
+  },
+];
+export const METRIC_DEFS = Object.fromEntries(defs.map((d) => [d.key, d])) as Record<TrendMetricKey, MetricDefinition>;
 
-/** Biểu mẫu chứa số liệu của từng chỉ số (khớp items.json / forms.ts). */
+/** Nhóm hiển thị theo hạng mục (ô chọn chỉ số). */
+export const METRIC_GROUPS: [string, TrendMetricKey[]][] = [
+  ['1. Tụ & Group tụ', ['unbalance']],
+  ['2. MOV', ['mov_rcd', 'mov_rsu', 'mov_p']],
+  ['3. Kháng cản dịu', ['reactor_rdc', 'reactor_rcd', 'reactor_z', 'reactor_l']],
+  ['4. Sứ xuyên', ['bushing_c1', 'bushing_tan']],
+  ['5. VAP / TAG', ['tag_gap', 'vap_mC', 'vap_V', 'vap_A']],
+];
+
+/** Biểu mẫu chứa số liệu của từng chỉ số (khớp items.json / forms). key = khóa số đo sau "Pha.". */
 export const METRIC_SOURCE: Record<TrendMetricKey, { itemId: string; testId: string; key: string }> = {
   unbalance: { itemId: '4.1', testId: 'unbalance', key: 'Idx10' },
   mov_rcd: { itemId: '4.2', testId: 'measure', key: 'Rmov' },
+  mov_rsu: { itemId: '4.2', testId: 'measure', key: 'Rsu' },
+  mov_p: { itemId: '4.2', testId: 'measure', key: 'P' },
   reactor_rdc: { itemId: '4.3', testId: 'measure', key: 'Rdc' },
+  reactor_rcd: { itemId: '4.3', testId: 'measure', key: 'Rcd' },
+  reactor_z: { itemId: '4.3', testId: 'measure', key: 'Z' },
+  reactor_l: { itemId: '4.3', testId: 'measure', key: 'L' },
   bushing_c1: { itemId: '4.4', testId: 'measure', key: 'C1' },
   bushing_tan: { itemId: '4.4', testId: 'measure', key: 'tan' },
+  tag_gap: { itemId: '4.5', testId: 'gap', key: 'gap' },
+  vap_mC: { itemId: '4.5', testId: 'vap-threshold', key: 'mC' },
+  vap_V: { itemId: '4.5', testId: 'vap-threshold', key: 'V' },
+  vap_A: { itemId: '4.5', testId: 'vap-threshold', key: 'A' },
 };
+
+/** Ngưỡng đã áp hồ sơ giàn (chỉ số có thresholdId: khe hở TAG, VAP). */
+export function metricThreshold(metric: MetricDefinition, profile: Profile): Threshold | null {
+  return metric.thresholdId ? resolveThreshold(th(metric.thresholdId), profile) : null;
+}
 
 export const SESSION_TYPE_LABEL: Record<TrendSessionType, string> = {
   after_install: 'Lắp đặt',
@@ -167,6 +317,8 @@ export function extractTrendFromSessions(
   const points: TrendDataPoint[] = [];
 
   for (const s of profSessions) {
+    // hạng mục bỏ chọn "Thực hiện" trong phiên → không đưa vào xu hướng (dù còn số liệu cũ)
+    if (s.items && !s.items.includes(src.itemId)) continue;
     const vals: Record<string, string> = {};
     for (const m of allMeasurements) {
       if (m.sessionId === s.id && m.itemId === src.itemId && m.testId === src.testId) vals[m.key] = m.value;
@@ -206,10 +358,33 @@ export function extractTrendFromSessions(
           if (!cor) uncorrected = true;
           return cor ? round(cor.R_75, 3) : raw;
         }
-        case 'bushing_c1':
-          return num(`${ph}.C1`);
-        case 'bushing_tan':
-          return num(`${ph}.tan`);
+        case 'mov_rsu':
+        case 'reactor_rcd': {
+          const raw = num(`${ph}.${src.key}`);
+          if (raw == null) return null;
+          const t = temp(ph);
+          const cor = t != null ? tempCorrectRcd(raw, t, 20) : null;
+          if (!cor) uncorrected = true;
+          return cor ? round(cor.R_ref, 0) : raw;
+        }
+        case 'vap_mC':
+        case 'vap_A': {
+          // 2 bộ VAP mỗi pha → lấy giá trị lệch xa danh định nhất (bất lợi nhất)
+          const t = metricThreshold(METRIC_DEFS[metricKey], profile)!;
+          const nom = t.nominal ?? ((t.min ?? 0) + (t.max ?? 0)) / 2;
+          const xs = ['VAP-A', 'VAP-B']
+            .map((u) => num(`${ph}.${u}.${src.key}`))
+            .filter((x): x is number => x !== null)
+            .map((x) => (t.abs ? Math.abs(x) : x));
+          return xs.length ? xs.reduce((a, b) => (Math.abs(b - nom) > Math.abs(a - nom) ? b : a)) : null;
+        }
+        case 'vap_V': {
+          const xs = ['VAP-A', 'VAP-B'].map((u) => num(`${ph}.${u}.V`)).filter((x): x is number => x !== null);
+          return xs.length ? Math.min(...xs) : null;
+        }
+        default:
+          // C1, tan δ, tổn hao P, Z, L, khe hở TAG: lấy nguyên giá trị đo
+          return num(`${ph}.${src.key}`);
       }
     };
 
@@ -354,21 +529,74 @@ export function analyzeTrendSeries(points: TrendDataPoint[], metric: MetricDefin
     const minVal = lv.length ? Math.min(...lv) : null;
     headline = { label: 'Đợt mới nhất (Min)', value: minVal, unit: metric.unit };
     if (rates.length) driftRate = round(Math.min(...rates), 4);
-    if (minVal !== null && metric.alarm !== undefined && minVal < metric.alarm) {
+    // mức tối thiểu theo hồ sơ giàn (VAP V) hoặc mức cảnh báo cố định (Rcd MOV)
+    const floor = metricThreshold(metric, profile)?.value ?? metric.alarm;
+    if (minVal !== null && floor !== undefined && minVal < floor) {
       verdict = 'fail';
-      verdictText = 'CÁCH ĐIỆN SUY GIẢM DƯỚI NGƯỠNG CẢNH BÁO';
-      recommendation = 'Cần vệ sinh, sấy cách điện hoặc thay thế cột MOV.';
+      verdictText = metric.thresholdId ? `DƯỚI MỨC TỐI THIỂU (${floor} ${metric.unit})` : 'CÁCH ĐIỆN SUY GIẢM DƯỚI NGƯỠNG CẢNH BÁO';
+      recommendation = metric.thresholdId ? 'Kiểm tra, hiệu chỉnh bộ VAP theo hướng dẫn GE.' : 'Cần vệ sinh, sấy cách điện hoặc thay thế cột MOV.';
     } else if (minVal !== null && metric.nominal !== undefined && minVal < metric.nominal) {
       verdict = 'warn';
       verdictText = 'Thấp hơn giá trị tiêu chuẩn';
       recommendation = 'Vệ sinh bề mặt, đo lại; rút ngắn chu kỳ theo dõi.';
-    } else if (driftRate !== null && driftRate < 0 && metric.alarm !== undefined && minVal !== null) {
-      projectedAlarmYears = round((minVal - metric.alarm) / -driftRate, 1);
+    } else if (driftRate !== null && driftRate < 0 && floor !== undefined && minVal !== null) {
+      projectedAlarmYears = round((minVal - floor) / -driftRate, 1);
       if (projectedAlarmYears < 5) {
         verdict = 'warn';
         verdictText = `Suy giảm nhanh (${driftRate} ${metric.unit}/năm)`;
         recommendation = `Dự báo xuống dưới ngưỡng cảnh báo trong ~ ${projectedAlarmYears} năm.`;
       }
+    }
+  } else if (metric.warningDirection === 'range') {
+    // phải nằm trong dải (khe hở TAG, VAP mC/A): đánh giá đợt mới nhất + dự báo thời điểm ra khỏi dải
+    const t = metricThreshold(metric, profile)!;
+    const nom = t.nominal ?? ((t.min ?? 0) + (t.max ?? 0)) / 2;
+    const worst = lv.length ? lv.reduce((a, b) => (Math.abs(b - nom) > Math.abs(a - nom) ? b : a)) : null;
+    headline = { label: 'Đợt mới nhất (lệch xa danh định nhất)', value: worst, unit: metric.unit };
+    if (rates.length) driftRate = round(rates.reduce((a, b) => (Math.abs(b) > Math.abs(a) ? b : a)), 4);
+    const out = lv.filter((x) => evalThreshold(t, x) === 'fail');
+    if (out.length) {
+      verdict = 'fail';
+      verdictText = `NGOÀI DẢI CHO PHÉP (${t.min} – ${t.max} ${metric.unit})`;
+      recommendation = metric.key === 'tag_gap' ? 'Chỉnh lại khe hở điện cực TAG (shim) theo hồ sơ giàn.' : 'Kiểm tra, hiệu chỉnh bộ VAP theo hướng dẫn GE.';
+    } else {
+      const years = spans
+        .filter((s) => s.n >= 2 && s.years >= 0.08 && s.last !== s.first)
+        .map((s) => {
+          const r = (s.last - s.first) / s.years;
+          return r > 0 ? ((t.max ?? Infinity) - s.last) / r : (s.last - (t.min ?? -Infinity)) / -r;
+        })
+        .filter((y) => Number.isFinite(y) && y >= 0);
+      if (years.length) {
+        projectedAlarmYears = round(Math.min(...years), 1);
+        if (projectedAlarmYears < 5) {
+          verdict = 'warn';
+          verdictText = `Đang trôi về biên dải (${driftRate! > 0 ? '+' : ''}${driftRate} ${metric.unit}/năm)`;
+          recommendation = `Dự báo ra khỏi dải cho phép trong ~ ${projectedAlarmYears} năm. Theo dõi đặc biệt.`;
+        }
+      }
+    }
+  } else if (metric.warningDirection === 'step') {
+    // so với đợt liền trước của từng pha
+    const steps = PH.map((ph) => {
+      const k = phaseKey(ph);
+      const has = pts.filter((p) => p[k] !== null);
+      if (has.length < 2) return null;
+      const prev = has[has.length - 2][k]!;
+      return prev !== 0 ? ((has[has.length - 1][k]! - prev) / prev) * 100 : null;
+    }).filter((x): x is number => x !== null);
+    const maxStep = steps.length ? round(steps.reduce((a, b) => (Math.abs(b) > Math.abs(a) ? b : a)), 2) : null;
+    headline = { label: 'Thay đổi so với đợt trước', value: maxStep, unit: '%' };
+    if (rates.length) driftRate = round(rates.reduce((a, b) => (Math.abs(b) > Math.abs(a) ? b : a)), 4);
+    const lim = metric.stepPct ?? Infinity;
+    if (maxStep == null) {
+      verdict = 'na';
+      verdictText = 'Mới có 1 đợt – chưa có mốc so sánh';
+      recommendation = 'Cần thêm ít nhất 1 đợt để so sánh với đợt trước.';
+    } else if (Math.abs(maxStep) > lim) {
+      verdict = 'warn';
+      verdictText = `BẤT THƯỜNG: thay đổi ${maxStep > 0 ? '+' : ''}${maxStep} % > ${lim} % so với đợt trước`;
+      recommendation = 'Kiểm tra lại phép đo (nhiệt độ, độ ẩm, đấu nối) và đánh giá theo QĐ 1901.';
     }
   } else {
     // 'deviation': so với đợt đầu tiên của từng pha (baseline)
@@ -438,8 +666,24 @@ export function renderTrendSvg(
     </svg>`;
   }
 
-  const alarmLimit = metric.key === 'unbalance' ? (profile.unbAlarm_pct ?? metric.alarm ?? 0.40) : metric.alarm;
-  const bypassLimit = metric.key === 'unbalance' ? (profile.unbBypass_pct ?? metric.bypass ?? 0.65) : metric.bypass;
+  // đường giới hạn trên đồ thị: Alarm/Bypass (higher), mức tối thiểu (lower), biên dải (range)
+  const t = metricThreshold(metric, profile);
+  let alarmLimit: number | undefined;
+  let bypassLimit: number | undefined;
+  let alarmLabel = 'Ngưỡng Alarm';
+  let bypassLabel = 'Ngưỡng Bypass';
+  if (metric.warningDirection === 'range' && t) {
+    alarmLimit = t.max;
+    bypassLimit = t.min;
+    alarmLabel = 'Giới hạn trên';
+    bypassLabel = 'Giới hạn dưới';
+  } else if (metric.warningDirection === 'lower') {
+    alarmLimit = t?.value ?? metric.alarm;
+    alarmLabel = t ? 'Mức tối thiểu' : 'Ngưỡng cảnh báo';
+  } else if (metric.warningDirection === 'higher') {
+    alarmLimit = metric.key === 'unbalance' ? (profile.unbAlarm_pct ?? metric.alarm) : metric.alarm;
+    bypassLimit = metric.key === 'unbalance' ? (profile.unbBypass_pct ?? metric.bypass) : metric.bypass;
+  }
 
   // Tìm min/max trục Y
   let allVals: number[] = [];
@@ -451,11 +695,18 @@ export function renderTrendSvg(
   if (alarmLimit && Number.isFinite(alarmLimit)) allVals.push(alarmLimit);
   if (bypassLimit && Number.isFinite(bypassLimit)) allVals.push(bypassLimit);
 
-  let minY = Math.min(0, ...allVals);
+  let minY = Math.min(...allVals);
   let maxY = Math.max(...allVals);
-  if (maxY === minY) maxY += 1;
-  // Đệm trục Y 15%
-  maxY = maxY * 1.15;
+  if (maxY === minY) maxY += Math.abs(maxY) * 0.05 || 1;
+  if (metric.thresholdId) {
+    // dải hẹp quanh danh định (khe hở, VAP): không kéo trục về 0, đệm 15% hai phía
+    const pad = (maxY - minY) * 0.15;
+    minY -= pad;
+    maxY += pad;
+  } else {
+    minY = Math.min(0, minY);
+    maxY = maxY * 1.15;
+  }
 
   const scaleX = (idx: number) => {
     if (points.length <= 1) return padLeft + chartW / 2;
@@ -507,7 +758,7 @@ export function renderTrendSvg(
 
         ${alarmLimit ? `
         <line x1="165" y1="0" x2="185" y2="0" stroke="#f59e0b" stroke-dasharray="3,2" stroke-width="2"/>
-        <text x="190" y="4" fill="#fbbf24">Alarm</text>
+        <text x="190" y="4" fill="#fbbf24">${metric.warningDirection === 'range' ? 'Giới hạn' : 'Ngưỡng'}</text>
         ` : ''}
       </g>
     </g>
@@ -527,7 +778,7 @@ export function renderTrendSvg(
       alarmY && alarmY >= padTop && alarmY <= padTop + chartH
         ? `
       <line x1="${padLeft}" y1="${alarmY.toFixed(1)}" x2="${padLeft + chartW}" y2="${alarmY.toFixed(1)}" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="5,3"/>
-      <text x="${padLeft + chartW - 4}" y="${(alarmY - 5).toFixed(1)}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="end">Ngưỡng Alarm (${alarmLimit} ${metric.unit})</text>
+      <text x="${padLeft + chartW - 4}" y="${(alarmY - 5).toFixed(1)}" fill="#fbbf24" font-size="10" font-weight="bold" text-anchor="end">${alarmLabel} (${alarmLimit} ${metric.unit})</text>
     `
         : ''
     }
@@ -537,7 +788,7 @@ export function renderTrendSvg(
       bypassY && bypassY >= padTop && bypassY <= padTop + chartH
         ? `
       <line x1="${padLeft}" y1="${bypassY.toFixed(1)}" x2="${padLeft + chartW}" y2="${bypassY.toFixed(1)}" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="5,3"/>
-      <text x="${padLeft + chartW - 4}" y="${(bypassY - 5).toFixed(1)}" fill="#ef4444" font-size="10" font-weight="bold" text-anchor="end">Ngưỡng Bypass (${bypassLimit} ${metric.unit})</text>
+      <text x="${padLeft + chartW - 4}" y="${(bypassY - 5).toFixed(1)}" fill="#ef4444" font-size="10" font-weight="bold" text-anchor="end">${bypassLabel} (${bypassLimit} ${metric.unit})</text>
     `
         : ''
     }

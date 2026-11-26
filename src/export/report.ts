@@ -71,7 +71,13 @@ export async function buildReport(d: SessionData) {
       check: valid ? 'Khớp nội dung lúc ký' : 'NỘI DUNG ĐÃ THAY ĐỔI SAU KHI KÝ',
     }));
   const unit = s.unitSnap ?? DEFAULT_UNIT;
-  const header = { orgName: unit.orgName, unitName: unit.name, reportNo: formatReportNo(unit.reportFormat, s.reportNo, s.date) };
+  const header = {
+    orgName: unit.orgName,
+    unitName: unit.name,
+    reportNo: s.historical ? '' : formatReportNo(unit.reportFormat, s.reportNo, s.date),
+    /** phiên nhập lại từ biên bản giấy: ghi rõ dưới tiêu đề */
+    note: s.historical ? `BẢN NHẬP LẠI SỐ LIỆU TỪ BIÊN BẢN GIẤY${s.paperRef ? ` ${s.paperRef}` : ''} – không thay thế bản gốc` : '',
+  };
   return { s, p, header, info, instruments, gates, sections, summary, signatures, signers: signerBlocks(s, signatures), resText, contentVersion: CONTENT_VERSION };
 }
 

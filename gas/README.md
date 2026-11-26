@@ -67,9 +67,9 @@ Cả hai giá trị này **công khai được** (nằm trong mã app). Thứ b�
    - **Máy chủ**: số tài khoản theo trạng thái, mở nhanh file Google Sheets và thư mục ảnh.
 4. Tài khoản đã duyệt **tự đồng bộ** với cả đội mỗi khi có mạng. Phiên đăng nhập giữ **30 ngày** trên máy và **tự gia hạn** mỗi lần mở app có mạng, nên dùng offline ngoài hiện trường bình thường.
 
-## Nâng cấp lên máy chủ bản 3 (đơn vị, nhân viên)
+## Nâng cấp lên máy chủ bản 3 (đơn vị, nhân viên, mốc xu hướng)
 
-Dán lại `Core.gs` và `Code.gs` rồi **Deploy → Manage deployments → New version**. Tab `data_units`, `data_staff` tự tạo ở lần ghi đầu, không cần chạy lại `setup()`. Trước khi nâng cấp, app vẫn đồng bộ bình thường các bảng cũ; đơn vị và nhân viên chỉ lưu trên máy và tự gửi lên sau khi máy chủ được nâng cấp.
+Dán lại `Core.gs` và `Code.gs` rồi **Deploy → Manage deployments → New version**. Tab `data_units`, `data_staff`, `data_trend_history` tự tạo ở lần ghi đầu, không cần chạy lại `setup()`. Trước khi nâng cấp, app vẫn đồng bộ bình thường các bảng cũ; đơn vị, nhân viên và mốc lịch sử xu hướng chỉ lưu trên máy và tự gửi lên sau khi máy chủ được nâng cấp.
 
 ## Phân quyền (máy chủ kiểm tra ở mọi lệnh)
 
@@ -81,6 +81,7 @@ Dán lại `Core.gs` và `Code.gs` rồi **Deploy → Manage deployments → New
 | Ký ô Người thí nghiệm / Chỉ huy trực tiếp (mỗi ô 1 chữ ký) | | cả 2 | Người TN | |
 | **Cấu hình**: hồ sơ giàn, máy TN, mốc xu hướng, nhập JSON, đơn vị & số biên bản | ✓ | | | |
 | Danh sách nhân viên đơn vị thí nghiệm | ✓ | ✓ | | |
+| Mốc lịch sử xu hướng (nhập tay / từ Excel) | ✓ | ✓ | | |
 | Quản lý người dùng, hủy chữ ký | ✓ | | | |
 
 - Chữ ký **Chỉ huy trực tiếp** khóa biên bản: máy chủ từ chối mọi sửa/xóa phiên, số đo, cổng an toàn, ảnh của phiên đó; mỗi phiên chỉ 1 chữ ký Chỉ huy.

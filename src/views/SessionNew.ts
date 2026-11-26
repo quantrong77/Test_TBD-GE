@@ -32,6 +32,7 @@ export const SessionNew: View = async (_r, el) => {
 
   el.innerHTML = `
     <form id="f" novalidate>
+      <label class="check card"><input type="checkbox" name="historical" id="historical"><span><b>📜 Nhập lại biên bản giấy cũ</b><br><span class="small muted">Chỉ để lưu số liệu các năm trước cho phân tích xu hướng: không cấp số biên bản mới, không ký điện tử, không cần cổng an toàn.</span></span></label>
       <h2>Thông tin biên bản</h2>
       ${
         units.length > 1
@@ -48,8 +49,11 @@ export const SessionNew: View = async (_r, el) => {
           .map(([k, l]) => `<option value="${k}"${k === 'periodic' ? ' selected' : ''}>${l}</option>`)
           .join('')}</select></label>
       </div>
-      <label class="field"><span>Số biên bản (tự tăng, sửa được)</span><input name="reportNo" inputmode="numeric" required></label>
-      <p class="small muted mt-0" id="noPreview"></p>
+      <div id="noWrap">
+        <label class="field"><span>Số biên bản (tự tăng, sửa được)</span><input name="reportNo" inputmode="numeric" required></label>
+        <p class="small muted mt-0" id="noPreview"></p>
+      </div>
+      <label class="field" id="paperWrap" hidden><span>Số / ký hiệu biên bản giấy gốc (nếu có)</span><input name="paperRef" maxlength="100" placeholder="vd: 12/BB-TN ngày 15/03/2022"></label>
 
       <h2>Nhân sự</h2>
       <div id="crew"></div>
@@ -155,8 +159,14 @@ export const SessionNew: View = async (_r, el) => {
       (missing.length ? `<p class="small muted">Chưa nhập hạn kiểm định: ${missing.map((i) => esc(i.model)).join(', ')}${can('instrument.edit') ? ' – <a href="#/instruments">nhập</a>' : ''}.</p>` : '');
   };
 
+  const isHist = () => f.querySelector<HTMLInputElement>('#historical')!.checked;
   f.addEventListener('change', (e) => {
     const name = (e.target as HTMLInputElement).name;
+    if (name === 'historical') {
+      el.querySelector<HTMLElement>('#noWrap')!.hidden = isHist();
+      el.querySelector<HTMLElement>('#paperWrap')!.hidden = !isHist();
+      f.querySelector<HTMLInputElement>('[name=date]')!.max = isHist() ? today() : '';
+    }
     if (name === 'unitId') drawCrew();
     if (name === 'unitId' || name === 'date') refreshNo();
     if (name === 'leaderId') el.querySelector<HTMLElement>('#leaderTextWrap')!.hidden = val('leaderId') !== OTHER;
@@ -180,11 +190,13 @@ export const SessionNew: View = async (_r, el) => {
     const resp = candidates()[Number(val('responsible'))];
     const reportNo = Number(val('reportNo'));
     const scope = fd.getAll('item').map(String);
+    const hist = isHist();
     const missing = [
-      ld ? '' : 'Chỉ huy trực tiếp',
-      resp ? '' : 'Người chịu trách nhiệm thí nghiệm',
-      Number.isInteger(reportNo) && reportNo > 0 ? '' : 'Số biên bản',
+      ld || hist ? '' : 'Chỉ huy trực tiếp',
+      resp || hist ? '' : 'Người chịu trách nhiệm thí nghiệm',
+      hist || (Number.isInteger(reportNo) && reportNo > 0) ? '' : 'Số biên bản',
       scope.length ? '' : 'ít nhất 1 hạng mục',
+      hist && val('date') > today() ? 'ngày thí nghiệm không ở tương lai' : '',
     ].filter(Boolean);
     if (missing.length) {
       el.querySelector('#err')!.textContent = 'Vui lòng chọn/nhập: ' + missing.join(', ') + '.';
@@ -192,17 +204,18 @@ export const SessionNew: View = async (_r, el) => {
     }
     const u = unit();
     const date = val('date');
-    const draft = { id: uid(), unitId: u.id, date, reportNo };
+    const draft = { id: uid(), unitId: u.id, date, ...(hist ? {} : { reportNo }) };
     const dup = duplicateReportNo(draft, sessions);
-    if (dup.length && !confirm(`Số biên bản ${formatReportNo(u.reportFormat, reportNo, date)} đã dùng cho phiên ngày ${fmtDate(dup[0].date)}. Vẫn dùng số này?`)) return;
-    const ms = all.filter((m) => m.name !== ld!.name);
+    if (!hist && dup.length && !confirm(`Số biên bản ${formatReportNo(u.reportFormat, reportNo, date)} đã dùng cho phiên ngày ${fmtDate(dup[0].date)}. Vẫn dùng số này?`)) return;
+    const ms = all.filter((m) => m.name !== ld?.name);
     const s: Session = {
       ...draft,
       profileId: val('profileId'),
       type: fd.get('type') as Session['type'],
-      leader: ld!.name,
+      leader: ld?.name ?? '',
       members: ms.map((m) => m.name),
-      crew: { leader: ld!, responsible: resp, members: ms },
+      crew: { ...(ld ? { leader: ld } : {}), ...(resp ? { responsible: resp } : {}), members: ms },
+      ...(hist ? { historical: true, ...(val('paperRef') ? { paperRef: val('paperRef') } : {}) } : {}),
       unitSnap: { orgName: u.orgName, name: u.name, reportFormat: u.reportFormat },
       items: scope,
       instruments: fd.getAll('inst').map(String),
@@ -212,8 +225,11 @@ export const SessionNew: View = async (_r, el) => {
       createdAt: Date.now(),
     };
     await db.sessions.add(s);
-    setActiveSession(s.id);
-    toast('Đã tạo phiên – đặt làm phiên đang làm');
+    if (hist) toast('Đã tạo phiên nhập lại biên bản cũ – nhập số liệu vào các hạng mục');
+    else {
+      setActiveSession(s.id);
+      toast('Đã tạo phiên – đặt làm phiên đang làm');
+    }
     go(`#/session/${s.id}`);
   });
 };

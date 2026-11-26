@@ -150,6 +150,10 @@ export interface Session {
   crew?: { leader?: CrewMember; responsible?: CrewMember; members: CrewMember[] };
   /** Hạng mục thực hiện (itemId); không có = tất cả (phiên cũ) */
   items?: string[];
+  /** Phiên nhập lại số liệu từ biên bản giấy cũ: không cấp số biên bản, không ký, không cần cổng an toàn */
+  historical?: boolean;
+  /** Số / ký hiệu biên bản giấy gốc (phiên nhập lại) */
+  paperRef?: string;
 }
 
 export interface Measurement {

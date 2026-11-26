@@ -1,5 +1,5 @@
 import { db } from '../store/db';
-import { vCheck, vInstrument, vMeasurement, vPhotoMeta, vProfile, vSession, vSignature, vStaff, vUnit } from '../store/validate';
+import { vCheck, vInstrument, vMeasurement, vPhotoMeta, vProfile, vSession, vSignature, vStaff, vTrendHistory, vUnit } from '../store/validate';
 import {
   idToKey,
   isLocalOnly,
@@ -52,6 +52,7 @@ export class RefusedError extends Error {}
 const VALIDATE: Record<SyncTable, (x: unknown) => void> = {
   units: vUnit,
   staff: vStaff,
+  trendHistory: vTrendHistory,
   profiles: vProfile,
   instruments: vInstrument,
   sessions: vSession,

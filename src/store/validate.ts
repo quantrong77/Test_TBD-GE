@@ -1,3 +1,4 @@
+import { TREND_METRICS } from '../calc/trend';
 // Kiểm tra kiểu dữ liệu từ nguồn ngoài (file JSON người khác gửi, dữ liệu kéo về từ Supabase).
 // Sai một trường là từ chối cả bản ghi – dữ liệu này được vẽ ra giao diện.
 
@@ -52,6 +53,7 @@ function vSessionExtra(o: Record<string, unknown>) {
   }
   check(o.reportNo === undefined || isInt(o.reportNo, 1, 99999), 'phiên – số biên bản');
   check(o.items === undefined || (isArr(o.items) && o.items.every((x) => isStr(x, 10))), 'phiên – hạng mục thực hiện');
+  check((o.historical === undefined || typeof o.historical === 'boolean') && (o.paperRef === undefined || isStr(o.paperRef, 100)), 'phiên – nhập lại biên bản cũ');
   if (o.crew !== undefined) {
     const c = o.crew as Record<string, unknown>;
     check(!!c && isArr(c.members), 'phiên – nhân sự');
@@ -105,11 +107,10 @@ export function vPhotoMeta(p: unknown) {
   check(isStr(o.userId, 64) && isStr(o.email, 200) && isStr(o.name, 200) && ['admin', 'leader', 'tester', 'viewer'].includes(o.role as string), 'chữ ký – người ký');
   check(isNum(o.signedAt) && isStr(o.hash, 128) && /^[0-9a-f]{64}$/.test(o.hash as string), 'chữ ký – mã nội dung');
 }
-const TREND_METRICS = ['unbalance', 'mov_rcd', 'reactor_rdc', 'bushing_c1', 'bushing_tan'];
 const numOrNull = (x: unknown) => x === null || (isNum(x) && x >= 0);
 export function vTrendHistory(r: unknown) {
   const o = r as Record<string, unknown>;
-  check(!!o && isId(o.id) && isId(o.profileId) && TREND_METRICS.includes(o.metric as string) && isDate(o.date), 'mốc xu hướng');
+  check(!!o && isId(o.id) && isId(o.profileId) && (TREND_METRICS as readonly string[]).includes(o.metric as string) && isDate(o.date), 'mốc xu hướng');
   check(['after_install', 'after_1y', 'periodic'].includes(o.sessionType as string) && isStr(o.label, 100) && isNum(o.createdAt), 'mốc xu hướng – loại/nhãn');
   check(numOrNull(o.phaseA) && numOrNull(o.phaseB) && numOrNull(o.phaseC), 'mốc xu hướng – số liệu');
   check(o.note === undefined || isStr(o.note, 500), 'mốc xu hướng – ghi chú');

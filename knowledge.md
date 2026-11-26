@@ -2,7 +2,7 @@
 
 > **Mục đích:** Nguồn tri thức duy nhất (Single Source of Truth) về nghiệp vụ, kiến trúc, quy tắc an toàn của **TBD-GE Field**, kèm **luồng sử dụng mục tiêu** và **kế hoạch refactor toàn bộ**. Dành cho kỹ sư phát triển, chuyên gia thí nghiệm và AI agent.
 >
-> **Cập nhật:** 26/11/2026 – nhánh `refactor/field-workflow` (tách từ `main` @ `54bb83d`), app `1.1.0`. Đã xong R0–R6 (trừ cảnh báo "nghi nhập sai" – để sau).
+> **Cập nhật:** 26/11/2026 – nhánh `refactor/field-workflow` (tách từ `main` @ `54bb83d`), app `1.1.0`. Đã xong R0–R7 (trừ cảnh báo "nghi nhập sai" – để sau).
 >
 > **Cách đọc:** Phần A = hiện trạng (đúng với mã nguồn). Phần B = đích đến (luồng, nhập liệu, mẫu BBTN). Phần C = kế hoạch refactor theo giai đoạn, mỗi giai đoạn có tiêu chí nghiệm thu.
 
@@ -72,7 +72,7 @@ Mọi phép thử đều làm **trên sàn tụ**; thứ tự tùy ý vì các n
 
 ### A5.1. Công nghệ
 * Vanilla TypeScript, render template string vào `innerHTML`; Vite 8 + `vite-plugin-pwa` (precache toàn bộ).
-* Dexie/IndexedDB: `sessions`, `measurements`, `checks`, `photos`, `signatures`, `profiles`, `instruments`, `trendHistory` (v3, chưa đồng bộ), `units`, `staff` (v4, đồng bộ).
+* Dexie/IndexedDB: `sessions`, `measurements`, `checks`, `photos`, `signatures`, `profiles`, `instruments`, `trendHistory` (v3), `units`, `staff` (v4) – tất cả đều đồng bộ (bảng máy chủ `trend_history`, `units`, `staff` từ máy chủ bản 3).
 * MiniSearch (tìm không dấu), PhotoSwipe, jsPDF + autotable (font Be Vietnam Pro, ký tự Hy Lạp được thay chữ), SheetJS 0.20.3 (bản CDN).
 * OCR 7 đoạn và watermark ảnh bằng Canvas, chạy trên máy.
 * 5 chủ đề màu (Theo máy, Tiêu chuẩn, Ca đêm, Nắng gắt, Đêm đỏ); vùng chạm ≥ 48 px, chữ ≥ 16 px; thanh điều hướng đáy.
@@ -96,7 +96,8 @@ Mọi phép thử đều làm **trên sàn tụ**; thứ tự tùy ý vì các n
 | Nhập số đo, cổng an toàn, ảnh | ✓ | ✓ | ✓ | |
 | Ký ô **Người thí nghiệm** | | ✓ | ✓ | |
 | Ký ô **Chỉ huy trực tiếp** (khóa biên bản) | | ✓ | | |
-| Cấu hình: hồ sơ giàn, máy TN, mốc xu hướng, nhập JSON, **đơn vị & số biên bản** (`unit.edit`) | ✓ | | | |
+| Cấu hình: hồ sơ giàn, máy TN, nhập JSON, **đơn vị & số biên bản** (`unit.edit`) | ✓ | | | |
+| **Mốc lịch sử xu hướng** – nhập tay / từ Excel (`trend.edit`) | ✓ | ✓ | | |
 | **Danh sách nhân viên** (`staff.edit`) | ✓ | ✓ | | |
 | Quản lý người dùng, thu hồi chữ ký | ✓ | | | |
 
@@ -116,7 +117,7 @@ Mọi phép thử đều làm **trên sàn tụ**; thứ tự tùy ý vì các n
 | `#/overview`, `#/safety`, `#/tools`, `#/cycle`, `#/about`, `#/thresholds`, `#/equipment/...`, `#/search` | Tra cứu |
 | `#/sessions`, `#/session-new`, `#/session/:id`, `#/session/:id/form/:itemId/:testId` | Phiên TN, nhập số đo, ký, xuất |
 | `#/calc/unbalance` | Máy tính %ΔC (OCR, ghi vào mục 1.B) |
-| `#/trend/:profileId?` | Xu hướng nhiều kỳ |
+| `#/trend/:profileId?` | Xu hướng nhiều kỳ: 14 chỉ số, mốc lịch sử nhập tay / từ Excel (file mẫu, xem trước) |
 | `#/profiles`, `#/profile/:id`, `#/instruments`, `#/units`, `#/staff` | Cấu hình: hồ sơ giàn, máy TN, đơn vị & số biên bản, nhân viên |
 | `#/settings`, `#/help`, `#/info` | Cài đặt, hướng dẫn, giới thiệu |
 | `#/login`, `#/register`, `#/account`, `#/admin`, `#/users` | Đăng nhập/đăng ký/chờ duyệt, quản trị, người dùng |
@@ -127,6 +128,7 @@ content/   items, thresholds, safety, equipment, overview, tools, cycle, review,
 src/
   main.ts router.ts content.ts types.ts ui.ts settings.ts pwa.ts
   domain/session.ts   # SessionData, loadSessionData, testState, itemState, phaseState, itemOn, TYPE_LABEL
+  domain/trend-import.ts # đọc bảng Excel/CSV mốc lịch sử xu hướng, file mẫu
   domain/units.ts     # DEFAULT_UNIT, nextReportNo, formatReportNo, duplicateReportNo, crewLabel, parseExtraCrew
   forms/              # index (FORMS, formFor, evaluateTest), types, inputs, checklist, unbalance,
                       # compare (mov, reactor), bushing, tag (gap, vap, trigger, ct10), inject (R2)
@@ -137,15 +139,15 @@ src/
   sign/ store/ sync/ styles/
   views/              # Org.ts (đơn vị, nhân viên), SessionNew.ts, Session.ts (biểu mẫu), session/ (SessionView, sign, photos), …
 gas/       Core.gs Code.gs appsscript.json README.md
-tests/     calc, sync, gas-core, auth-ui, signers, architecture, forms (snapshot), org (.spec.ts) + e2e/ (app, contrast-audit, org – Playwright Pixel 7)
+tests/     calc, sync, gas-core, auth-ui, signers, architecture, forms (snapshot), org, trend-import (.spec.ts) + e2e/ (app, contrast-audit, org, history – Playwright Pixel 7)
 ```
 
 ### A5.8. Lệnh
 ```bash
 npm run dev        # http://localhost:5173
-npm test           # vitest – 8 file, 136 test (26/11/2026)
+npm test           # vitest – 9 file, 150 test (26/11/2026)
 npm run build      # tsc + vite build PWA
-npm run test:e2e   # Playwright tự build bản dùng-một-mình (VITE_GAS_URL rỗng); 26 test
+npm run test:e2e   # Playwright tự build bản dùng-một-mình (VITE_GAS_URL rỗng); 27 test
 npm run contrast   # kiểm tra tương phản WCAG các chủ đề
 ```
 
@@ -155,7 +157,7 @@ npm run contrast   # kiểm tra tương phản WCAG các chủ đề
 3. ~~CSS nội tuyến~~ – R3 đã chuyển sang class trong `base.css` (chỉ còn 2 kích thước tính động: thanh tiến độ, cột biểu đồ chuỗi).
 4. **Con người là chuỗi tự do:** `session.leader`, `session.members`, `gate.confirmedBy` là text; không liên kết tài khoản ký → tên trên chữ ký điện tử và tên in có thể lệch.
 5. **Thứ tự nhập theo tài liệu GE (1→7)**, không theo vị trí làm việc thực tế; không có chỉ báo "còn thiếu ô nào" cho từng pha.
-6. **Ngưỡng xu hướng viết cứng** trong `METRIC_DEFS`; `trendHistory` chưa đồng bộ máy chủ.
+6. ~~Ngưỡng xu hướng viết cứng; `trendHistory` chưa đồng bộ~~ – R7: ngưỡng trong `thresholds.json` (dòng `trend_*`), `trendHistory` đồng bộ.
 7. **Mẫu BBTN** chưa có tiêu đề đơn vị / quốc hiệu / số biên bản.
 
 ---
@@ -247,8 +249,8 @@ VII. Xác nhận                                   <Trạm>, ngày …
 | **R4** ✅ | **Nhân sự & đơn vị:** bảng `units` (tên đơn vị, đơn vị TN, mẫu số BB, số bắt đầu theo năm) và `staff` (họ tên, chức danh, bậc an toàn, đã nghỉ) – CRUD, đồng bộ; phiên lưu `unitId`, `unitSnap`, `reportNo`, `crew {leader, responsible, members}` (giữ `leader`/`members` cho dữ liệu cũ) | `types`, `store/db` v4, `domain/units.ts`, `views/Org.ts`, `views/SessionNew.ts`, `gas/Core.gs` v3 | `tests/org.spec.ts`, `tests/e2e/org.spec.ts` |
 | **R5** ✅ (một phần) | **Luồng hiện trường:** tick hạng mục thực hiện (ẩn/hiện vùng nhập); bảng tiến độ hạng mục × pha (`phaseState`); tách `views/Session.ts` → `views/session/SessionView.ts`, `sign.ts`, `photos.ts`. **Để sau:** cảnh báo nghi nhập sai, “còn N ô trống”, Enter → ô kế | `domain/session.ts`, `views/session/*` | e2e org; unit test `phaseState`, `itemOn` |
 | **R6** ✅ (một phần) | **BBTN chuẩn:** đầu biên bản tên đơn vị + đơn vị TN + số BB (không quốc hiệu); chỉ hạng mục thực hiện; ô Người thí nghiệm = người chịu trách nhiệm. **Để sau:** gợi ý kết luận từ dòng ❌/⚠️ | `export/*` | PDF/Excel đúng mẫu B3 |
-| **R7** | **Xu hướng & ngưỡng:** ngưỡng `METRIC_DEFS` → `thresholds.json`/hồ sơ giàn; đồng bộ `trendHistory` (thêm vào `TABLES` + `SYNC_TABLES`); tách `calc/trend.ts` (tính) và vẽ SVG | `calc/trend*`, `gas/Core.gs`, `sync/` | Hai máy thấy cùng mốc lịch sử; test xu hướng xanh |
-| **R8** | **Dọn & tài liệu:** `/simplify`, `/code-review`, cập nhật `AGENTS.md`, `knowledge.md`, `content/help.json` theo luồng mới | toàn bộ | Review không còn lỗi mức quan trọng |
+| **R7** ✅ | **Xu hướng & số liệu lịch sử:** (1) đồng bộ `trendHistory` (bảng `trend_history`, Quản trị + Chỉ huy ghi); (2) xu hướng bỏ qua hạng mục không tick Thực hiện; (3) **nhập nhiều mốc từ Excel/CSV** – file mẫu 4 sheet, xem trước, báo lỗi theo dòng, trùng giàn+chỉ số+ngày thì thay (`domain/trend-import.ts`); (4) **14 chỉ số** (thêm MOV Rsu, P; kháng Rcd, Z, L; khe hở TAG; VAP mC, V, A) với kiểu đánh giá mới `range` (trong dải theo hồ sơ giàn + dự báo ra khỏi dải) và `step` (thay đổi > 20 % so với đợt trước); ngưỡng từ `thresholds.json`; (5) **phiên nhập lại biên bản giấy** (`historical`, `paperRef`): không số BB, không ký, không cổng an toàn, PDF ghi "bản nhập lại". Chưa tách phần vẽ SVG khỏi `calc/trend.ts` | `calc/trend.ts`, `domain/trend-import.ts`, `views/Trend.ts`, `views/SessionNew.ts`, `gas/Core.gs`, `content/help.json` | `tests/trend-import.spec.ts`, `tests/e2e/history.spec.ts` |
+| **R8** | **Dọn & tài liệu:** `/simplify`, `/code-review`, cập nhật `AGENTS.md`; tách vẽ SVG khỏi `calc/trend.ts`. (`knowledge.md`, `content/help.json` đã cập nhật theo luồng mới) | toàn bộ | Review không còn lỗi mức quan trọng |
 
 **Thứ tự khuyến nghị:** R1 → R2 → R3 (thuần kỹ thuật, không đổi hành vi) rồi R4 → R5 → R6 (đổi trải nghiệm, cần người dùng thử ngoài hiện trường) → R7 → R8.
 

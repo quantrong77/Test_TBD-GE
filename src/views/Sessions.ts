@@ -23,7 +23,7 @@ export const Sessions: View = async (_r, el) => {
             .map(
               (s) => `<a class="card block link-plain" href="#/session/${esc(s.id)}">
             <div class="row"><b>${esc(s.profileId)}</b>${s.id === active ? '<span class="pill">● Đang làm</span>' : s.status === 'done' ? '<span class="pill">Đã kết thúc</span>' : ''}</div>
-            <div class="small muted">${esc(fmtDate(s.date))} · ${esc(TYPE_LABEL[s.type])} · Chỉ huy: ${esc(s.leader)}</div></a>`,
+            <div class="small muted">${esc(fmtDate(s.date))} · ${esc(TYPE_LABEL[s.type])} · ${s.historical ? '📜 Nhập lại BB giấy' : `Chỉ huy: ${esc(s.leader)}`}</div></a>`,
             )
             .join('')
         : '<p class="muted">Chưa có phiên nào. Tạo phiên để ghi số đo, xuất biên bản PDF/Excel/JSON.</p>'

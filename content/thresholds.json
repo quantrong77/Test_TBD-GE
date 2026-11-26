@@ -13,5 +13,11 @@
   { "id": "ct_200A", "item": "4.7", "label": "CT1, CT2, CT4, CT8 bơm 200 A", "op": "range", "min": 194, "max": 206, "unit": "A" },
   { "id": "ct_mov", "item": "4.7", "label": "CT6, CT60 (MOV Group) bơm 200 A", "op": "range", "min": 190, "max": 210, "unit": "A" },
   { "id": "ct_unb", "item": "4.7", "label": "CT3–CT30 bơm 6 A (1 vòng CT3, 2 vòng CT30)", "op": "range", "min": 5.8, "max": 6.2, "unit": "A" },
-  { "id": "ct_unb0", "item": "4.7", "label": "CT3–CT30 bơm 6 A (1 vòng CT3 & CT30)", "op": "approx0", "value": 0.2, "unit": "A", "note": "Kỳ vọng ≈ 0 (app dùng |x| ≤ 0,2 A)" }
+  { "id": "ct_unb0", "item": "4.7", "label": "CT3–CT30 bơm 6 A (1 vòng CT3 & CT30)", "op": "approx0", "value": 0.2, "unit": "A", "note": "Kỳ vọng ≈ 0 (app dùng |x| ≤ 0,2 A)" },
+  { "id": "trend_mov_rcd", "item": "4.2", "label": "Xu hướng – Rcd cột MOV quy đổi 20 °C: tiêu chuẩn", "op": ">=", "value": 2000, "unit": "MΩ", "note": "Dưới mức này: cảnh báo trên đồ thị xu hướng" },
+  { "id": "trend_mov_rcd_alarm", "item": "4.2", "label": "Xu hướng – Rcd cột MOV quy đổi 20 °C: mức cảnh báo", "op": ">=", "value": 1000, "unit": "MΩ", "note": "Dưới mức này: không đạt trên đồ thị xu hướng" },
+  { "id": "trend_rdc_dev", "item": "4.3", "label": "Xu hướng – Rdc cuộn kháng (75 °C): sai lệch so với đợt đầu", "op": "<=", "value": 2, "unit": "%" },
+  { "id": "trend_tan", "item": "4.4", "label": "Xu hướng – tan δ sứ xuyên: mức cảnh báo", "op": "<=", "value": 0.5, "unit": "%" },
+  { "id": "trend_tan_bypass", "item": "4.4", "label": "Xu hướng – tan δ sứ xuyên: mức không đạt", "op": "<=", "value": 0.7, "unit": "%" },
+  { "id": "trend_step", "item": "4.3", "label": "Xu hướng – thay đổi so với đợt trước (Rsu, tổn hao P của MOV; Rcd, Z, L của kháng)", "op": "<=", "value": 20, "unit": "%", "note": "Cùng mức cờ Bất thường mặc định của biểu mẫu" }
 ]

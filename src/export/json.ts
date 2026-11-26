@@ -1,7 +1,7 @@
 import { db } from '../store/db';
 import { blobToDataUrl, dataUrlToBlob } from './report';
 import { CONTENT_VERSION } from '../content';
-import { vCheck, vInstrument, vMeasurement, vPhoto, vProfile, vSession, vSignature, vTrendHistory } from '../store/validate';
+import { vCheck, vInstrument, vMeasurement, vPhoto, vProfile, vSession, vSignature, vStaff, vTrendHistory, vUnit } from '../store/validate';
 import { stripMeta } from '../sync/meta';
 
 /** Trường đồng bộ (_dirty, _rv…) không đi theo file: bản nhập vào máy khác phải được coi là thay đổi mới. */
@@ -64,7 +64,9 @@ export async function backupJson() {
     profiles: clean(profiles),
     instruments: clean(instruments),
     signatures: clean(await db.signatures.toArray()),
-    trendHistory: await db.trendHistory.toArray(),
+    trendHistory: clean(await db.trendHistory.toArray()),
+    units: clean(await db.units.toArray()),
+    staff: clean(await db.staff.toArray()),
   };
 }
 
@@ -81,7 +83,7 @@ export async function importJson(text: string): Promise<string> {
     throw new Error('File không phải JSON hợp lệ');
   }
   if (!j || typeof j !== 'object') throw new Error('File không phải JSON hợp lệ');
-  for (const k of ['sessions', 'measurements', 'checks', 'photos', 'profiles', 'instruments', 'signatures']) j[k] = cleanArr(j[k]);
+  for (const k of ['sessions', 'measurements', 'checks', 'photos', 'profiles', 'instruments', 'signatures', 'trendHistory', 'units', 'staff']) j[k] = cleanArr(j[k]);
   for (const k of ['session', 'profile']) if (j[k] && typeof j[k] === 'object') j[k] = stripMeta(j[k] as object);
   // kiểm tra toàn bộ trước khi ghi – lỗi thì không ghi gì
   if (j.format === 'tbd-ge-backup') each(j.profiles, vProfile);
@@ -93,12 +95,16 @@ export async function importJson(text: string): Promise<string> {
   each(j.checks, vCheck);
   each(j.photos, vPhoto);
   each(j.signatures, vSignature);
-  if (j.format === 'tbd-ge-backup') each(j.trendHistory, vTrendHistory);
+  if (j.format === 'tbd-ge-backup') {
+    each(j.trendHistory, vTrendHistory);
+    each(j.units, vUnit);
+    each(j.staff, vStaff);
+  }
   const photos = async (arr: unknown) =>
     Promise.all((isArr(arr) ? (arr as PhotoJson[]) : []).map(async ({ dataUrl, ...rest }) => ({ ...rest, blob: await dataUrlToBlob(dataUrl) }) as Photo));
   if (j.format === 'tbd-ge-backup') {
     const ph = await photos(j.photos);
-    await db.transaction('rw', [db.sessions, db.measurements, db.checks, db.photos, db.profiles, db.instruments, db.signatures, db.trendHistory], async () => {
+    await db.transaction('rw', [db.sessions, db.measurements, db.checks, db.photos, db.profiles, db.instruments, db.signatures, db.trendHistory, db.units, db.staff], async () => {
       if (isArr(j.profiles)) await db.profiles.bulkPut(j.profiles as never[]);
       if (isArr(j.instruments)) await db.instruments.bulkPut(j.instruments as never[]);
       if (isArr(j.sessions)) await db.sessions.bulkPut(j.sessions as never[]);
@@ -107,6 +113,8 @@ export async function importJson(text: string): Promise<string> {
       await db.photos.bulkPut(ph);
       if (isArr(j.signatures)) await db.signatures.bulkPut(j.signatures as never[]);
       if (isArr(j.trendHistory)) await db.trendHistory.bulkPut(j.trendHistory as never[]);
+      if (isArr(j.units)) await db.units.bulkPut(j.units as never[]);
+      if (isArr(j.staff)) await db.staff.bulkPut(j.staff as never[]);
     });
     return `Đã khôi phục ${isArr(j.sessions) ? j.sessions.length : 0} phiên, ${isArr(j.profiles) ? j.profiles.length : 0} hồ sơ giàn.`;
   }

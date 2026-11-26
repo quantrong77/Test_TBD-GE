@@ -16,7 +16,7 @@ export const SERVER_LABEL = 'Google Drive của đơn vị (Google Sheets + thư
 /** Phiên bản mã máy chủ (gas/Core.gs – SERVER_VERSION) mà bản app này cần. */
 export const REQUIRED_SERVER_VERSION = 3;
 /** Bảng chỉ có từ máy chủ bản 3 – máy chủ cũ: bỏ qua (giữ trên máy, gửi sau khi cập nhật). */
-const V3_TABLES = ['units', 'staff'];
+const V3_TABLES = ['units', 'staff', 'trend_history'];
 const OUTDATED_MSG =
   'Máy chủ Apps Script đang chạy mã cũ, chưa có chức năng này. Quản trị cần dán lại Core.gs và Code.gs mới vào Apps Script rồi Deploy → Manage deployments → New version (gas/README.md, mục 3).';
 

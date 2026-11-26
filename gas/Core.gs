@@ -27,13 +27,14 @@
  */
 
 /** Tăng mỗi khi thêm/đổi lệnh máy chủ; app báo "máy chủ cần cập nhật" nếu thấp hơn số app cần (gas.ts). */
-var SERVER_VERSION = 3; // 3: bảng units, staff (đơn vị thí nghiệm, nhân viên)
+var SERVER_VERSION = 3; // 3: bảng units, staff (đơn vị thí nghiệm, nhân viên), trend_history (mốc xu hướng)
 
-var TABLES = ['units', 'staff', 'profiles', 'instruments', 'sessions', 'gate_checks', 'measurements', 'photos', 'signatures'];
+var TABLES = ['units', 'staff', 'trend_history', 'profiles', 'instruments', 'sessions', 'gate_checks', 'measurements', 'photos', 'signatures'];
 // Cấu hình (hồ sơ giàn, máy thí nghiệm) chỉ Quản trị sửa
 var WRITE_ROLES = {
   units: ['admin'],
   staff: ['admin', 'leader'],
+  trend_history: ['admin', 'leader'],
   profiles: ['admin'],
   instruments: ['admin'],
   sessions: ['admin', 'leader'],

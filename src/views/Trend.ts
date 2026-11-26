@@ -4,9 +4,12 @@ import { esc, resBadge, toast } from '../ui';
 import { params, type View } from '../router';
 import type { Profile } from '../types';
 import { can } from '../auth/roles';
+import { historyKey, parseTrendTable, templateSheets, type ImportResult } from '../domain/trend-import';
+import { download } from '../export/report';
 import { fmt, parseNum } from '../calc/units';
 import {
   METRIC_DEFS,
+  METRIC_GROUPS,
   METRIC_SOURCE,
   SESSION_TYPE_LABEL,
   type TrendHistoryRecord,
@@ -19,14 +22,6 @@ import {
   renderTrendSvg,
   validateHistoryInput,
 } from '../calc/trend';
-
-const METRIC_TABS: [TrendMetricKey, string][] = [
-  ['unbalance', '1. %ΔC Mất C/B'],
-  ['mov_rcd', '2. MOV Rcd'],
-  ['reactor_rdc', '3. Kháng Rdc'],
-  ['bushing_c1', '4. Sứ C1'],
-  ['bushing_tan', '4. Sứ tan δ'],
-];
 
 const showNum = (x: number | null | undefined) => (x === null || x === undefined ? '—' : fmt(x));
 const signed = (x: number) => (x > 0 ? '+' : '') + fmt(x);
@@ -44,7 +39,7 @@ export const TrendView: View = async (_r, el) => {
   const urlProfileId = params().profileId;
   let activeProfile: Profile = profiles.find((p) => p.id === urlProfileId) ?? profiles[0];
   let selectedMetric: TrendMetricKey = 'unbalance';
-  const editable = can('profile.edit');
+  const editable = can('trend.edit');
 
   const setTitle = () => setTop('Phân tích xu hướng', { back: '#/sessions', sub: `${activeProfile.bank} – ${activeProfile.station}` });
   setTitle();
@@ -79,9 +74,12 @@ export const TrendView: View = async (_r, el) => {
             ${profiles.map((p) => `<option value="${esc(p.id)}"${p.id === activeProfile.id ? ' selected' : ''}>${esc(p.bank)} – ${esc(p.station)}</option>`).join('')}
           </select>
         </label>
-        <div class="seg trend-metrics" role="group" aria-label="Thông số theo dõi">
-          ${METRIC_TABS.map(([k, l]) => `<button type="button" data-met="${k}" aria-pressed="${selectedMetric === k}">${esc(l)}</button>`).join('')}
-        </div>
+        <label class="field mt-8 mb-0">
+          <span class="fw-6">Chỉ số theo dõi:</span>
+          <select id="trend-met-sel">${METRIC_GROUPS.map(
+            ([g, ks]) => `<optgroup label="${esc(g)}">${ks.map((k) => `<option value="${k}"${k === selectedMetric ? ' selected' : ''}>${esc(METRIC_DEFS[k].shortTitle)} (${esc(METRIC_DEFS[k].unit)})</option>`).join('')}</optgroup>`,
+          ).join('')}</select>
+        </label>
       </div>
 
       <div class="mb-12">${chart}</div>
@@ -121,6 +119,16 @@ export const TrendView: View = async (_r, el) => {
           ${editable ? '<button type="button" class="btn secondary small" id="btn-add-hist">＋ Thêm mốc lịch sử</button>' : ''}
         </div>
         ${
+          editable
+            ? `<div class="btn-row mt-0 mb-8">
+                <label class="btn secondary">📥 Nhập nhiều mốc từ Excel<input type="file" id="hist-file" accept=".xlsx,.xls,.csv" hidden></label>
+                <button type="button" class="btn secondary" id="hist-template">⬇ Tải file mẫu</button>
+              </div>
+              <p class="small mt-0"><a href="#/help?s=trend">❓ Hướng dẫn nhập số liệu lịch sử (3 cách)</a></p>
+              <div id="hist-preview"></div>`
+            : ''
+        }
+        ${
           points.length
             ? `<div class="table-wrap"><table>
           <thead><tr><th>Đợt / Ngày</th><th>Pha A (${esc(metric.unit)})</th><th>Pha B (${esc(metric.unit)})</th><th>Pha C (${esc(metric.unit)})</th><th>Nguồn / Ghi chú</th></tr></thead>
@@ -154,7 +162,7 @@ export const TrendView: View = async (_r, el) => {
             <button type="button" class="icon-btn" id="hist-close" aria-label="Đóng">✕</button>
           </div>
           <p class="small muted mt-0 mb-8">Nhập số liệu từ biên bản giấy của giàn ${esc(activeProfile.bank)}. ${
-            selectedMetric === 'mov_rcd' ? 'Giá trị đã quy đổi về 20°C.' : selectedMetric === 'reactor_rdc' ? 'Giá trị đã quy đổi về 75°C.' : ''
+            ['mov_rcd', 'mov_rsu', 'reactor_rcd'].includes(selectedMetric) ? 'Giá trị đã quy đổi về 20°C.' : selectedMetric === 'reactor_rdc' ? 'Giá trị đã quy đổi về 75°C.' : selectedMetric === 'vap_A' ? 'Ghi trị tuyệt đối.' : ''
           } Để trống pha không có số liệu.</p>
           <form id="hist-form" novalidate>
             <label class="field"><span>Ngày thí nghiệm:</span><input type="date" name="date" required max="${new Date().toISOString().slice(0, 10)}"></label>
@@ -185,12 +193,11 @@ export const TrendView: View = async (_r, el) => {
       void renderContent();
     });
 
-    el.querySelectorAll<HTMLButtonElement>('[data-met]').forEach((b) =>
-      b.addEventListener('click', () => {
-        selectedMetric = b.dataset.met as TrendMetricKey;
-        void renderContent();
-      }),
-    );
+    el.querySelector<HTMLSelectElement>('#trend-met-sel')?.addEventListener('change', (e) => {
+      selectedMetric = (e.target as HTMLSelectElement).value as TrendMetricKey;
+      void renderContent();
+    });
+    bindImport(el, profiles, activeProfile, () => void renderContent());
 
     el.querySelectorAll<HTMLButtonElement>('[data-del-hist]').forEach((b) =>
       b.addEventListener('click', async () => {
@@ -247,3 +254,66 @@ export const TrendView: View = async (_r, el) => {
 
   await renderContent();
 };
+
+// ---------- Nhập nhiều mốc lịch sử từ Excel ----------
+function bindImport(el: HTMLElement, profiles: Profile[], active: Profile, done: () => void) {
+  el.querySelector('#hist-template')?.addEventListener('click', async () => {
+    const XLSX = await import('xlsx');
+    const t = templateSheets(profiles);
+    const wb = XLSX.utils.book_new();
+    const data = XLSX.utils.aoa_to_sheet(t.data);
+    data['!cols'] = [14, 20, 16, 12, 10, 10, 10, 18, 28].map((wch) => ({ wch }));
+    XLSX.utils.book_append_sheet(wb, data, 'Mốc lịch sử');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(t.metrics), 'Danh mục chỉ số');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(t.profiles), 'Hồ sơ giàn');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(t.guide), 'Hướng dẫn');
+    const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    download(new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `Mau_moc_lich_su_xu_huong_${active.bank}.xlsx`.replace(/[^\p{L}\p{N}._-]+/gu, '_'));
+  });
+
+  el.querySelector<HTMLInputElement>('#hist-file')?.addEventListener('change', async (e) => {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    const box = el.querySelector<HTMLElement>('#hist-preview')!;
+    let res: ImportResult;
+    try {
+      const XLSX = await import('xlsx');
+      // raw: ô chữ trong CSV giữ nguyên (không tự đoán ngày kiểu Mỹ mm/dd) – app đọc dd/mm/yyyy; ô ngày thật của Excel vẫn là Date
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true, raw: true });
+      const ws = wb.Sheets['Mốc lịch sử'] ?? wb.Sheets[wb.SheetNames[0]];
+      res = parseTrendTable(XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, raw: true, defval: '' }), profiles);
+    } catch (err) {
+      toast('Không đọc được file: ' + (err as Error).message, undefined, 6000);
+      return;
+    }
+    const existing = new Map((await db.trendHistory.toArray()).map((r) => [historyKey(r), r]));
+    const replaced = res.rows.filter((r) => existing.has(historyKey(r.rec))).length;
+    const prof = (id: string) => profiles.find((p) => p.id === id)?.bank ?? id;
+    box.innerHTML = `<div class="card">
+      <b>Xem trước: ${res.rows.length} mốc hợp lệ${replaced ? ` (${replaced} mốc thay mốc cũ cùng ngày)` : ''}${res.errors.length ? `, ${res.errors.length} dòng lỗi` : ''}</b>
+      ${res.errors.length ? `<ul class="small text-danger">${res.errors.slice(0, 20).map((x) => `<li>Dòng ${x.line}: ${esc(x.message)}</li>`).join('')}${res.errors.length > 20 ? `<li>… và ${res.errors.length - 20} dòng khác</li>` : ''}</ul>` : ''}
+      ${
+        res.rows.length
+          ? `<div class="table-wrap"><table><thead><tr><th>Dòng</th><th>Ngày</th><th>Giàn</th><th>Chỉ số</th><th>A</th><th>B</th><th>C</th></tr></thead><tbody>${res.rows
+              .slice(0, 50)
+              .map(
+                ({ line, rec }) =>
+                  `<tr><td>${line}</td><td>${esc(rec.date)}</td><td>${esc(prof(rec.profileId))}</td><td>${esc(METRIC_DEFS[rec.metric].shortTitle)}</td><td>${showNum(rec.phaseA)}</td><td>${showNum(rec.phaseB)}</td><td>${showNum(rec.phaseC)}</td></tr>`,
+              )
+              .join('')}</tbody></table></div>${res.rows.length > 50 ? `<p class="small muted">Hiển thị 50 / ${res.rows.length} dòng.</p>` : ''}`
+          : ''
+      }
+      <div class="btn-row">${res.rows.length ? `<button class="btn" type="button" id="hist-import-ok">Ghi ${res.rows.length} mốc</button>` : ''}<button class="btn secondary" type="button" id="hist-import-cancel">Hủy</button></div>
+    </div>`;
+    box.querySelector('#hist-import-cancel')!.addEventListener('click', () => (box.innerHTML = ''));
+    box.querySelector('#hist-import-ok')?.addEventListener('click', async () => {
+      const now = Date.now();
+      await db.trendHistory.bulkPut(res.rows.map(({ rec }, i) => ({ ...rec, id: existing.get(historyKey(rec))?.id ?? uid(), createdAt: now + i })));
+      toast(`✓ Đã ghi ${res.rows.length} mốc lịch sử`);
+      box.innerHTML = '';
+      done();
+    });
+  });
+}

@@ -83,6 +83,12 @@ export async function buildPdf(d: SessionData): Promise<Blob> {
   doc.text('GIÀN TỤ BÙ DỌC 500 kV – HÃNG GE', W / 2, hy + 7, { align: 'center' });
   doc.setFont(FONT, 'normal').setFontSize(10);
   doc.text(`${r.p.bank} – ${r.p.station} · Ngày ${fmtDate(r.s.date)}`, W / 2, hy + 14, { align: 'center' });
+  if (r.header.note) {
+    doc.setFont(FONT, 'bold').setFontSize(9).setTextColor(180, 110, 0);
+    doc.text(r.header.note, W / 2, hy + 19, { align: 'center' });
+    doc.setTextColor(0);
+    hy += 5;
+  }
 
   autoTable(doc, { ...base, startY: hy + 20, head: [['Thông tin', '']], body: clean(r.info), columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' } } });
   if (r.instruments.length) autoTable(doc, { ...base, startY: y(), head: [['Máy thí nghiệm', 'Số serial', 'Hạn kiểm định']], body: clean(r.instruments) });

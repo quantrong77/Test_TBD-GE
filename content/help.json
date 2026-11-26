@@ -35,21 +35,43 @@
     "id": "session",
     "title": "Ghi kết quả một đợt thí nghiệm",
     "steps": [
-      "Tab **Phiên TN** → **＋ Tạo phiên mới**: chọn hồ sơ giàn, loại thí nghiệm, ngày, chỉ huy, thành viên, máy thí nghiệm. App cảnh báo máy quá hạn kiểm định.",
-      "Qua **cổng an toàn lên sàn tụ** (tên người xác nhận chọn từ danh sách đội).",
-      "Mở từng phép thử → nhập số đo theo **pha A/B/C**. Ô tự tô xanh (Đạt) / đỏ (Không đạt); số được lưu ngay, tắt app không mất.",
-      "Chụp ảnh hiện trường ở cuối mỗi biểu mẫu.",
-      "Về trang phiên: xem tiến độ 1 ✅ 2 ⏳…, ghi **Kết luận, kiến nghị**.",
-      "Xuất **📄 PDF**, **📊 Excel** hoặc **JSON**; hoặc **📤 Chia sẻ PDF** qua Zalo, email."
+      "Tab **Phiên TN** → **＋ Tạo phiên mới** (Chỉ huy trực tiếp hoặc Quản trị): chọn hồ sơ giàn, ngày, loại thí nghiệm. **Số biên bản** tự tăng theo đơn vị và năm (sửa được).",
+      "**Nhân sự:** chọn Chỉ huy trực tiếp và thành viên từ **danh sách nhân viên** (hiện chức danh, bậc an toàn); người ngoài danh sách gõ tay dạng *Họ tên, chức danh, bậc*. Chọn **người chịu trách nhiệm thí nghiệm** – người ký ô Người thí nghiệm.",
+      "**Hạng mục thực hiện:** bỏ tick hạng mục không làm đợt này. Hạng mục bỏ tick ẩn vùng nhập và không đưa vào biên bản; sửa lại được trong trang phiên (ô **Thực hiện** ở từng hạng mục).",
+      "Chọn máy thí nghiệm – app cảnh báo máy quá hạn kiểm định.",
+      "Qua **cổng an toàn lên sàn tụ** (tên người xác nhận chọn từ nhân sự của phiên).",
+      "Mọi phép thử làm trên sàn tụ, thứ tự tùy ý; các nhóm có thể làm **song song ở 3 pha**. Mở phép thử → chọn pha A/B/C → nhập số. Ô tự tô xanh (Đạt) / đỏ (Không đạt); số lưu ngay, tắt app không mất.",
+      "Theo dõi **bảng tiến độ hạng mục × pha** ở trang phiên (○ chưa · ⏳ đang làm · ✅ ⚠️ ❌).",
+      "Chụp ảnh hiện trường ở cuối mỗi biểu mẫu (tự đóng dấu trạm, giàn, pha, GPS, giờ).",
+      "Ghi **Kết luận, kiến nghị** → người chịu trách nhiệm ký ô **Người thí nghiệm** → Chỉ huy trực tiếp ký (biên bản khóa).",
+      "Xuất **📄 PDF**, **📊 Excel** hoặc **JSON**; hoặc **📤 Chia sẻ PDF**. Đầu biên bản có tên đơn vị, đơn vị thí nghiệm và số biên bản; cuối biên bản có chỗ ký Người thí nghiệm – Chỉ huy trực tiếp (ký tay được trên bản in)."
+    ]
+  },
+  {
+    "id": "trend",
+    "title": "Xu hướng và nhập số liệu lịch sử",
+    "points": [
+      "Mở **📈 Xu hướng** (Trang chủ, Phiên TN hoặc trong trang phiên) → chọn **giàn** và **chỉ số**. Có 14 chỉ số: %ΔC; MOV Rcd, Rsu, tổn hao P; kháng Rdc, Rcd, Z, L; sứ C1, tan δ; khe hở TAG; VAP mC, V, A.",
+      "Số liệu **tự lấy từ các phiên** của giàn (chỉ hạng mục có tick Thực hiện). Điện trở cách điện quy đổi 20 °C, Rdc quy đổi 75 °C khi có nhiệt độ; VAP lấy bộ lệch xa danh định nhất của mỗi pha.",
+      "Từ **2 đợt** trở lên app vẽ đường xu hướng, tính tốc độ biến thiên/năm, dự báo thời điểm chạm ngưỡng. Ngưỡng lấy theo hồ sơ giàn và bảng **Ngưỡng** (các dòng *Xu hướng – …*).",
+      "**Số liệu các năm trước (biên bản giấy) – 3 cách:**",
+      "① **＋ Thêm mốc lịch sử:** nhập 1 đợt cho chỉ số đang chọn (ngày, loại đợt, Pha A/B/C, số biên bản giấy).",
+      "② **📥 Nhập nhiều mốc từ Excel:** bấm **⬇ Tải file mẫu**, điền sheet *Mốc lịch sử* (mỗi dòng: ngày, mã hồ sơ giàn, chỉ số, loại đợt, Pha A/B/C, tên đợt, ghi chú; mã chỉ số và mã giàn xem ở các sheet kèm theo) → chọn file → **xem trước**, app báo dòng lỗi → **Ghi**. Cùng giàn + chỉ số + ngày thì mốc mới thay mốc cũ.",
+      "③ **Phiên nhập lại biên bản giấy:** khi tạo phiên tick **📜 Nhập lại biên bản giấy cũ**, chọn ngày cũ, ghi số biên bản giấy, rồi nhập số liệu vào các biểu mẫu như bình thường (có đủ mọi hạng mục). Phiên này không cấp số biên bản mới, không ký, không cần cổng an toàn; PDF ghi rõ *bản nhập lại*.",
+      "Mốc lịch sử do **Quản trị và Chỉ huy** nhập, **đồng bộ cho cả đội** (cần máy chủ bản 3). Ghi giá trị **đã quy đổi nhiệt độ** (Rcd, Rsu về 20 °C; Rdc về 75 °C) và **trị tuyệt đối** cho VAP A.",
+      "Thử Trigger và bơm dòng CT là phép thử đạt/không đạt theo lần nên không có đồ thị xu hướng."
     ]
   },
   {
     "id": "profiles",
-    "title": "Hồ sơ giàn và máy thí nghiệm",
+    "title": "Cấu hình: hồ sơ giàn, máy TN, đơn vị, nhân viên",
     "points": [
-      "Mỗi giàn có ngưỡng riêng (ΔC alarm/bypass, VAP, khe hở TAG). Sửa ở **Phiên TN → Hồ sơ giàn**; luôn đối chiếu biên bản/data sheet của giàn.",
-      "Phiên lưu bản chụp ngưỡng lúc tạo. Sửa hồ sơ sau đó không làm đổi kết quả cũ; muốn áp ngưỡng mới, bấm **↻ Cập nhật ngưỡng từ hồ sơ giàn** trong phiên.",
-      "**Máy TN:** nhập số serial và hạn hiệu chuẩn/kiểm định để app cảnh báo khi quá hạn."
+      "Vào **⚙️ → 🛡️ Quản trị hệ thống → Cấu hình** (hồ sơ giàn, máy TN, đơn vị: chỉ Quản trị; nhân viên: Quản trị và Chỉ huy).",
+      "**Hồ sơ giàn:** ngưỡng riêng từng giàn (ΔC alarm/bypass, VAP, khe hở TAG); luôn đối chiếu data sheet của giàn. Phiên lưu bản chụp ngưỡng lúc tạo – muốn áp ngưỡng mới bấm **↻ Cập nhật ngưỡng từ hồ sơ giàn** trong phiên.",
+      "**Máy TN:** số serial, hạn hiệu chuẩn/kiểm định để app cảnh báo khi quá hạn.",
+      "**Đơn vị & số biên bản:** Tên đơn vị (vd Trung tâm Sửa chữa, thí nghiệm điện 3), Đơn vị thí nghiệm (vd Đội Sửa chữa, thí nghiệm điện Lâm Đồng), mẫu số biên bản ({nn}/{yyyy}/BB-TN) và **số bắt đầu** cho năm. Sang năm mới số tự về 01.",
+      "**Nhân viên:** họ tên, chức danh, bậc an toàn 1–5. Người nghỉ việc nên đánh dấu **Đã nghỉ** thay vì xóa (biên bản cũ vẫn giữ tên).",
+      "Hai máy cùng tạo phiên khi không có mạng có thể **trùng số biên bản** – trang phiên sẽ báo, Chỉ huy bấm **Sửa số**. Nên tạo phiên ở văn phòng khi có mạng."
     ]
   },
   {
@@ -57,26 +79,25 @@
     "title": "File JSON: sao lưu và chuyển dữ liệu",
     "points": [
       "File JSON là **dữ liệu cho máy đọc**, không phải để in. Muốn xem, in, gửi biên bản thì dùng **PDF** hoặc **Excel**.",
-      "Dữ liệu app **nằm trên điện thoại này**. Nếu chưa bật đồng bộ đám mây, mất máy, xóa dữ liệu trình duyệt hay gỡ app là mất hết khi chưa sao lưu.",
-      "**Đồng bộ đám mây** (⚙️ → Đồng bộ đám mây, tắt mặc định): đăng nhập bằng mã gửi qua email, bật đồng bộ → phiên, số đo, ảnh tự gửi lên và nhận về cho cả đội khi có mạng; không mạng vẫn dùng bình thường. Chỉ bật khi đơn vị cho phép.",
-      "**Sao lưu toàn bộ** (⚙️ → Sao lưu toàn bộ): gom mọi phiên, hồ sơ giàn, máy TN và ảnh vào file **tbdge-backup-NgàyThángNăm.json**. Nên làm **sau mỗi đợt thí nghiệm**.",
-      "**Đổi điện thoại:** sao lưu ở máy cũ, trên máy mới vào **⚙️ → Khôi phục / nhập JSON**.",
-      "**JSON một phiên** (nút **{ } JSON** trong trang phiên): chứa thông tin phiên, ngưỡng hồ sơ giàn, máy TN, mọi số đo, xác nhận cổng an toàn và ảnh. Gửi cho đồng nghiệp để họ nhập vào máy mình, sửa và xuất PDF tiếp.",
-      "**So sánh với lần trước:** nhập file phiên năm trước của cùng giàn, nút **↻ Lấy số lần trước** ở MOV, kháng cản dịu, sứ xuyên sẽ tự điền giá trị cũ để tính Δ %.",
+      "Khi app có máy chủ, tài khoản đã duyệt **tự đồng bộ** với cả đội mỗi khi có mạng (phiên, số đo, ảnh, chữ ký, hồ sơ giàn, máy TN, đơn vị, nhân viên, mốc xu hướng); không mạng vẫn dùng bình thường.",
+      "**Sao lưu toàn bộ** (⚙️ → 🛡️ Quản trị → Sao lưu toàn bộ): gom mọi dữ liệu và ảnh vào một file JSON. Nên làm định kỳ, nhất là khi dùng app không có máy chủ.",
+      "**Đổi điện thoại (không có máy chủ):** sao lưu ở máy cũ, trên máy mới vào **Quản trị → Khôi phục / nhập JSON**.",
+      "**JSON một phiên** (nút **{ } JSON** trong trang phiên): chứa thông tin phiên, ngưỡng, máy TN, số đo, cổng an toàn, ảnh, chữ ký. Gửi cho đồng nghiệp để nhập vào máy họ.",
+      "**So sánh với lần trước:** nút **↻ Lấy số lần trước** ở MOV, kháng cản dịu, sứ xuyên tự điền giá trị phiên trước cùng giàn để tính Δ %.",
       "File có kèm ảnh nên có thể **nặng** khi chụp nhiều ảnh.",
-      "Khi nhập: app kiểm tra file và từ chối nếu sai định dạng. Bản ghi **trùng mã sẽ bị ghi đè** (app hỏi trước). Chỉ nhập file của chính bạn hoặc đồng nghiệp trong đội."
+      "Khi nhập: app kiểm tra file và từ chối nếu sai định dạng; bản ghi **trùng mã bị ghi đè**. Chỉ nhập file của chính bạn hoặc đồng nghiệp trong đội."
     ]
   },
   {
     "id": "account",
     "title": "Tài khoản, vai trò và ký biên bản",
     "points": [
-      "Vào **⚙️ → Tài khoản và đồng bộ** → **Tiếp tục với Google**. iPhone đã cài app hoặc không dùng Google: chọn đăng nhập bằng mã gửi qua email.",
-      "Tài khoản mới ở trạng thái **chờ duyệt**. Quản trị duyệt và gán vai trò ở **Quản lý tài khoản**.",
-      "**Vai trò:** Quản trị duyệt tài khoản, thu hồi chữ ký. Chỉ huy trực tiếp tạo phiên, sửa hồ sơ giàn, máy TN. Nhân viên TN nhập số đo, ảnh, xác nhận cổng an toàn. Chỉ xem được xem và xuất PDF.",
-      "**Ký:** mở trang phiên → **Ký biên bản** → **✍️ Ký xác nhận**. Chữ ký gắn với tài khoản, thời điểm và mã kiểm tra nội dung.",
+      "Mở app → **Tiếp tục với Google** (hoặc nhận mã đăng nhập qua email). Lần đầu: khai hồ sơ (họ tên, chức danh, đơn vị) → **chờ Quản trị duyệt** rồi mới vào được app.",
+      "**Vai trò:** *Quản trị* – duyệt/khóa tài khoản, cấu hình (hồ sơ giàn, máy TN, đơn vị & số biên bản), thu hồi chữ ký. *Chỉ huy trực tiếp* – tạo/sửa phiên, nhân viên, mốc xu hướng, ký ô Chỉ huy. *Nhân viên TN* – nhập số đo, ảnh, xác nhận cổng an toàn, ký ô Người thí nghiệm. *Chỉ xem* – xem và xuất biên bản.",
+      "**Ký:** trang phiên → **Ký biên bản** → **✍️ Ký xác nhận**. Mỗi ô chỉ 1 chữ ký: ô **Người thí nghiệm** do **người chịu trách nhiệm** ký, ô **Chỉ huy trực tiếp** do Chỉ huy ký. Ký bằng tài khoản khác tên người ghi trong phiên → app cảnh báo trước.",
       "**Chỉ huy ký xong biên bản bị khóa**, không sửa được số liệu. Cần sửa thì nhờ Quản trị thu hồi chữ ký.",
-      "Dòng **Nội dung đã thay đổi sau khi ký** nghĩa là số liệu khác với lúc ký: kiểm tra lại và ký lại."
+      "Dòng **Nội dung đã thay đổi sau khi ký** nghĩa là số liệu khác với lúc ký: kiểm tra lại và ký lại.",
+      "Biên bản in (PDF) luôn có chỗ **ký tay** cho người chưa ký điện tử."
     ]
   },
   {

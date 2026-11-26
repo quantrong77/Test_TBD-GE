@@ -31,7 +31,7 @@ function phaseMatrix(d: SessionData): string {
 function crewHtml(s: Session): string {
   const c = s.crew;
   if (!c) return `Chỉ huy: <b>${esc(s.leader)}</b>${s.members.length ? `<br>Thành viên: ${s.members.map(esc).join(', ')}` : ''}`;
-  return `Chỉ huy trực tiếp: <b>${esc(crewLabel(c.leader ?? { name: s.leader }))}</b>
+  return `${c.leader || s.leader ? `Chỉ huy trực tiếp: <b>${esc(crewLabel(c.leader ?? { name: s.leader }))}</b>` : ''}
     ${c.responsible ? `<br>Chịu trách nhiệm thí nghiệm: <b>${esc(crewLabel(c.responsible))}</b>` : ''}
     ${c.members.length ? `<br>Thành viên: ${c.members.map((m) => esc(crewLabel(m))).join('; ')}` : ''}`;
 }
@@ -59,17 +59,23 @@ export const SessionView: View = async (_r, el) => {
   const dup = duplicateReportNo(s, await db.sessions.toArray());
   const unit = s.unitSnap ?? DEFAULT_UNIT;
 
+  const hist = !!s.historical;
   el.innerHTML = `
+    ${hist ? callout({ level: 'info', text: `📜 **Phiên nhập lại từ biên bản giấy**${s.paperRef ? ` (${s.paperRef})` : ''}: không cấp số biên bản, không ký điện tử, không cần cổng an toàn. Số liệu dùng cho phân tích xu hướng.` }) : ''}
     <div class="card">
       <div class="row"><b>${esc(p.bank)} – ${esc(p.station)}</b>${isActive ? '<span class="pill">● Đang làm</span>' : ''}</div>
-      <div class="small">${esc(unit.name)}${s.reportNo ? ` · Biên bản số <b>${esc(reportNoText(s))}</b>` : ''}${editable ? ' <button class="btn secondary" type="button" id="editNo">Sửa số</button>' : ''}</div>
+      <div class="small">${esc(unit.name)}${s.reportNo ? ` · Biên bản số <b>${esc(reportNoText(s))}</b>` : ''}${editable && !hist ? ' <button class="btn secondary" type="button" id="editNo">Sửa số</button>' : ''}</div>
       ${dup.length ? callout({ level: 'warn', text: `Số biên bản trùng với phiên ngày ${fmtDate(dup[0].date)} (có thể do tạo trên 2 máy khi không có mạng) – hãy sửa số.` }) : ''}
       <div class="small mt-4">Ngày: ${esc(fmtDate(s.date))} · ${esc(TYPE_LABEL[s.type])}<br>${crewHtml(s)}</div>
       ${insts.map((i) => `<div class="small hstack">${Icons.testSet} <span>${esc(i!.model)}${i!.serial ? ` · SN ${esc(i!.serial)}` : ''}${calibOverdue(i!.calibDue, s.date) ? ` <span class="res fail">QUÁ HẠN ${esc(fmtDate(i!.calibDue))}</span>` : ''}</span></div>`).join('')}
       <div class="btn-row">${isActive ? '<button class="btn secondary" type="button" id="deact">Bỏ chọn phiên</button>' : '<button class="btn" type="button" id="act">Đặt làm phiên đang làm</button>'}${editable ? '<button class="btn secondary" type="button" id="resnap">↻ Cập nhật ngưỡng từ hồ sơ giàn</button>' : ''}<a class="btn secondary" href="#/trend/${esc(s.profileId)}">📈 Xem xu hướng giàn tụ</a></div>
     </div>
-    <a class="card row link-plain" href="#/gate/gate-platform" ${isActive ? '' : 'data-need-active'}>
-      <span>${gp.confirmedBy ? '✅' : '⚠️'} Cổng an toàn lên sàn tụ</span><span class="small">${gp.confirmedBy ? `${esc(gp.confirmedBy)} · ${esc(fmtTime(gp.timestamp!))}` : 'Chưa xác nhận'}</span></a>
+    ${
+      hist
+        ? ''
+        : `<a class="card row link-plain" href="#/gate/gate-platform" ${isActive ? '' : 'data-need-active'}>
+      <span>${gp.confirmedBy ? '✅' : '⚠️'} Cổng an toàn lên sàn tụ</span><span class="small">${gp.confirmedBy ? `${esc(gp.confirmedBy)} · ${esc(fmtTime(gp.timestamp!))}` : 'Chưa xác nhận'}</span></a>`
+    }
 
     <h2>Tiến độ theo pha</h2>
     ${onItems.length ? phaseMatrix(d) : '<p class="muted">Chưa chọn hạng mục nào.</p>'}
@@ -103,9 +109,13 @@ export const SessionView: View = async (_r, el) => {
     }
     <label class="field"><span>Kết luận, kiến nghị</span><textarea id="concl" rows="4"${editable ? '' : ' disabled'}>${esc(s.conclusion ?? '')}</textarea></label>
     <label class="check"><input type="checkbox" id="done"${s.status === 'done' ? ' checked' : ''}${editable ? '' : ' disabled'}><span>Đã kết thúc phiên</span></label>
-    <h2>Ký biên bản</h2>
+    ${
+      hist
+        ? ''
+        : `<h2>Ký biên bản</h2>
     ${locked ? callout({ level: 'info', text: '🔒 **Biên bản đã khóa** do Chỉ huy trực tiếp đã ký. Không sửa được số liệu.' }) : ''}
-    ${signBlock(s, sigs)}
+    ${signBlock(s, sigs)}`
+    }
     <h2>Xuất biên bản</h2>
     <div class="btn-row">
       <button class="btn" type="button" data-exp="pdf">📄 PDF</button>
