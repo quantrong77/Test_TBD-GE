@@ -126,6 +126,13 @@ test('session: measurements autosave, survive reload, compute %ΔC, export', asy
 
   await page.goto(sessionUrl);
   await expect(page.locator('.phase-matrix tr', { hasText: 'VAP' })).toContainText('❌');
+  // cảnh báo & đề xuất xử lý + gợi ý kết luận
+  await expect(page.locator('.issue-fail')).toContainText('ngưỡng VAP');
+  await expect(page.locator('.issue-fail')).toContainText('Đề xuất');
+  await page.getByRole('button', { name: '💡 Gợi ý kết luận, kiến nghị' }).click();
+  await expect(page.locator('#draftText')).toHaveValue(/KHÔNG ĐẠT[\s\S]*KIẾN NGHỊ:/);
+  await page.getByRole('button', { name: 'Thay kết luận' }).click();
+  await expect(page.locator('#concl')).toHaveValue(/CHƯA đạt yêu cầu/);
   for (const [btn, ext] of [
     ['📄 PDF', '.pdf'],
     ['📊 Excel', '.xlsx'],

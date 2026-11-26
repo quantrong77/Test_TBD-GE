@@ -12,6 +12,8 @@ import { verifySignatures } from '../../sign/sign';
 import { itemOn, itemState, loadSessionData, phaseState, sessionInstruments, STATE_ICON, testState, TYPE_LABEL, type SessionData } from '../../domain/session';
 import { crewLabel, DEFAULT_UNIT, duplicateReportNo, formatReportNo } from '../../domain/units';
 import { bindSignActions, saveConclusionNow, signBlock } from './sign';
+import { bindDraft, reviewContext, reviewHtml, signReminder } from './review';
+import { reviewSession } from '../../domain/review';
 import type { Session } from '../../types';
 
 export const reportNoText = (s: Session) => formatReportNo(s.unitSnap?.reportFormat ?? DEFAULT_UNIT.reportFormat, s.reportNo, s.date);
@@ -58,6 +60,7 @@ export const SessionView: View = async (_r, el) => {
   const editable = !locked && can('session.edit');
   const dup = duplicateReportNo(s, await db.sessions.toArray());
   const unit = s.unitSnap ?? DEFAULT_UNIT;
+  const issues = reviewSession(d, await reviewContext(d, insts));
 
   const hist = !!s.historical;
   el.innerHTML = `
@@ -100,14 +103,8 @@ export const SessionView: View = async (_r, el) => {
 
     <h2>Tổng kết</h2>
     <p>${resBadge('pass', `✅ Đạt: ${counts.pass}`)} ${resBadge('warn', `⚠️ Cảnh báo: ${counts.warn}`)} ${resBadge('fail', `❌ Không đạt: ${counts.fail}`)}</p>
-    ${
-      counts.fail + counts.warn
-        ? `<div class="table-wrap"><table><thead><tr><th>Hạng mục</th><th>Nội dung</th><th>Giá trị</th><th>KQ</th></tr></thead><tbody>${all
-            .flatMap((x) => x.rows.filter((r) => r.result === 'fail' || r.result === 'warn').map((r) => `<tr><td>${x.it.id.slice(2)}</td><td>${esc(r.group)} ${esc(r.label)}</td><td>${esc(r.value)}</td><td>${resBadge(r.result)}</td></tr>`))
-            .join('')}</tbody></table></div>`
-        : ''
-    }
-    <label class="field"><span>Kết luận, kiến nghị</span><textarea id="concl" rows="4"${editable ? '' : ' disabled'}>${esc(s.conclusion ?? '')}</textarea></label>
+    ${reviewHtml(issues, editable)}
+    <label class="field"><span>Kết luận, kiến nghị</span><textarea id="concl" rows="6"${editable ? '' : ' disabled'}>${esc(s.conclusion ?? '')}</textarea></label>
     <label class="check"><input type="checkbox" id="done"${s.status === 'done' ? ' checked' : ''}${editable ? '' : ' disabled'}><span>Đã kết thúc phiên</span></label>
     ${
       hist
@@ -125,7 +122,16 @@ export const SessionView: View = async (_r, el) => {
     </div>
     ${editable ? '<button class="btn danger block mt-24" type="button" id="del">Xóa phiên</button>' : ''}`;
 
-  bindSignActions(el, s, () => saveConclusionNow(el, s));
+  bindSignActions(
+    el,
+    s,
+    () => saveConclusionNow(el, s),
+    () => signReminder(issues, el.querySelector<HTMLTextAreaElement>('#concl')!.value),
+  );
+  bindDraft(el, d, issues, async (text) => {
+    await db.sessions.update(s.id, { conclusion: text });
+    toast('Đã đưa gợi ý vào Kết luận, kiến nghị – hãy xem lại');
+  });
 
   el.querySelectorAll<HTMLInputElement>('[data-item]').forEach((cb) =>
     cb.addEventListener('change', async () => {

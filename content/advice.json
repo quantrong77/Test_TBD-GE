@@ -1,0 +1,78 @@
+{
+  "_note": "Đề xuất xử lý theo phép thử, dùng cho gợi ý kết luận biên bản. Luật đầu tiên khớp (item, test, label chứa chuỗi) được dùng. Chuyên gia sửa trực tiếp file này, không cần sửa mã.",
+  "rules": [
+    {
+      "item": "4.1",
+      "test": "unbalance",
+      "label": "String nghi ngờ",
+      "advice": "Kiểm tra lực xiết bu-lông, mắt nối, đo điện dung từng bình tụ trong các chuỗi nghi ngờ; thay bình tụ suy giảm/hỏng rồi đo lại dòng chuỗi và %ΔC."
+    },
+    {
+      "item": "4.1",
+      "test": "unbalance",
+      "advice": "Đo dòng từng chuỗi (string) để khoanh vùng, đo điện dung từng bình trong chuỗi nghi ngờ, thay bình tụ hỏng; đo lại %ΔC sau xử lý. Nếu %ΔC ≥ ngưỡng Bypass: không đưa giàn vào vận hành cho tới khi xử lý xong."
+    },
+    {
+      "item": "4.1",
+      "test": "visual",
+      "advice": "Khắc phục các tồn tại kiểm tra ngoại quan (xiết lại bu-lông theo lực quy định ASTM A-307, vệ sinh, thay chi tiết nứt vỡ/rò dầu) và kiểm tra lại."
+    },
+    {
+      "item": "4.2",
+      "test": "install",
+      "advice": "Khắc phục tồn tại lắp đặt cột MOV (đấu nối, xiết bu-lông, khoảng cách cách điện) và kiểm tra lại."
+    },
+    {
+      "item": "4.2",
+      "test": "measure",
+      "advice": "Vệ sinh, sấy bề mặt cột MOV/sứ đỡ, đo lại ở điều kiện nhiệt độ – độ ẩm phù hợp và quy đổi 20 °C; nếu điện trở cách điện vẫn thấp hoặc tổn hao tăng bất thường: báo hãng GE, xem xét thay cột MOV."
+    },
+    {
+      "item": "4.3",
+      "test": "measure",
+      "advice": "Kiểm tra mối nối, đầu cốt cuộn kháng cản dịu; đo lại Rdc khi nhiệt độ cuộn dây ổn định, quy đổi 75 °C và so với số liệu xuất xưởng; kiểm tra cách điện, vệ sinh bề mặt epoxy."
+    },
+    {
+      "item": "4.4",
+      "test": "measure",
+      "advice": "Vệ sinh sứ xuyên, đo lại C1 và tan δ; nếu vẫn vượt giới hạn: đưa vào theo dõi đặc biệt, rút ngắn chu kỳ và xem xét thay sứ xuyên."
+    },
+    {
+      "item": "4.5",
+      "test": "gap",
+      "advice": "Chỉnh khe hở điện cực TAG (shim) về giá trị theo hồ sơ giàn, đo lại và ghi giá trị sau hiệu chỉnh."
+    },
+    {
+      "item": "4.5",
+      "test": "vap-threshold",
+      "advice": "Kiểm tra jumper, cấu hình và số serial bộ VAP; hiệu chỉnh hoặc thay bo VAP theo hướng dẫn GE, thử lại ngưỡng ENERGY/CURRENT bằng VAP Tester 31F246."
+    },
+    {
+      "item": "4.5",
+      "test": "trigger",
+      "advice": "Kiểm tra mạch kích hoạt, đầu phun plasma, tụ C1/C2 và nguồn GAMMA; thử lại đủ 3/3 lần mỗi cực tính (cách nhau ≥ 1 phút, đọc ENERGY trong 0,5 s)."
+    },
+    {
+      "item": "4.5",
+      "test": "ct10",
+      "advice": "Kiểm tra mạch bơm dòng và ngưỡng tác động CT10/CT11 theo biên bản TAG của GE, thử lại."
+    },
+    {
+      "item": "4.6",
+      "test": "inspect",
+      "advice": "Kiểm tra lại tỷ số, cực tính, đấu nối mạch thứ cấp CT trên CT rack; khắc phục trước khi đóng điện."
+    },
+    {
+      "item": "4.7",
+      "test": "inject",
+      "advice": "Kiểm tra cực tính (giá trị âm = đấu ngược), đấu nối thứ cấp, cáp quang PFOI/GFOI và cấu hình HMI; bơm lại các CT không đạt."
+    }
+  ],
+  "general": {
+    "fallback": "Kiểm tra lại phép đo, xác định nguyên nhân và xử lý theo quy trình QĐ 1901/QĐ-EVNNPT, sau đó thí nghiệm lại.",
+    "instrumentOverdue": "Máy thí nghiệm quá hạn kiểm định: kiểm định lại máy và xem xét đo lại các nội dung dùng máy này.",
+    "noData": "Hạng mục được chọn thực hiện nhưng chưa có số liệu: bổ sung số liệu hoặc bỏ chọn nếu không thực hiện.",
+    "gateMissing": "Chưa xác nhận cổng an toàn trong phiên: xác nhận lại theo phiếu công tác.",
+    "uncorrected": "Thiếu nhiệt độ môi trường nên chưa quy đổi điện trở: bổ sung nhiệt độ để so sánh được giữa các đợt."
+  }
+}

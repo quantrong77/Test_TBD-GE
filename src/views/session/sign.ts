@@ -34,7 +34,7 @@ export function signBlock(s: Session, sigs: SignatureCheck[]): string {
 }
 
 /** Gắn nút Ký / Thu hồi. `beforeSign` lưu kết luận đang gõ để nằm trong nội dung được ký. */
-export function bindSignActions(el: HTMLElement, s: Session, beforeSign: () => Promise<void>) {
+export function bindSignActions(el: HTMLElement, s: Session, beforeSign: () => Promise<void>, reminder: () => string = () => '') {
   el.querySelectorAll<HTMLButtonElement>('[data-sign]').forEach((b) =>
     b.addEventListener('click', async () => {
       const slot = b.dataset.sign as SignSlot;
@@ -44,6 +44,7 @@ export function bindSignActions(el: HTMLElement, s: Session, beforeSign: () => P
       const warn = [
         other ? `\n⚠️ Phiên ghi ${slot === 'leader' ? 'Chỉ huy trực tiếp' : 'người chịu trách nhiệm'} là "${who}", tài khoản đang ký là "${me!.name}".` : '',
         slot === 'leader' ? '\nSau khi ký, biên bản bị KHÓA: không sửa được số liệu, chỉ Quản trị mới thu hồi được chữ ký.' : '',
+        reminder(),
       ].join('');
       if (!confirm(`Ký xác nhận "${SLOT_LABEL[slot]}" bằng tài khoản ${me?.email}?${warn}`)) return;
       try {

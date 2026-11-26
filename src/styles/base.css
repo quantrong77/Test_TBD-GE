@@ -1497,3 +1497,10 @@ body.auth-mode {
 [hidden] { display: none !important; }
 .list-row { flex-wrap: nowrap; }
 .list-row > span:first-child { flex: 1; min-width: 0; }
+
+/* Cảnh báo & đề xuất xử lý (trang phiên) */
+.issue { border-left: 4px solid var(--c-muted); }
+.issue-fail { border-left-color: var(--c-danger); }
+.issue-warn { border-left-color: var(--c-warn); }
+.issue ul { margin: 6px 0; padding-left: 20px; }
+#draftText { width: 100%; font: inherit; }
