@@ -10,6 +10,7 @@ import { renderSyncPanel } from './SyncPanel';
 import { can } from '../auth/roles';
 import { downloadBackup } from './Admin';
 import { isConfigured } from '../sync/status';
+import { getReadback, setReadback, voiceSupported } from '../components/Voice';
 
 /** Chủ đề đặt theo điều kiện làm việc tại trạm. */
 const THEMES: { id: Theme; name: string; use: string }[] = [
@@ -61,6 +62,14 @@ export const Settings: View = async (_r, el) => {
     <h3>Cỡ chữ</h3>
     <div class="seg" role="group" aria-label="Cỡ chữ">${SCALES.map(([s, l]) => `<button class="px-12" type="button" data-scale="${s}" aria-pressed="${getFontScale() === s}">${l}</button>`).join('')}</div>
 
+    <h3>Nhập bằng giọng nói</h3>
+    ${
+      voiceSupported()
+        ? `<label class="check"><input type="checkbox" id="readback"${getReadback() ? ' checked' : ''}><span>Đọc lại số vừa nhập bằng giọng nói (nghe để kiểm tra, không cần nhìn màn hình)</span></label>
+           <p class="small muted">Bấm 🎤 cạnh ô số, hoặc <b>🎤 Đọc số liên tiếp</b> trong biểu mẫu. Chrome cần có mạng để nhận giọng nói.</p>`
+        : '<p class="small muted">Trình duyệt này chưa hỗ trợ nhận giọng nói. Dùng Chrome (Android) hoặc Safari (iPhone) bản mới.</p>'
+    }
+
     <h2>Offline & cài đặt app</h2>
     <p><span class="dot ${off.ok ? 'ok' : 'warn'}"></span>${esc(off.ok && !import.meta.env.DEV ? 'Toàn bộ nội dung và hình ảnh đã sẵn sàng offline.' : off.text)}</p>
     <div id="install"></div>
@@ -88,6 +97,8 @@ export const Settings: View = async (_r, el) => {
       el.querySelectorAll('[data-scale]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     }),
   );
+
+  el.querySelector<HTMLInputElement>('#readback')?.addEventListener('change', (e) => setReadback((e.target as HTMLInputElement).checked));
 
   const inst = el.querySelector('#install')!;
   const drawInstall = () => {

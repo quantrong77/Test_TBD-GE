@@ -10,6 +10,7 @@ import { stepsOf } from './StepMode';
 import { can } from '../auth/roles';
 import { isLocked } from '../sign/sign';
 import { openOcrScanner } from '../components/OcrModal';
+import { bindVoice } from '../components/Voice';
 import { photosBlock } from './session/photos';
 import { itemOn, loadSessionData } from '../domain/session';
 
@@ -69,6 +70,7 @@ export const SessionForm: View = async (_r, el) => {
     <div class="btn-row">
       ${canPrev && !readOnly ? `<button class="btn secondary" type="button" id="prev">↺ Lấy số lần trước (${esc(fmtDate(prevS!.date))})</button>` : ''}
       ${ctrlRoom ? '<button class="btn secondary" type="button" id="ctrl" aria-pressed="false">🖥 Phòng điều khiển</button>' : ''}
+      ${readOnly ? '' : '<button class="btn secondary voice-only" type="button" id="voice-run">🎤 Đọc số liên tiếp</button>'}
     </div>
     <div id="body"></div>
     <h2>Kết quả</h2><div id="rows"></div>
@@ -76,6 +78,7 @@ export const SessionForm: View = async (_r, el) => {
     <div class="btn-row"><a class="btn block" href="#/session/${esc(s.id)}">✓ Xong – về phiên</a></div>`;
 
   const body = el.querySelector<HTMLElement>('#body')!;
+  bindVoice(body, el.querySelector<HTMLButtonElement>('#voice-run'));
   const rowsEl = el.querySelector<HTMLElement>('#rows')!;
   const pending = new Map<string, string>();
   const writeNow = () => {

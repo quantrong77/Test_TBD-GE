@@ -1450,7 +1450,9 @@ body.auth-mode {
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .grid-fill-auto { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-.grid-idx { display: grid; grid-template-columns: 1fr 38px 84px; gap: 6px; }
+/* IΔ×10: ô số + 📷 + 🎤 trên một dòng, đơn vị xuống dòng dưới (màn hẹp) */
+.grid-idx { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; }
+.grid-idx select { grid-column: 1 / -1; }
 
 /* Modal dùng chung (Xu hướng, OCR) */
 .modal-backdrop { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgb(0 0 0 / 0.75); backdrop-filter: blur(4px); }
@@ -1504,3 +1506,98 @@ body.auth-mode {
 .issue-warn { border-left-color: var(--c-warn); }
 .issue ul { margin: 6px 0; padding-left: 20px; }
 #draftText { width: 100%; font: inherit; }
+
+/* ---------- Nhập bằng giọng nói ---------- */
+.btn-voice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  font-size: 18px;
+  cursor: pointer;
+}
+.btn-voice.listening,
+#voice-panel.listening .voice-dot {
+  animation: voice-pulse 1s ease-in-out infinite;
+}
+.btn-voice.listening {
+  background: var(--c-danger);
+  color: var(--c-danger-ink);
+}
+.no-voice .btn-voice,
+.no-voice .voice-only {
+  display: none;
+}
+@keyframes voice-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-voice.listening,
+  #voice-panel.listening .voice-dot {
+    animation: none;
+  }
+}
+.voice-target {
+  outline: 3px solid var(--c-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+.voice-filled input,
+.voice-filled select {
+  box-shadow: 0 0 0 3px var(--c-ok);
+}
+#voice-panel {
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  z-index: 9000;
+  background: var(--c-bg);
+  color: var(--c-text);
+  border: 2px solid var(--c-primary);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  box-sizing: border-box;
+  max-width: 640px;
+  margin: 0 auto;
+}
+#voice-panel > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.voice-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.voice-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c-danger);
+  flex-shrink: 0;
+}
+.voice-btns {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.voice-btns .btn {
+  padding: 0 2px;
+  min-height: 48px;
+  min-width: 0;
+  font-size: 0.9em;
+  line-height: 1.15;
+}

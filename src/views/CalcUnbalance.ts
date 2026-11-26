@@ -10,6 +10,7 @@ import { can } from '../auth/roles';
 import { isLocked } from '../sign/sign';
 import { go, type View } from '../router';
 import { openOcrScanner } from '../components/OcrModal';
+import { bindVoice } from '../components/Voice';
 
 const KEY = 'tbd.calc.unbalance';
 const load = (): Values => {
@@ -54,6 +55,7 @@ export const CalcUnbalance: View = async (_r, el) => {
       .join('')}</select></label>
     <div class="row"><div class="seg" role="group" aria-label="Pha">${PHASES.map((x) => `<button type="button" data-ph="${x}" aria-pressed="${x === phase}">${x}</button>`).join('')}</div>
       <button class="btn secondary" type="button" id="clr">Xóa số</button></div>
+    <button class="btn secondary block voice-only mt-8" type="button" id="voice-run">🎤 Đọc số liên tiếp</button>
     <div id="body"></div>
     <details class="card"><summary>Dung lượng danh định theo hồ sơ</summary><div id="nom"></div></details>
     <div class="btn-row mt-12 mb-6">
@@ -62,6 +64,7 @@ export const CalcUnbalance: View = async (_r, el) => {
     <div id="save-msg"></div>
     <p class="small muted">Để ghi biên bản, bấm lưu, số liệu sẽ tự điền vào mục 1.B.</p>`;
   const body = el.querySelector<HTMLElement>('#body')!;
+  bindVoice(body, el.querySelector<HTMLButtonElement>('#voice-run'));
   const draw = () => {
     body.innerHTML = form.render(values, profile, phase);
     paintRows(body, values, profile);

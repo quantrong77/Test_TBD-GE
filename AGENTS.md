@@ -113,6 +113,7 @@ Route chính: `#/`, `#/items`, `#/item/:id`, `#/item/:id/test/:tid/step/:n`, `#/
 16. Dữ liệu mẫu mang `_rv: 'seed'`, không tự gửi lên. Thay đổi bị máy chủ từ chối (`RefusedError`) thì bỏ và kéo lại bản máy chủ, không thử lại mãi.
 17. **Phân tầng:** chỉ `main.ts` và `views/` được import `views/` (`tests/architecture.spec.ts`). Nghiệp vụ dùng chung để ở `domain/`.
 18. **Gợi ý kết luận chỉ là nháp:** không tự ghi vào biên bản; người dùng bấm Thay / Thêm vào cuối rồi sửa. Đề xuất xử lý lấy từ `content/advice.json`.
+19b. **Giọng nói** (`components/Voice.ts`): giá trị điền bằng giọng nói phải đi qua sự kiện `input` như gõ phím (để tự lưu + đánh giá) – không ghi thẳng DB. Hiểu câu nói ở `calc/speech.ts` (có test). Chrome nhận dạng qua mạng → không hứa dùng offline.
 19. **Không viết `style=""` nội tuyến** (trừ kích thước tính động); màu luôn qua token theme. Ngoại lệ có chủ đích: đồ thị xu hướng (`calc/trend-chart.ts`) là khung nền tối cố định ở mọi chủ đề (`.trend-chart-svg`), màu pha A/B/C cố định để nhận diện. Thuộc tính `hidden` thắng mọi lớp `display` (`[hidden] { display: none !important }`).
 
 ## 7. Quyết định kỹ thuật cần biết

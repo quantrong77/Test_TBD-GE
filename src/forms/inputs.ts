@@ -20,7 +20,7 @@ export const okTxt = (s: string | undefined) => (s === 'ok' ? '✓' : s === 'nok
 
 // ---------- Ô nhập ----------
 export function numRow(v: Values, k: string, label: string, sub = '', th = '', placeholder = '', ocr = true): string {
-  return `<div class="inrow" data-row="${esc(k)}"${th ? ` data-th="${esc(th)}"` : ''}><span class="lbl">${rich(label)}${sub ? `<small>${rich(sub)}</small>` : ''}</span><div class="hstack-tight"><input class="grow" inputmode="decimal" data-k="${esc(k)}" value="${esc(v[k] ?? '')}" placeholder="${esc(placeholder)}" aria-label="${esc(label)}">${ocr ? `<button type="button" class="btn-ocr-scan" data-scan-for="${esc(k)}" title="Quét số đo bằng camera (OCR)" aria-label="Quét số cho ${esc(label)}">📷</button>` : ''}</div></div>`;
+  return `<div class="inrow" data-row="${esc(k)}"${th ? ` data-th="${esc(th)}"` : ''}><span class="lbl">${rich(label)}${sub ? `<small>${rich(sub)}</small>` : ''}</span><div class="hstack-tight"><input class="grow" inputmode="decimal" data-k="${esc(k)}" value="${esc(v[k] ?? '')}" placeholder="${esc(placeholder)}" aria-label="${esc(label)}">${ocr ? `<button type="button" class="btn-ocr-scan" data-scan-for="${esc(k)}" title="Quét số đo bằng camera (OCR)" aria-label="Quét số cho ${esc(label)}">📷</button>` : ''}<button type="button" class="btn-voice" data-voice-for="${esc(k)}" title="Nói số đo (giọng nói)" aria-label="Nói số cho ${esc(label)}">🎤</button></div></div>`;
 }
 export function textRow(v: Values, k: string, label: string, sub = ''): string {
   return `<div class="inrow"><span class="lbl">${rich(label)}${sub ? `<small>${rich(sub)}</small>` : ''}</span><input type="text" data-k="${esc(k)}" value="${esc(v[k] ?? '')}" aria-label="${esc(label)}"></div>`;

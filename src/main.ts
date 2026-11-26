@@ -29,9 +29,13 @@ import { Account, Login, Register } from './views/Auth';
 import { AUTH_PAGES, authState, guard } from './auth/gate';
 import { initAuthNotifications } from './auth/notify';
 import { initUserMenu } from './components/UserMenu';
+import { voiceSupported } from './components/Voice';
 import { isMember } from './auth/roles';
 import { bootSync } from './sync/status';
 import { toast } from './ui';
+
+// trình duyệt không nhận giọng nói → ẩn nút 🎤
+if (!voiceSupported()) document.documentElement.classList.add('no-voice');
 
 applySettings();
 

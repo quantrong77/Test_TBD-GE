@@ -50,6 +50,19 @@
     ]
   },
   {
+    "id": "voice",
+    "title": "Nhập số đo bằng giọng nói",
+    "points": [
+      "**Một ô:** bấm **🎤** cạnh ô số rồi nói ngay, vd *\"bốn phẩy ba sáu\"* → 4,36; *\"hai trăm năm mươi\"* → 250; *\"âm bốn phẩy năm\"* → -4,5; *\"không phẩy không năm\"* → 0,05. Đơn vị đọc kèm (ampe, vôn, mê ga ôm, độ…) được bỏ qua.",
+      "**Đọc liên tiếp (rảnh tay, đeo găng):** trong biểu mẫu bấm **🎤 Đọc số liên tiếp**. App lần lượt đánh dấu từng ô (khung cam), nghe → điền → **đọc lại** số vừa nhận → sang ô kế. Bắt đầu từ ô đang chọn, nếu không thì từ ô trống đầu tiên.",
+      "**Lệnh khi đọc liên tiếp:** *\"tiếp\"* / *\"bỏ qua\"* sang ô kế · *\"quay lại\"* lùi một ô · *\"xóa\"* xóa ô đang chọn · *\"dừng\"* kết thúc. Ô Đạt/Không đạt: nói *\"đạt\"* hoặc *\"không đạt\"*. Ô ghi chú: nói câu cần ghi.",
+      "Chưa hiểu câu nói thì app báo và nghe lại; im lặng 3 lần thì tạm dừng – bấm **🎤 Nghe lại**. Các nút Lùi / Bỏ qua / Dừng to, bấm được khi đeo găng.",
+      "Số nhập bằng giọng nói được **lưu và đánh giá Đạt/Không đạt như khi gõ**. Luôn nhìn lại số trên ô (viền xanh khi vừa điền) trước khi chuyển hạng mục.",
+      "**Cần mạng với Chrome (Android):** Chrome gửi âm thanh tới Google để nhận dạng. Không có sóng → dùng bàn phím (bàn phím Gboard có nút 🎤 nhận giọng nói ngoại tuyến nếu đã tải gói tiếng Việt). Safari (iPhone) có thể nhận dạng ngay trên máy.",
+      "Lần đầu, trình duyệt hỏi quyền **Micro** – chọn Cho phép. Tắt/bật **đọc lại số** trong **⚙️ Cài đặt → Nhập bằng giọng nói**. Trình duyệt trong Zalo/Facebook thường chặn micro – mở bằng Chrome/Safari."
+    ]
+  },
+  {
     "id": "trend",
     "title": "Xu hướng và nhập số liệu lịch sử",
     "points": [

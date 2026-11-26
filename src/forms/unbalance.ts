@@ -66,6 +66,7 @@ export const unbalanceForm: FormDef = {
       <div class="inrow"><span class="lbl">IΔ×10 đọc được<small>Vị trí 4 – = 10 × dòng vi sai thực</small></span>
         <div class="grid-idx"><input inputmode="decimal" data-k="${ph}.Idx10" value="${esc(v[`${ph}.Idx10`] ?? '')}" aria-label="IΔ×10">
         <button type="button" class="btn-ocr-scan" data-scan-for="${ph}.Idx10" title="Quét số đo bằng camera (OCR)" aria-label="Quét số cho IΔ×10">📷</button>
+        <button type="button" class="btn-voice" data-voice-for="${ph}.Idx10" title="Nói số đo (giọng nói)" aria-label="Nói số cho IΔ×10">🎤</button>
         <select data-k="${ph}.unit" aria-label="Đơn vị IΔ×10">${UNITS.map(([o, l]) => `<option value="${o}"${(v[`${ph}.unit`] || 'mA') === o ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>
       <div class="card calc-out" data-out="calc">—</div>
       <div data-out="warn"></div>
