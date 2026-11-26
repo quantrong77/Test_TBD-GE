@@ -36,6 +36,39 @@ export function vSession(s: unknown) {
     check(isArr(o.instrumentSnap), 'phiên – máy TN (bản chụp)');
     (o.instrumentSnap as unknown[]).forEach(vInstrument);
   }
+  vSessionExtra(o);
+}
+const isInt = (x: unknown, lo: number, hi: number) => isNum(x) && Number.isInteger(x) && x >= lo && x <= hi;
+function vCrew(c: unknown, what: string) {
+  const o = c as Record<string, unknown>;
+  check(!!o && isStr(o.name, 200) && (o.staffId === undefined || isId(o.staffId)) && (o.title === undefined || isStr(o.title, 200)), what);
+  check(o.safetyGrade === undefined || isInt(o.safetyGrade, 1, 5), what + ' – bậc an toàn');
+}
+function vSessionExtra(o: Record<string, unknown>) {
+  check(o.unitId === undefined || isId(o.unitId), 'phiên – đơn vị');
+  if (o.unitSnap !== undefined) {
+    const u = o.unitSnap as Record<string, unknown>;
+    check(!!u && isStr(u.orgName, 200) && isStr(u.name, 200) && isStr(u.reportFormat, 100), 'phiên – đơn vị (bản chụp)');
+  }
+  check(o.reportNo === undefined || isInt(o.reportNo, 1, 99999), 'phiên – số biên bản');
+  check(o.items === undefined || (isArr(o.items) && o.items.every((x) => isStr(x, 10))), 'phiên – hạng mục thực hiện');
+  if (o.crew !== undefined) {
+    const c = o.crew as Record<string, unknown>;
+    check(!!c && isArr(c.members), 'phiên – nhân sự');
+    (c.members as unknown[]).forEach((m) => vCrew(m, 'phiên – thành viên'));
+    if (c.leader !== undefined) vCrew(c.leader, 'phiên – chỉ huy');
+    if (c.responsible !== undefined) vCrew(c.responsible, 'phiên – người chịu trách nhiệm');
+  }
+}
+export function vUnit(u: unknown) {
+  const o = u as Record<string, unknown>;
+  check(!!o && isId(o.id) && isStr(o.orgName, 200) && isStr(o.name, 200) && isStr(o.reportFormat, 100), 'đơn vị');
+  check(isInt(o.numberStart, 1, 99999) && isInt(o.numberYear, 2000, 2200), 'đơn vị – đánh số');
+}
+export function vStaff(s: unknown) {
+  const o = s as Record<string, unknown>;
+  check(!!o && isId(o.id) && isId(o.unitId) && isStr(o.name, 200) && isStr(o.title, 200) && isInt(o.safetyGrade, 1, 5), 'nhân viên');
+  check(o.inactive === undefined || typeof o.inactive === 'boolean', 'nhân viên – trạng thái');
 }
 export function vInstrument(i: unknown) {
   const o = i as Record<string, unknown>;

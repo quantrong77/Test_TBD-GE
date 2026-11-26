@@ -27,11 +27,13 @@
  */
 
 /** Tăng mỗi khi thêm/đổi lệnh máy chủ; app báo "máy chủ cần cập nhật" nếu thấp hơn số app cần (gas.ts). */
-var SERVER_VERSION = 2;
+var SERVER_VERSION = 3; // 3: bảng units, staff (đơn vị thí nghiệm, nhân viên)
 
-var TABLES = ['profiles', 'instruments', 'sessions', 'gate_checks', 'measurements', 'photos', 'signatures'];
+var TABLES = ['units', 'staff', 'profiles', 'instruments', 'sessions', 'gate_checks', 'measurements', 'photos', 'signatures'];
 // Cấu hình (hồ sơ giàn, máy thí nghiệm) chỉ Quản trị sửa
 var WRITE_ROLES = {
+  units: ['admin'],
+  staff: ['admin', 'leader'],
   profiles: ['admin'],
   instruments: ['admin'],
   sessions: ['admin', 'leader'],
@@ -352,11 +354,12 @@ function upsert(req, env) {
         if (old && old.data && old.data.userId !== u.user_id) fail('refused', 'Không sửa được chữ ký của người khác');
         if (!canSign(u, r.data)) fail('refused', 'Không có quyền ký ô này');
       }
-      if (!r.deleted && r.data.slot === 'leader') {
+      // mỗi ô chỉ 1 chữ ký: Chỉ huy trực tiếp; Người thí nghiệm = người chịu trách nhiệm
+      if (!r.deleted && (r.data.slot === 'leader' || r.data.slot === 'tester')) {
         var dup = all.some(function (s) {
-          return s.team_id === u.team_id && s.id !== r.id && !s.deleted && s.data && s.data.slot === 'leader' && s.data.sessionId === r.data.sessionId;
+          return s.team_id === u.team_id && s.id !== r.id && !s.deleted && s.data && s.data.slot === r.data.slot && s.data.sessionId === r.data.sessionId;
         });
-        if (dup) fail('refused', 'Phiên đã có chữ ký Chỉ huy trực tiếp');
+        if (dup) fail('refused', r.data.slot === 'leader' ? 'Phiên đã có chữ ký Chỉ huy trực tiếp' : 'Phiên đã có chữ ký Người thí nghiệm');
       }
       return;
     }

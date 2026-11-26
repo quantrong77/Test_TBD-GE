@@ -23,7 +23,11 @@ export async function buildXlsx(d: SessionData): Promise<Blob> {
   const res = (x: string) => (x === 'na' ? '' : r.resText(x as never).replace(/^[^\p{L}]+/u, ''));
 
   const info = XLSX.utils.aoa_to_sheet([
-    ['BIÊN BẢN THÍ NGHIỆM NHẤT THỨ GIÀN TỤ BÙ DỌC GE'],
+    [r.header.orgName.toUpperCase()],
+    [r.header.unitName.toUpperCase()],
+    ...(r.header.reportNo ? [[`Số: ${r.header.reportNo}`]] : []),
+    [],
+    ['BIÊN BẢN THÍ NGHIỆM NHẤT THỨ GIÀN TỤ BÙ DỌC 500 kV – HÃNG GE'],
     [],
     ...r.info,
     [],

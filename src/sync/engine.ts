@@ -1,5 +1,5 @@
 import { db } from '../store/db';
-import { vCheck, vInstrument, vMeasurement, vPhotoMeta, vProfile, vSession, vSignature } from '../store/validate';
+import { vCheck, vInstrument, vMeasurement, vPhotoMeta, vProfile, vSession, vSignature, vStaff, vUnit } from '../store/validate';
 import {
   idToKey,
   isLocalOnly,
@@ -31,6 +31,10 @@ export interface Remote {
   upsert(table: string, rows: { id: string; data: Record<string, unknown>; deleted: boolean }[]): Promise<{ id: string; updated_at: string }[]>;
   uploadPhoto(path: string, blob: Blob): Promise<void>;
   downloadPhoto(path: string): Promise<Blob>;
+  /** Hỏi máy chủ trước mỗi lần đồng bộ (vd phiên bản) – tùy chọn. */
+  prepare?(): Promise<void>;
+  /** Máy chủ có bảng này không (máy chủ cũ chưa có bảng mới) – mặc định có. */
+  supports?(table: string): boolean;
 }
 
 export interface SyncResult {
@@ -46,6 +50,8 @@ export interface SyncResult {
 export class RefusedError extends Error {}
 
 const VALIDATE: Record<SyncTable, (x: unknown) => void> = {
+  units: vUnit,
+  staff: vStaff,
   profiles: vProfile,
   instruments: vInstrument,
   sessions: vSession,
@@ -118,11 +124,12 @@ async function upsertSafe(remote: Remote, table: string, rows: Row[]): Promise<{
 }
 
 async function push(remote: Remote, team: string): Promise<{ pushed: number; refused: number }> {
+  const TABLES = tablesFor(remote);
   let pushed = 0;
   let refused = 0;
   // 1. xóa chờ gửi – trước, để bản tạo lại (nếu có) thắng
   const tombs = tombstones();
-  for (const t of SYNC_TABLES) {
+  for (const t of TABLES) {
     const mine = tombs.filter((x) => x.table === t);
     for (let i = 0; i < mine.length; i += CHUNK) {
       const part = mine.slice(i, i + CHUNK);
@@ -134,7 +141,7 @@ async function push(remote: Remote, team: string): Promise<{ pushed: number; ref
     }
   }
   // 2. bản ghi đã sửa
-  for (const t of SYNC_TABLES) {
+  for (const t of TABLES) {
     const dirty = (await tableOf(t).filter((r) => r._dirty !== 0).toArray()).filter((r) => !isLocalOnly(t, keyToId(t, localKey(t, r))));
     for (let i = 0; i < dirty.length; i += CHUNK) {
       const part = dirty.slice(i, i + CHUNK);
@@ -180,9 +187,10 @@ async function push(remote: Remote, team: string): Promise<{ pushed: number; ref
 }
 
 async function pull(remote: Remote, team: string): Promise<{ pulled: number; rejected: number }> {
+  const TABLES = tablesFor(remote);
   let pulled = 0;
   let rejected = 0;
-  for (const t of SYNC_TABLES) {
+  for (const t of TABLES) {
     const rows = await remote.pull(REMOTE_TABLE[t], getCursor(team, t));
     let max = getCursor(team, t);
     for (const row of rows) {
@@ -230,7 +238,10 @@ async function pull(remote: Remote, team: string): Promise<{ pulled: number; rej
 }
 
 /** Một vòng đồng bộ: gửi lên trước, kéo về sau. */
+const tablesFor = (remote: Remote) => SYNC_TABLES.filter((t) => remote.supports?.(REMOTE_TABLE[t]) !== false);
+
 export async function syncOnce(remote: Remote, team: string): Promise<SyncResult> {
+  await remote.prepare?.();
   const { pushed, refused } = await push(remote, team);
   const { pulled, rejected } = await pull(remote, team);
   if (pulled && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('sync:applied', { detail: pulled }));

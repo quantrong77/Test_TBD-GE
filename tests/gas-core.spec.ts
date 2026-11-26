@@ -187,6 +187,20 @@ describe('dữ liệu theo đội và vai trò', () => {
   });
 });
 
+describe('đơn vị & nhân viên', () => {
+  it('đơn vị: chỉ Quản trị ghi; nhân viên: Quản trị và Chỉ huy ghi', () => {
+    const a = member('qt@evn.vn', 'admin');
+    const l = member('ch@evn.vn', 'leader');
+    const t = member('tn@evn.vn', 'tester');
+    const unit = { id: 'u1', data: { id: 'u1', orgName: 'TT', name: 'Đội' }, deleted: false };
+    const staff = { id: 'st1', data: { id: 'st1', unitId: 'u1', name: 'A' }, deleted: false };
+    expect(up(a.token, 'units', [unit]).ok).toBe(true);
+    expect(up(l.token, 'units', [unit]).code).toBe('refused');
+    expect(up(l.token, 'staff', [staff]).ok).toBe(true);
+    expect(up(t.token, 'staff', [staff]).code).toBe('refused');
+  });
+});
+
 describe('chữ ký và khóa biên bản', () => {
   const sig = (id: string, userId: string, slot: string, sessionId = 's1') => ({ id, data: { id, sessionId, slot, userId }, deleted: false });
 
@@ -198,6 +212,9 @@ describe('chữ ký và khóa biên bản', () => {
     expect(up(t.token, 'signatures', [sig('x3', l.me.userId, 'tester')]).code).toBe('refused'); // ký hộ người khác
     expect(up(l.token, 'signatures', [sig('x4', l.me.userId, 'leader')]).ok).toBe(true);
     expect(up(t.token, 'signatures', [sig('x5', t.me.userId, 'qlvh')]).code).toBe('refused'); // ô QLVH đã bỏ
+    // ô Người thí nghiệm chỉ 1 chữ ký (người chịu trách nhiệm)
+    const t2 = member('tn2@evn.vn', 'tester');
+    expect(up(t2.token, 'signatures', [sig('x6', t2.me.userId, 'tester')]).code).toBe('refused');
   });
 
   it('chữ ký Chỉ huy khóa phiên, số đo, kể cả lệnh xóa; mỗi phiên chỉ 1 chữ ký Chỉ huy', () => {

@@ -2,7 +2,7 @@
 
 > **Mục đích:** Nguồn tri thức duy nhất (Single Source of Truth) về nghiệp vụ, kiến trúc, quy tắc an toàn của **TBD-GE Field**, kèm **luồng sử dụng mục tiêu** và **kế hoạch refactor toàn bộ**. Dành cho kỹ sư phát triển, chuyên gia thí nghiệm và AI agent.
 >
-> **Cập nhật:** 26/11/2026 – nhánh `refactor/field-workflow` (tách từ `main` @ `54bb83d`), app `1.1.0`. Đã xong R0–R3.
+> **Cập nhật:** 26/11/2026 – nhánh `refactor/field-workflow` (tách từ `main` @ `54bb83d`), app `1.1.0`. Đã xong R0–R6 (trừ cảnh báo "nghi nhập sai" – để sau).
 >
 > **Cách đọc:** Phần A = hiện trạng (đúng với mã nguồn). Phần B = đích đến (luồng, nhập liệu, mẫu BBTN). Phần C = kế hoạch refactor theo giai đoạn, mỗi giai đoạn có tiêu chí nghiệm thu.
 
@@ -33,17 +33,17 @@
 
 ### A2.2. 7 hạng mục (UI đánh số 1–7, mã nội bộ 4.1–4.7 – **không đổi `itemId`**)
 
-| UI | Mã | Hạng mục | Phép thử `testId` → form / gate | Vị trí làm việc* |
+| UI | Mã | Hạng mục | Phép thử `testId` → form / gate | Vị trí |
 | :-: | :-: | :-- | :-- | :-- |
 | 1 | 4.1 | Tụ & Group tụ | `visual` → checklist / gate-visual; `unbalance` → unbalance / gate-hv | Sàn tụ |
 | 2 | 4.2 | Chống sét van MOV | `install` → checklist / gate-visual; `measure` → mov / gate-visual | Sàn tụ |
 | 3 | 4.3 | Kháng cản dịu | `measure` → reactor / gate-visual | Sàn tụ |
-| 4 | 4.4 | Sứ xuyên TAG house | `measure` → bushing / gate-visual | Sàn tụ / TAG house |
-| 5 | 4.5 | Tủ VAP & khe hở TAG ⚡ | `gap` → gap / gate-visual; `vap-threshold` → vap / gate-tag; `trigger` → trigger / gate-tag; `ct10` → ct10 / gate-inject | TAG house |
+| 4 | 4.4 | Sứ xuyên TAG house | `measure` → bushing / gate-visual | Sàn tụ |
+| 5 | 4.5 | Tủ VAP & khe hở TAG ⚡ | `gap` → gap / gate-visual; `vap-threshold` → vap / gate-tag; `trigger` → trigger / gate-tag; `ct10` → ct10 / gate-inject | Sàn tụ |
 | 6 | 4.6 | Biến dòng CT rack | `inspect` → checklist / gate-visual | Sàn tụ |
-| 7 | 4.7 | Bơm dòng nhất thứ CT | `inject` → inject / gate-inject | Sàn tụ + phòng điều khiển (HMI) |
+| 7 | 4.7 | Bơm dòng nhất thứ CT | `inject` → inject / gate-inject | Sàn tụ |
 
-\* Cột "Vị trí làm việc" là đề xuất cho luồng hiện trường (Phần B), **cần chuyên gia giàn tụ xác nhận**.
+Mọi phép thử đều làm **trên sàn tụ**; thứ tự tùy ý vì các nhóm làm **song song ở 3 pha** (đã chốt 26/11/2026). Mỗi phiên chọn hạng mục **thực hiện**: có tick mới hiện vùng nhập số liệu và đưa vào biên bản.
 
 ### A2.3. Thiết bị chuyên dụng
 * **VAP Tester GE 31F246:** ENERGY (V/mC), CURRENT (A – DPM có thể âm → lấy trị tuyệt đối), EXT TRIG.
@@ -72,7 +72,7 @@
 
 ### A5.1. Công nghệ
 * Vanilla TypeScript, render template string vào `innerHTML`; Vite 8 + `vite-plugin-pwa` (precache toàn bộ).
-* Dexie/IndexedDB: `sessions`, `measurements`, `checks`, `photos`, `signatures`, `profiles`, `instruments`, `trendHistory` (v3, chưa đồng bộ).
+* Dexie/IndexedDB: `sessions`, `measurements`, `checks`, `photos`, `signatures`, `profiles`, `instruments`, `trendHistory` (v3, chưa đồng bộ), `units`, `staff` (v4, đồng bộ).
 * MiniSearch (tìm không dấu), PhotoSwipe, jsPDF + autotable (font Be Vietnam Pro, ký tự Hy Lạp được thay chữ), SheetJS 0.20.3 (bản CDN).
 * OCR 7 đoạn và watermark ảnh bằng Canvas, chạy trên máy.
 * 5 chủ đề màu (Theo máy, Tiêu chuẩn, Ca đêm, Nắng gắt, Đêm đỏ); vùng chạm ≥ 48 px, chữ ≥ 16 px; thanh điều hướng đáy.
@@ -96,14 +96,15 @@
 | Nhập số đo, cổng an toàn, ảnh | ✓ | ✓ | ✓ | |
 | Ký ô **Người thí nghiệm** | | ✓ | ✓ | |
 | Ký ô **Chỉ huy trực tiếp** (khóa biên bản) | | ✓ | | |
-| Cấu hình: hồ sơ giàn, máy TN, mốc xu hướng, nhập JSON | ✓ | | | |
+| Cấu hình: hồ sơ giàn, máy TN, mốc xu hướng, nhập JSON, **đơn vị & số biên bản** (`unit.edit`) | ✓ | | | |
+| **Danh sách nhân viên** (`staff.edit`) | ✓ | ✓ | | |
 | Quản lý người dùng, thu hồi chữ ký | ✓ | | | |
 
 ### A5.5. Ký biên bản (`sign/sign.ts`) – **đã bỏ ô Đơn vị QLVH (26/11/2026)**
-* Chỉ còn **2 ô**: Người thí nghiệm (`tester`, ký số liệu – không gồm kết luận) và Chỉ huy trực tiếp (`leader`, ký toàn bộ gồm kết luận; mỗi phiên 1 chữ ký; ký xong → **khóa** phiên trên máy và máy chủ; chỉ Quản trị thu hồi).
+* Chỉ còn **2 ô**, **mỗi ô 1 chữ ký** (máy và máy chủ đều chặn chữ ký thứ hai): Người thí nghiệm (`tester` – **chỉ người chịu trách nhiệm** ký, ký số liệu không gồm kết luận) và Chỉ huy trực tiếp (`leader`, ký toàn bộ gồm kết luận; ký xong → **khóa** phiên trên máy và máy chủ; chỉ Quản trị thu hồi). Ký bằng tài khoản khác tên người chịu trách nhiệm/Chỉ huy ghi trong phiên → app cảnh báo trước khi ký.
 * Mã SHA-256 trên nội dung chuẩn hóa; khi xuất kiểm tra lại "Khớp nội dung lúc ký" / "NỘI DUNG ĐÃ THAY ĐỔI SAU KHI KÝ".
 * Dữ liệu cũ có ô `qlvh`: vẫn nhập được từ JSON nhưng bị bỏ qua khi hiển thị/xuất; máy chủ mới từ chối ghi ô `qlvh`.
-* Khối ký trên PDF/Excel do `export/signers.ts` dựng: cột trái Người thí nghiệm, cột phải Chỉ huy trực tiếp, "(Ký, ghi rõ họ tên)". Người đã ký điện tử in kèm thời điểm; người chưa ký vẫn in sẵn tên (thành viên/Chỉ huy của phiên) chừa chỗ **ký tay** trên bản in. Có bảng mã kiểm tra chữ ký điện tử nếu có.
+* Khối ký trên PDF/Excel do `export/signers.ts` dựng: cột trái Người thí nghiệm (người chịu trách nhiệm), cột phải Chỉ huy trực tiếp, "(Ký, ghi rõ họ tên)". Đã ký điện tử → in tên + thời điểm; chưa ký → in sẵn tên, chừa chỗ **ký tay**. Phiên cũ chưa khai người chịu trách nhiệm → in tên các thành viên.
 
 ### A5.6. Màn hình (`src/main.ts`)
 
@@ -116,7 +117,7 @@
 | `#/sessions`, `#/session-new`, `#/session/:id`, `#/session/:id/form/:itemId/:testId` | Phiên TN, nhập số đo, ký, xuất |
 | `#/calc/unbalance` | Máy tính %ΔC (OCR, ghi vào mục 1.B) |
 | `#/trend/:profileId?` | Xu hướng nhiều kỳ |
-| `#/profiles`, `#/profile/:id`, `#/instruments` | Cấu hình (Quản trị) |
+| `#/profiles`, `#/profile/:id`, `#/instruments`, `#/units`, `#/staff` | Cấu hình: hồ sơ giàn, máy TN, đơn vị & số biên bản, nhân viên |
 | `#/settings`, `#/help`, `#/info` | Cài đặt, hướng dẫn, giới thiệu |
 | `#/login`, `#/register`, `#/account`, `#/admin`, `#/users` | Đăng nhập/đăng ký/chờ duyệt, quản trị, người dùng |
 
@@ -125,24 +126,26 @@
 content/   items, thresholds, safety, equipment, overview, tools, cycle, review, images, profiles.seed, help (.json)
 src/
   main.ts router.ts content.ts types.ts ui.ts settings.ts pwa.ts
-  domain/session.ts   # SessionData, loadSessionData, testState, itemState, TYPE_LABEL (R1)
+  domain/session.ts   # SessionData, loadSessionData, testState, itemState, phaseState, itemOn, TYPE_LABEL
+  domain/units.ts     # DEFAULT_UNIT, nextReportNo, formatReportNo, duplicateReportNo, crewLabel, parseExtraCrew
   forms/              # index (FORMS, formFor, evaluateTest), types, inputs, checklist, unbalance,
                       # compare (mov, reactor), bushing, tag (gap, vap, trigger, ct10), inject (R2)
   auth/               # roles, session, gate, notify
   calc/               # unbalance, evaluate, isolation, units, temp-correction, trend, ocr, watermark
   components/         # Chrome, Icons, Timer, OcrModal, ImageViewer, UserMenu
   export/             # report (mô hình biên bản), signers (khối ký), pdf, xlsx, json, exporters
-  sign/ store/ sync/ styles/ views/
+  sign/ store/ sync/ styles/
+  views/              # Org.ts (đơn vị, nhân viên), SessionNew.ts, Session.ts (biểu mẫu), session/ (SessionView, sign, photos), …
 gas/       Core.gs Code.gs appsscript.json README.md
-tests/     calc, sync, gas-core, auth-ui, signers, architecture, forms (snapshot) (.spec.ts) + e2e/ (Playwright Pixel 7)
+tests/     calc, sync, gas-core, auth-ui, signers, architecture, forms (snapshot), org (.spec.ts) + e2e/ (app, contrast-audit, org – Playwright Pixel 7)
 ```
 
 ### A5.8. Lệnh
 ```bash
 npm run dev        # http://localhost:5173
-npm test           # vitest – 7 file, 122 test (26/11/2026)
+npm test           # vitest – 8 file, 136 test (26/11/2026)
 npm run build      # tsc + vite build PWA
-npm run test:e2e   # Playwright tự build bản dùng-một-mình (VITE_GAS_URL rỗng); 25 test
+npm run test:e2e   # Playwright tự build bản dùng-một-mình (VITE_GAS_URL rỗng); 26 test
 npm run contrast   # kiểm tra tương phản WCAG các chủ đề
 ```
 
@@ -168,18 +171,19 @@ QUẢN TRỊ (văn phòng, có mạng)
   3. Danh mục máy TN + hạn kiểm định
         │
 CHỈ HUY TRỰC TIẾP (trước khi đi, có mạng → đồng bộ)
-  4. Tạo phiên: giàn tụ, ngày, loại (sau lắp đặt / sau 1 năm / định kỳ)
-     chọn Chỉ huy + thành viên TỪ DANH SÁCH TÀI KHOẢN đã duyệt (ghi chú ATVSV)
-     chọn máy TN (cảnh báo quá hạn kiểm định)
+  4. Tạo phiên: đơn vị TN, giàn tụ, ngày, loại; SỐ BIÊN BẢN tự tăng (sửa được)
+     Chỉ huy + thành viên chọn TỪ DANH SÁCH NHÂN VIÊN (họ tên, chức danh, bậc an toàn),
+     người ngoài danh sách nhập tay; chọn NGƯỜI CHỊU TRÁCH NHIỆM (ký ô Người thí nghiệm)
+     tick HẠNG MỤC THỰC HIỆN; chọn máy TN (cảnh báo quá hạn kiểm định)
   5. Đồng bộ → mọi máy trong đội có phiên, dùng được offline
         │
 HIỆN TRƯỜNG (offline)
   6. Cổng "Lên sàn tụ" + timer 15 phút (hoặc nhập giờ cô lập theo phiếu)
-  7. Màn hình "Làm việc" theo VỊ TRÍ: Sàn tụ → TAG house → Phòng điều khiển
-     mỗi phép thử: cổng riêng → (tùy chọn) xem từng bước → nhập theo pha A/B/C
+  7. Trên sàn tụ, 3 nhóm làm song song theo pha A/B/C, thứ tự hạng mục tùy ý
+     mỗi phép thử: cổng riêng → (tùy chọn) xem từng bước → nhập theo pha
   8. Nhập số: bàn phím số, OCR 📷, tự sang ô kế, kết quả tô màu ngay,
      cảnh báo nghi nhập sai; chụp ảnh có dấu kỹ thuật
-  9. Thanh tiến độ: hạng mục × pha (○ chưa / ⏳ dở / ✅ ⚠️ ❌)
+  9. Bảng tiến độ hạng mục × pha (○ chưa / ⏳ dở / ✅ ⚠️ ❌) – chỉ hạng mục thực hiện
         │
 KẾT THÚC
  10. Rà soát: danh sách Không đạt / Cảnh báo / ô còn trống
@@ -208,21 +212,21 @@ SAU ĐÓ
 ## B3. Mẫu BBTN xuất ra (PDF & Excel cùng một mô hình `buildReport`)
 
 ```text
-CÔNG TY TRUYỀN TẢI ĐIỆN 3            CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM      ← (C5)
-<ĐỘI / ĐƠN VỊ thí nghiệm>              Độc lập – Tự do – Hạnh phúc
-Số: …/BB-TN                                                                   ← (C5)
+TRUNG TÂM SỬA CHỮA, THÍ NGHIỆM ĐIỆN 3        ← Tên đơn vị (Quản trị sửa, #/units)
+ĐỘI SỬA CHỮA, THÍ NGHIỆM ĐIỆN LÂM ĐỒNG       ← Đơn vị thí nghiệm (đậm)
+     Số: 05/2026/BB-TN                       ← mẫu {nn}/{yyyy}/BB-TN; không quốc hiệu
           BIÊN BẢN THÍ NGHIỆM NHẤT THỨ GIÀN TỤ BÙ DỌC 500 kV – HÃNG GE
-I.   Thông tin chung: trạm, giàn, ngày, loại TN, Chỉ huy, thành viên, thông số hồ sơ giàn
+I.   Thông tin chung: trạm, giàn, ngày, loại TN, Chỉ huy, người chịu trách nhiệm, thành viên (chức danh, bậc an toàn), hạng mục không thực hiện, thông số hồ sơ giàn
 II.  Thiết bị thí nghiệm: model, serial, hạn kiểm định (QUÁ HẠN in đỏ)
 III. Điều kiện an toàn: cổng, người xác nhận, thời điểm, giờ cô lập
-IV.  Kết quả theo hạng mục 1–7: Nhóm | Nội dung | Giá trị | Yêu cầu | Kết quả
+IV.  Kết quả các hạng mục THỰC HIỆN: Nhóm | Nội dung | Giá trị | Yêu cầu | Kết quả
 V.   Tổng kết Đạt / Cảnh báo / Không đạt + Kết luận, kiến nghị
 VI.  Ảnh hiện trường (có dấu kỹ thuật)
 VII. Xác nhận                                   <Trạm>, ngày …
        NGƯỜI THÍ NGHIỆM                 CHỈ HUY TRỰC TIẾP
       (Ký, ghi rõ họ tên)               (Ký, ghi rõ họ tên)
       [Đã ký điện tử hh:mm]             [Đã ký điện tử hh:mm]
-        Họ tên từng người                    Họ tên
+     Người chịu trách nhiệm                  Họ tên
      Bảng mã kiểm tra chữ ký điện tử (SHA-256) – chỉ khi có ký điện tử
 ```
 * **Không có ô Đại diện đơn vị QLVH.** (Đã làm – mục VII.)
@@ -240,19 +244,22 @@ VII. Xác nhận                                   <Trạm>, ngày …
 | **R1** ✅ | **Tầng domain:** chuyển `loadSessionData`, `testState`, `itemState`, `sessionInstruments`, `TYPE_LABEL` sang `src/domain/session.ts`; `export/` và `views/` chỉ phụ thuộc `domain/` | `views/Session.ts`, `views/Sessions.ts`, `export/*` | Không còn import `../views/` ngoài `main.ts`; test hiện có xanh |
 | **R2** ✅ | **Tách biểu mẫu:** `src/forms/` – `inputs.ts` (numRow/selRow/textRow/paintRows), mỗi form 1 file, `index.ts` giữ `FORMS`, `formFor`, `evaluateTest`; test `rows()` cho từng form | `forms.ts` | Mỗi file < 200 dòng; test snapshot `rows()` 9 form |
 | **R3** ✅ | **Bỏ CSS nội tuyến:** class + token trong `base.css`; helper `html`/`attr` tự escape | views, forms, components | `grep 'style="'` ≈ 0; e2e tương phản xanh |
-| **R4** | **Con người gắn tài khoản:** phiên lưu `crew: {userId?, name, role: 'leader'|'tester', atvsv?}[]` (giữ `leader`/`members` cho dữ liệu cũ); tạo phiên chọn từ danh sách tài khoản đã duyệt (dùng một mình: gõ tay); cổng an toàn chọn từ `crew` | `types`, `views/Sessions`, `SafetyGate`, `signers`, `gas/Core.gs` (thao tác `teamMembers`) | Tên in BBTN = tên tài khoản ký; phiên cũ hiển thị đúng |
-| **R5** | **Luồng hiện trường:** màn hình “Làm việc” nhóm theo vị trí; tiến độ hạng mục × pha; “còn N ô trống”; Enter → ô kế; cảnh báo nghi nhập sai; tách `views/Session.ts` thành `SessionHome`, `SessionForm`, `SessionSign`, `photos` | `views/session/*`, `content/items.json` (thêm `location`), `calc/sanity.ts` | e2e: làm trọn 1 phiên bằng bàn phím; unit test sanity |
-| **R6** | **Kết luận & BBTN chuẩn:** gợi ý kết luận từ dòng ❌/⚠️; tiêu đề đơn vị + quốc hiệu + số biên bản (cấu hình trong hồ sơ đội/Quản trị); nhắc ô trống trước khi ký | `export/*`, `views/session/SessionSign` | PDF đúng mẫu B3; Excel cùng nội dung |
+| **R4** ✅ | **Nhân sự & đơn vị:** bảng `units` (tên đơn vị, đơn vị TN, mẫu số BB, số bắt đầu theo năm) và `staff` (họ tên, chức danh, bậc an toàn, đã nghỉ) – CRUD, đồng bộ; phiên lưu `unitId`, `unitSnap`, `reportNo`, `crew {leader, responsible, members}` (giữ `leader`/`members` cho dữ liệu cũ) | `types`, `store/db` v4, `domain/units.ts`, `views/Org.ts`, `views/SessionNew.ts`, `gas/Core.gs` v3 | `tests/org.spec.ts`, `tests/e2e/org.spec.ts` |
+| **R5** ✅ (một phần) | **Luồng hiện trường:** tick hạng mục thực hiện (ẩn/hiện vùng nhập); bảng tiến độ hạng mục × pha (`phaseState`); tách `views/Session.ts` → `views/session/SessionView.ts`, `sign.ts`, `photos.ts`. **Để sau:** cảnh báo nghi nhập sai, “còn N ô trống”, Enter → ô kế | `domain/session.ts`, `views/session/*` | e2e org; unit test `phaseState`, `itemOn` |
+| **R6** ✅ (một phần) | **BBTN chuẩn:** đầu biên bản tên đơn vị + đơn vị TN + số BB (không quốc hiệu); chỉ hạng mục thực hiện; ô Người thí nghiệm = người chịu trách nhiệm. **Để sau:** gợi ý kết luận từ dòng ❌/⚠️ | `export/*` | PDF/Excel đúng mẫu B3 |
 | **R7** | **Xu hướng & ngưỡng:** ngưỡng `METRIC_DEFS` → `thresholds.json`/hồ sơ giàn; đồng bộ `trendHistory` (thêm vào `TABLES` + `SYNC_TABLES`); tách `calc/trend.ts` (tính) và vẽ SVG | `calc/trend*`, `gas/Core.gs`, `sync/` | Hai máy thấy cùng mốc lịch sử; test xu hướng xanh |
 | **R8** | **Dọn & tài liệu:** `/simplify`, `/code-review`, cập nhật `AGENTS.md`, `knowledge.md`, `content/help.json` theo luồng mới | toàn bộ | Review không còn lỗi mức quan trọng |
 
 **Thứ tự khuyến nghị:** R1 → R2 → R3 (thuần kỹ thuật, không đổi hành vi) rồi R4 → R5 → R6 (đổi trải nghiệm, cần người dùng thử ngoài hiện trường) → R7 → R8.
 
-**Câu hỏi cần chuyên gia/đơn vị chốt trước R4–R6:**
-1. Vị trí làm việc của từng phép thử (cột * ở A2.2) và thứ tự làm thực tế.
-2. Mẫu tiêu đề BBTN: tên đơn vị cấp trên/cấp dưới, cách đánh số biên bản.
-3. Người thí nghiệm ký: từng người hay chỉ người chịu trách nhiệm chính?
-4. Ngưỡng “nghi nhập sai” cho từng loại số đo.
+**Đã chốt (26/11/2026):**
+1. Mọi phép thử làm trên sàn tụ; thứ tự tùy ý, 3 nhóm song song theo pha. Có tick “Thực hiện” từng hạng mục: tick → hiện vùng nhập, bỏ tick → ẩn.
+2. Đầu BBTN: Tên đơn vị “Trung tâm Sửa chữa, thí nghiệm điện 3”, Đơn vị thí nghiệm “Đội Sửa chữa, thí nghiệm điện Lâm Đồng” – đều sửa được; không quốc hiệu. Số BB bắt đầu từ số Quản trị đặt, hết năm tự về 01.
+3. Ô Người thí nghiệm: chỉ người chịu trách nhiệm ký.
+4. Ngưỡng “nghi nhập sai”: **để sau**.
+5. Bổ sung: danh sách nhân viên đơn vị thí nghiệm (họ tên, bậc an toàn, chức danh) – CRUD, chọn khi chuẩn bị phiên.
+
+**Rủi ro đã biết – số biên bản:** số được cấp trên máy lúc tạo phiên (làm được khi không có mạng). Hai máy cùng tạo phiên khi offline có thể trùng số → app cảnh báo “số trùng” ở trang phiên sau khi đồng bộ; Chỉ huy bấm **Sửa số**. Nên tạo phiên ở văn phòng khi có mạng.
 
 ## Phụ lục – Điểm kỹ thuật cần rà soát (từ `content/review.json`)
 1. CT3 & CT30 (mục 7) cùng vòng dây kỳ vọng ≈ 0 – tạm ngưỡng |x| ≤ 0,2 A, chờ chuyên gia duyệt.

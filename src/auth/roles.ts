@@ -57,6 +57,8 @@ export type Action =
   | 'gate.confirm'
   | 'profile.edit'
   | 'instrument.edit'
+  | 'unit.edit'
+  | 'staff.edit'
   | 'data.import'
   | 'users.manage'
   | 'sign.revoke'
@@ -70,6 +72,9 @@ const MATRIX: Record<Action, Role[]> = {
   // cấu hình hệ thống: chỉ Quản trị
   'profile.edit': ['admin'],
   'instrument.edit': ['admin'],
+  'unit.edit': ['admin'],
+  // danh sách nhân viên: Chỉ huy cũng thêm được người khi chuẩn bị phiên
+  'staff.edit': ['admin', 'leader'],
   'data.import': ['admin'],
   'users.manage': ['admin'],
   'sign.revoke': ['admin'],

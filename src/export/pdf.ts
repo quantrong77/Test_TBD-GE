@@ -60,13 +60,31 @@ export async function buildPdf(d: SessionData): Promise<Blob> {
     return at;
   };
 
-  doc.setFont(FONT, 'bold').setFontSize(14);
-  doc.text('BIÊN BẢN THÍ NGHIỆM NHẤT THỨ', W / 2, 16, { align: 'center' });
-  doc.text('GIÀN TỤ BÙ DỌC 500 kV – HÃNG GE', W / 2, 23, { align: 'center' });
+  // Đầu biên bản: đơn vị cấp trên, đơn vị thí nghiệm (đậm), số biên bản – khối bên trái, không quốc hiệu
+  const hx = M + 50;
+  let hy = 14;
   doc.setFont(FONT, 'normal').setFontSize(10);
-  doc.text(`${r.p.bank} – ${r.p.station} · Ngày ${fmtDate(r.s.date)}`, W / 2, 30, { align: 'center' });
+  for (const line of doc.splitTextToSize(r.header.orgName.toUpperCase(), 100) as string[]) {
+    doc.text(line, hx, hy, { align: 'center' });
+    hy += 5;
+  }
+  doc.setFont(FONT, 'bold');
+  for (const line of doc.splitTextToSize(r.header.unitName.toUpperCase(), 100) as string[]) {
+    doc.text(line, hx, hy, { align: 'center' });
+    hy += 5;
+  }
+  doc.setLineWidth(0.3).line(hx - 18, hy - 1.5, hx + 18, hy - 1.5);
+  doc.setFont(FONT, 'normal').setFontSize(10);
+  if (r.header.reportNo) doc.text(`Số: ${r.header.reportNo}`, hx, hy + 4.5, { align: 'center' });
+  hy += 14;
 
-  autoTable(doc, { ...base, startY: 36, head: [['Thông tin', '']], body: clean(r.info), columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' } } });
+  doc.setFont(FONT, 'bold').setFontSize(14);
+  doc.text('BIÊN BẢN THÍ NGHIỆM NHẤT THỨ', W / 2, hy, { align: 'center' });
+  doc.text('GIÀN TỤ BÙ DỌC 500 kV – HÃNG GE', W / 2, hy + 7, { align: 'center' });
+  doc.setFont(FONT, 'normal').setFontSize(10);
+  doc.text(`${r.p.bank} – ${r.p.station} · Ngày ${fmtDate(r.s.date)}`, W / 2, hy + 14, { align: 'center' });
+
+  autoTable(doc, { ...base, startY: hy + 20, head: [['Thông tin', '']], body: clean(r.info), columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' } } });
   if (r.instruments.length) autoTable(doc, { ...base, startY: y(), head: [['Máy thí nghiệm', 'Số serial', 'Hạn kiểm định']], body: clean(r.instruments) });
   if (r.gates.length) autoTable(doc, { ...base, startY: y(), head: [['Cổng an toàn', 'Người xác nhận', 'Thời điểm', 'Ghi chú']], body: clean(r.gates) });
 

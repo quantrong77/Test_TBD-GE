@@ -88,7 +88,7 @@ export async function signSession(sessionId: string, slot: SignSlot): Promise<Si
   if (!isMember(me) || !canSign(slot, me)) throw new Error('Tài khoản này không được ký ô này');
   const existing = await sessionSignatures(sessionId);
   if (existing.some((x) => x.slot === slot && x.userId === me.userId)) throw new Error('Bạn đã ký ô này');
-  if (slot === 'leader' && existing.some((x) => x.slot === 'leader')) throw new Error('Biên bản đã có chữ ký Chỉ huy');
+  if (existing.some((x) => x.slot === slot)) throw new Error(slot === 'leader' ? 'Biên bản đã có chữ ký Chỉ huy' : 'Ô Người thí nghiệm đã có chữ ký (chỉ người chịu trách nhiệm ký)');
   if (slot === 'leader') await db.sessions.update(sessionId, { status: 'done' });
   const sig: Signature = {
     id: `${sessionId}|${slot}|${me.userId}`,

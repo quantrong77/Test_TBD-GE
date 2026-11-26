@@ -38,6 +38,14 @@ export const Admin: View = async (_r, el) => {
         : ''
     }
     <h2>Cấu hình</h2>
+    <a class="card admin-link" href="#/units">
+      <span class="ico">🏢</span>
+      <span><b>Đơn vị & số biên bản</b><span class="small muted">Tên đơn vị, đơn vị thí nghiệm (đầu biên bản), số bắt đầu, mẫu số biên bản</span></span>
+    </a>
+    <a class="card admin-link" href="#/staff">
+      <span class="ico">👷</span>
+      <span><b>Nhân viên đơn vị thí nghiệm</b><span class="small muted">Họ tên, chức danh, bậc an toàn – chọn khi chuẩn bị phiên</span></span>
+    </a>
     <a class="card admin-link" href="#/profiles">
       <span class="ico">${Icons.folder}</span>
       <span><b>Hồ sơ giàn tụ</b><span class="small muted">Số bình, điện dung danh định, ngưỡng Alarm/Bypass, khe hở TAG, ngưỡng VAP</span></span>

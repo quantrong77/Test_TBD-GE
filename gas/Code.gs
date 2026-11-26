@@ -186,6 +186,8 @@ function sheetStore_(ss, photoFolderId) {
 
   function sheet(name) {
     var sh = ss.getSheetByName(name);
+    // bảng dữ liệu mới (sau khi nâng cấp mã) tự tạo, không cần chạy lại setup()
+    if (!sh && name.indexOf('data_') === 0) sh = ensureSheet_(ss, name, DATA_HEADER);
     if (!sh) throw new Error('Thiếu tab ' + name + ' – chạy lại setup()');
     return sh;
   }

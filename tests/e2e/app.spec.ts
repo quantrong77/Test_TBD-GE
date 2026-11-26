@@ -96,8 +96,8 @@ test('safety gate blocks until all checks + 15-minute timer', async ({ page }) =
 test('session: measurements autosave, survive reload, compute %ΔC, export', async ({ page }) => {
   watch(page);
   await page.goto('#/session-new');
-  await page.locator('input[name=leader]').fill('Trần Văn C');
-  await page.locator('textarea[name=members]').fill('Lê D (ATVSV)\nPhạm E');
+  await page.locator('input[name=leaderText]').fill('Trần Văn C');
+  await page.locator('textarea[name=extra]').fill('Lê D, ATVSV, 4\nPhạm E');
   await page.getByRole('button', { name: 'Tạo phiên' }).click();
   await expect(page).toHaveURL(/#\/session\/[^/]+$/);
   const sessionUrl = page.url();
@@ -125,7 +125,7 @@ test('session: measurements autosave, survive reload, compute %ΔC, export', asy
   await page.waitForTimeout(800);
 
   await page.goto(sessionUrl);
-  await expect(page.locator('.progress-items')).toContainText('5 ❌');
+  await expect(page.locator('.phase-matrix tr', { hasText: 'VAP' })).toContainText('❌');
   for (const [btn, ext] of [
     ['📄 PDF', '.pdf'],
     ['📊 Excel', '.xlsx'],
@@ -325,7 +325,8 @@ test.describe('vai trò và ký biên bản', () => {
     await page.goto('#/sessions');
     await expect(page.getByRole('link', { name: /Tạo phiên mới/ })).toBeVisible();
     await page.goto('#/session-new');
-    await page.locator('input[name=leader]').fill('C');
+    await page.locator('input[name=leaderText]').fill('C');
+    await page.locator('textarea[name=extra]').fill('D');
     await page.getByRole('button', { name: 'Tạo phiên' }).click();
     await expect(page.locator('#app')).toContainText('để ký biên bản');
     await expect(page.locator('[data-sign]')).toHaveCount(0);
@@ -334,7 +335,8 @@ test.describe('vai trò và ký biên bản', () => {
   test('Nhân viên TN và Chỉ xem không tạo được phiên; Chỉ xem không nhập số đo', async ({ page }) => {
     await asRole(page, 'leader');
     await page.goto('#/session-new');
-    await page.locator('input[name=leader]').fill('C');
+    await page.locator('input[name=leaderText]').fill('C');
+    await page.locator('textarea[name=extra]').fill('D');
     await page.getByRole('button', { name: 'Tạo phiên' }).click();
     await expect(page).toHaveURL(/#\/session\/[^/]+$/);
     const url = page.url();
@@ -357,7 +359,8 @@ test.describe('vai trò và ký biên bản', () => {
     page.on('dialog', (d) => d.accept());
     await asRole(page, 'leader');
     await page.goto('#/session-new');
-    await page.locator('input[name=leader]').fill('C');
+    await page.locator('input[name=leaderText]').fill('C');
+    await page.locator('textarea[name=extra]').fill('D');
     await page.getByRole('button', { name: 'Tạo phiên' }).click();
     await expect(page).toHaveURL(/#\/session\/[^/]+$/);
     const url = page.url();

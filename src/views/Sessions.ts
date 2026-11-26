@@ -1,13 +1,13 @@
 import { setTop } from '../components/Chrome';
 import { Icons } from '../components/Icons';
 import { can } from '../auth/roles';
-import { activeSessionId, db, setActiveSession } from '../store/db';
+import { activeSessionId, db } from '../store/db';
 import { calibOverdue } from '../calc/evaluate';
 import { parseNum } from '../calc/units';
 import { PROFILE_DEFAULTS } from '../content';
 import { callout, esc, fmtDate, today, toast, uid } from '../ui';
 import { go, params, type View } from '../router';
-import type { Instrument, Profile, Session } from '../types';
+import type { Instrument, Profile } from '../types';
 
 import { TYPE_LABEL } from '../domain/session';
 
@@ -36,76 +36,6 @@ export const Sessions: View = async (_r, el) => {
       <a href="#/trend"><span class="ico">${Icons.chart}</span>Xu hướng</a>
     </div>
     ${can('admin.panel') ? '<div class="btn-row"><a class="btn secondary" href="#/admin">🛡️ Quản trị: cấu hình, dữ liệu, người dùng</a></div>' : ''}`;
-};
-
-export const SessionNew: View = async (_r, el) => {
-  setTop('Tạo phiên thí nghiệm', { back: '#/sessions' });
-  if (!can('session.create')) {
-    el.innerHTML = '<p>Chỉ Quản trị và Chỉ huy trực tiếp được tạo phiên.</p>';
-    return;
-  }
-  const profiles = await db.profiles.toArray();
-  const instruments = await db.instruments.toArray();
-  const last = (await db.sessions.toArray()).sort((a, b) => b.createdAt - a.createdAt)[0];
-  const preferred = last?.profileId ?? 'TBD503-PLEIKU2';
-  el.innerHTML = `
-    <form id="f">
-      <label class="field"><span>Hồ sơ giàn tụ</span><select name="profileId" required>${profiles
-        .map((p) => `<option value="${esc(p.id)}"${p.id === preferred ? ' selected' : ''}>${esc(p.bank)} – ${esc(p.station)}</option>`)
-        .join('')}</select></label>
-      <p class="small"><a href="#/profile/new">＋ Tạo hồ sơ giàn mới</a></p>
-      <label class="field"><span>Loại thí nghiệm</span><select name="type">${Object.entries(TYPE_LABEL)
-        .map(([k, l]) => `<option value="${k}"${k === 'periodic' ? ' selected' : ''}>${l}</option>`)
-        .join('')}</select></label>
-      <label class="field"><span>Ngày thí nghiệm</span><input type="date" name="date" value="${today()}" required></label>
-      <label class="field"><span>Chỉ huy trực tiếp</span><input type="text" name="leader" required autocomplete="name"></label>
-      <label class="field"><span>Thành viên (mỗi dòng 1 người, ghi rõ ATVSV)</span><textarea name="members" rows="5"></textarea></label>
-      <fieldset class="card"><legend><b>Máy thí nghiệm sử dụng</b></legend>
-        ${instruments
-          .map(
-            (i) => `<label class="check"><input type="checkbox" name="inst" value="${esc(i.id)}" checked><span>${esc(i.model)}${i.serial ? ` · SN ${esc(i.serial)}` : ''}<br><span class="small muted">Hạn kiểm định: ${i.calibDue ? esc(fmtDate(i.calibDue)) : 'chưa nhập'}</span></span></label>`,
-          )
-          .join('')}
-        <div id="calwarn"></div>
-      </fieldset>
-      <button class="btn block big" type="submit">Tạo phiên</button>
-    </form>`;
-  const f = el.querySelector<HTMLFormElement>('#f')!;
-  const checkCal = () => {
-    const date = (f.elements.namedItem('date') as HTMLInputElement).value;
-    const chosen = new Set([...f.querySelectorAll<HTMLInputElement>('input[name="inst"]:checked')].map((i) => i.value));
-    const bad = instruments.filter((i) => chosen.has(i.id) && calibOverdue(i.calibDue, date));
-    const missing = instruments.filter((i) => chosen.has(i.id) && !i.calibDue);
-    el.querySelector('#calwarn')!.innerHTML =
-      bad.map((i) => callout({ level: 'danger', text: `**${i.model}** đã QUÁ HẠN kiểm định (${fmtDate(i.calibDue)}).` })).join('') +
-      (missing.length ? `<p class="small muted">Chưa nhập hạn kiểm định: ${missing.map((i) => esc(i.model)).join(', ')} – <a href="#/instruments">nhập</a>.</p>` : '');
-  };
-  f.addEventListener('change', checkCal);
-  checkCal();
-  f.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fd = new FormData(f);
-    const s: Session = {
-      id: uid(),
-      profileId: String(fd.get('profileId')),
-      type: fd.get('type') as Session['type'],
-      date: String(fd.get('date')),
-      leader: String(fd.get('leader')).trim(),
-      members: String(fd.get('members') ?? '')
-        .split('\n')
-        .map((x) => x.trim())
-        .filter(Boolean),
-      instruments: fd.getAll('inst').map(String),
-      profileSnap: profiles.find((x) => x.id === String(fd.get('profileId'))),
-      instrumentSnap: instruments.filter((i) => fd.getAll('inst').includes(i.id)),
-      status: 'open',
-      createdAt: Date.now(),
-    };
-    await db.sessions.add(s);
-    setActiveSession(s.id);
-    toast('Đã tạo phiên – đặt làm phiên đang làm');
-    go(`#/session/${s.id}`);
-  });
 };
 
 // ---------- Hồ sơ giàn ----------

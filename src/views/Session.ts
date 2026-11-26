@@ -1,265 +1,17 @@
-import { getItem, getTest, items, gatesFor, getGate } from '../content';
+// Biểu mẫu nhập số đo của một phép thử trong phiên.
+import { getItem, getTest, gatesFor, getGate } from '../content';
 import { setTop } from '../components/Chrome';
-import { Icons } from '../components/Icons';
-import { activeSessionId, db, deleteSession, getGateCheck, getValues, measId, previousSession, putValue, setActiveSession, storageWarning } from '../store/db';
+import { db, getGateCheck, getValues, measId, previousSession, putValue } from '../store/db';
 import { formFor, paintRows, PHASES, type Phase, type Values } from '../forms';
-import { calibOverdue } from '../calc/evaluate';
-import { callout, debounce, esc, fmtDate, fmtTime, resBadge, toast, uid } from '../ui';
+import { callout, debounce, esc, fmtDate, resBadge, toast } from '../ui';
 import { go, params, type View } from '../router';
-import { bindViewer } from '../components/ImageViewer';
 import { getFontScale } from '../settings';
 import { stepsOf } from './StepMode';
-import { can, canSign, getMe, SLOT_LABEL } from '../auth/roles';
-import { isLocked, revokeSignature, signSession, verifySignatures, type SignatureCheck } from '../sign/sign';
-import { compressWithWatermark, getGpsCoordinates, type WatermarkMeta } from '../calc/watermark';
+import { can } from '../auth/roles';
+import { isLocked } from '../sign/sign';
 import { openOcrScanner } from '../components/OcrModal';
-import type { SignSlot } from '../types';
-import { itemState, loadSessionData, sessionInstruments, STATE_ICON, testState, TYPE_LABEL } from '../domain/session';
-
-// ---------- Ảnh hiện trường ----------
-const urls: string[] = [];
-window.addEventListener('route:leave', () => urls.splice(0).forEach((u) => URL.revokeObjectURL(u)));
-
-interface PhotoMetaContext {
-  station?: string;
-  bank?: string;
-  phase?: string;
-  itemTitle?: string;
-}
-
-async function photosBlock(
-  root: HTMLElement,
-  sessionId: string,
-  itemId: string,
-  readOnly: boolean,
-  metaContext?: PhotoMetaContext,
-) {
-  const box = root.querySelector<HTMLElement>('[data-photos]')!;
-  const draw = async () => {
-    const list = await db.photos.where('[sessionId+itemId]').equals([sessionId, itemId]).toArray();
-    box.innerHTML = `<div class="thumbs" data-gallery="photos">${list
-      .map((p) => {
-        const u = URL.createObjectURL(p.blob);
-        urls.push(u);
-        return `<figure><a href="${u}" data-pswp-width="1600" data-pswp-height="1200" data-caption="${esc(p.caption)}"><img src="${u}" alt="${esc(p.caption)}"></a><figcaption>${esc(p.caption)} ${readOnly ? '' : `<button class="icon-btn photo-del" type="button" data-del="${esc(p.id)}" aria-label="Xóa ảnh">🗑</button>`}</figcaption></figure>`;
-      })
-      .join('')}</div>
-      ${readOnly ? '' : '<label class="btn secondary block mt-12">📷 Chụp / chọn ảnh (Tự động đóng dấu Watermark kỹ thuật)<input type="file" accept="image/*" capture="environment" multiple hidden data-file></label>'}`;
-    // kích thước thật cho trình xem
-    box.querySelectorAll<HTMLAnchorElement>('a[data-pswp-width]').forEach((a) => {
-      const img = a.querySelector('img')!;
-      const set = () => {
-        a.dataset.pswpWidth = String(img.naturalWidth);
-        a.dataset.pswpHeight = String(img.naturalHeight);
-      };
-      if (img.complete) set();
-      else img.addEventListener('load', set, { once: true });
-    });
-    box.querySelector<HTMLInputElement>('[data-file]')?.addEventListener('change', async (e) => {
-      const files = [...((e.target as HTMLInputElement).files ?? [])];
-      if (!files.length) return;
-      toast('Đang xử lý ảnh & đóng dấu tọa độ GPS...');
-      const gps = await getGpsCoordinates(2000);
-      for (const f of files) {
-        try {
-          const watermarkMeta: WatermarkMeta = {
-            station: metaContext?.station,
-            bank: metaContext?.bank,
-            phase: metaContext?.phase,
-            itemTitle: metaContext?.itemTitle || `Hạng mục ${itemId.slice(2)}`,
-            timestamp: new Date().toLocaleString('vi-VN'),
-            gps,
-          };
-          const blob = await compressWithWatermark(f, watermarkMeta);
-          const defaultCap = `${metaContext?.phase ? `Pha ${metaContext.phase} · ` : ''}${itemId.slice(2)} – ${new Date().toLocaleTimeString('vi-VN')}`;
-          const caption = prompt('Chú thích ảnh (đã đóng dấu kỹ thuật):', defaultCap) ?? '';
-          await db.photos.add({ id: uid(), sessionId, itemId, blob, caption, ts: Date.now() });
-        } catch (err) {
-          console.error(err);
-          toast('Không xử lý được ảnh ' + f.name);
-        }
-      }
-      const w = await storageWarning();
-      if (w) toast(w);
-      draw();
-    });
-    box.querySelectorAll<HTMLButtonElement>('[data-del]').forEach((b) =>
-      b.addEventListener('click', async () => {
-        if (!confirm('Xóa ảnh này?')) return;
-        await db.photos.delete(b.dataset.del!);
-        draw();
-      }),
-    );
-    bindViewer();
-  };
-  await draw();
-}
-
-// ---------- Ký biên bản ----------
-const SLOTS: SignSlot[] = ['tester', 'leader'];
-
-function signBlock(sigs: SignatureCheck[]): string {
-  const me = getMe();
-  return SLOTS.map((slot) => {
-    const mine = sigs.filter((x) => x.sig.slot === slot);
-    const already = mine.some((x) => x.sig.userId === me?.userId) || (slot === 'leader' && mine.length > 0);
-    return `<div class="card"><b>${esc(SLOT_LABEL[slot])}</b>
-      ${mine
-        .map(
-          ({ sig, valid }) => `<div class="small mt-6">✍️ <b>${esc(sig.name)}</b> (${esc(sig.email)})<br>${esc(fmtTime(sig.signedAt))} · mã ${esc(sig.hash.slice(0, 12))}
-            <br>${valid ? resBadge('pass', '✓ Nội dung khớp lúc ký') : resBadge('fail', '⚠️ Nội dung đã thay đổi sau khi ký')}
-            ${can('sign.revoke') ? `<button class="btn secondary mt-6" type="button" data-revoke="${esc(sig.id)}">Thu hồi chữ ký</button>` : ''}</div>`,
-        )
-        .join('')}
-      ${!mine.length ? '<div class="small muted">Chưa ký</div>' : ''}
-      ${canSign(slot) && !already ? `<button class="btn block mt-8" type="button" data-sign="${slot}">✍️ Ký xác nhận</button>` : ''}
-    </div>`;
-  }).join('') + (me ? '' : '<p class="small muted">Đăng nhập tài khoản đã được duyệt (⚙️ Cài đặt) để ký biên bản.</p>');
-}
-
-// ---------- Chi tiết phiên ----------
-export const SessionView: View = async (_r, el) => {
-  const id = params().id;
-  const d = await loadSessionData(id);
-  if (!d) {
-    setTop('Không tìm thấy', { back: '#/sessions' });
-    el.innerHTML = '<p>Không tìm thấy phiên hoặc hồ sơ giàn của phiên.</p>';
-    return;
-  }
-  const { session: s, profile: p } = d;
-  setTop(`Phiên ${p.bank}`, { back: '#/sessions', sub: `${fmtDate(s.date)} · ${TYPE_LABEL[s.type]}` });
-  const isActive = activeSessionId() === s.id;
-  const insts = await sessionInstruments(s);
-  const gp = await getGateCheck('gate-platform', s.id);
-  const all = items.flatMap((it) => it.tests.map((t) => ({ it, t, ...testState(d, it.id, t.id) })));
-  const counts = { pass: 0, fail: 0, warn: 0 };
-  for (const x of all) for (const r of x.rows) if (r.result in counts) counts[r.result as keyof typeof counts]++;
-  const sigs = await verifySignatures(s.id);
-  const locked = sigs.some((x) => x.sig.slot === 'leader');
-  const editable = !locked && can('session.edit');
-
-  el.innerHTML = `
-    <div class="card">
-      <div class="row"><b>${esc(p.bank)} – ${esc(p.station)}</b>${isActive ? '<span class="pill">● Đang làm</span>' : ''}</div>
-      <div class="small">Ngày: ${esc(fmtDate(s.date))} · ${esc(TYPE_LABEL[s.type])}<br>Chỉ huy: <b>${esc(s.leader)}</b>${s.members.length ? `<br>Thành viên: ${s.members.map(esc).join(', ')}` : ''}</div>
-      ${insts.map((i) => `<div class="small hstack">${Icons.testSet} <span>${esc(i!.model)}${i!.serial ? ` · SN ${esc(i!.serial)}` : ''}${calibOverdue(i!.calibDue, s.date) ? ` <span class="res fail">QUÁ HẠN ${esc(fmtDate(i!.calibDue))}</span>` : ''}</span></div>`).join('')}
-      <div class="btn-row">${isActive ? '<button class="btn secondary" type="button" id="deact">Bỏ chọn phiên</button>' : '<button class="btn" type="button" id="act">Đặt làm phiên đang làm</button>'}${editable ? '<button class="btn secondary" type="button" id="resnap">↻ Cập nhật ngưỡng từ hồ sơ giàn</button>' : ''}<a class="btn secondary" href="#/trend/${esc(s.profileId)}">📈 Xem xu hướng giàn tụ</a></div>
-    </div>
-    <a class="card row link-plain" href="#/gate/gate-platform" ${isActive ? '' : 'data-need-active'}>
-      <span>${gp.confirmedBy ? '✅' : '⚠️'} Cổng an toàn lên sàn tụ</span><span class="small">${gp.confirmedBy ? `${esc(gp.confirmedBy)} · ${esc(fmtTime(gp.timestamp!))}` : 'Chưa xác nhận'}</span></a>
-    <h2>Tiến độ</h2>
-    <div class="progress-items">${items.map((it) => `<a href="#/session/${esc(s.id)}/form/${it.id}/${it.tests[0].id}">${it.id.slice(2)} ${STATE_ICON[itemState(d, it.id)]}</a>`).join('')}</div>
-    ${items
-      .map(
-        (it) => `<div class="card"><b>${it.id.slice(2)} ${esc(it.short)}</b>
-        ${it.tests
-          .map((t) => {
-            const st = testState(d, it.id, t.id).state;
-            return `<a class="row link-plain list-row" href="#/session/${esc(s.id)}/form/${it.id}/${t.id}"><span>${esc(t.title)}</span><span>${STATE_ICON[st]}</span></a>`;
-          })
-          .join('')}</div>`,
-      )
-      .join('')}
-    <h2>Tổng kết</h2>
-    <p>${resBadge('pass', `✅ Đạt: ${counts.pass}`)} ${resBadge('warn', `⚠️ Cảnh báo: ${counts.warn}`)} ${resBadge('fail', `❌ Không đạt: ${counts.fail}`)}</p>
-    ${
-      counts.fail + counts.warn
-        ? `<div class="table-wrap"><table><thead><tr><th>Hạng mục</th><th>Nội dung</th><th>Giá trị</th><th>KQ</th></tr></thead><tbody>${all
-            .flatMap((x) => x.rows.filter((r) => r.result === 'fail' || r.result === 'warn').map((r) => `<tr><td>${x.it.id.slice(2)}</td><td>${esc(r.group)} ${esc(r.label)}</td><td>${esc(r.value)}</td><td>${resBadge(r.result)}</td></tr>`))
-            .join('')}</tbody></table></div>`
-        : ''
-    }
-    <label class="field"><span>Kết luận, kiến nghị</span><textarea id="concl" rows="4"${editable ? '' : ' disabled'}>${esc(s.conclusion ?? '')}</textarea></label>
-    <label class="check"><input type="checkbox" id="done"${s.status === 'done' ? ' checked' : ''}${editable ? '' : ' disabled'}><span>Đã kết thúc phiên</span></label>
-    <h2>Ký biên bản</h2>
-    ${locked ? callout({ level: 'info', text: '🔒 **Biên bản đã khóa** do Chỉ huy trực tiếp đã ký. Không sửa được số liệu.' }) : ''}
-    ${signBlock(sigs)}
-    <h2>Xuất biên bản</h2>
-    <div class="btn-row">
-      <button class="btn" type="button" data-exp="pdf">📄 PDF</button>
-      <button class="btn" type="button" data-exp="xlsx">📊 Excel</button>
-      <button class="btn secondary" type="button" data-exp="json">{ } JSON</button>
-      ${'share' in navigator ? '<button class="btn secondary" type="button" data-exp="share">📤 Chia sẻ PDF</button>' : ''}
-    </div>
-    ${editable ? '<button class="btn danger block mt-24" type="button" id="del">Xóa phiên</button>' : ''}`;
-
-  el.querySelectorAll<HTMLButtonElement>('[data-sign]').forEach((b) =>
-    b.addEventListener('click', async () => {
-      const slot = b.dataset.sign as SignSlot;
-      const warn = slot === 'leader' ? '\nSau khi ký, biên bản bị KHÓA: không sửa được số liệu, chỉ Quản trị mới thu hồi được chữ ký.' : '';
-      if (!confirm(`Ký xác nhận "${SLOT_LABEL[slot]}" bằng tài khoản ${getMe()?.email}?${warn}`)) return;
-      try {
-        // kết luận vừa gõ phải nằm trong nội dung được ký
-        const concl = el.querySelector<HTMLTextAreaElement>('#concl')!;
-        if (!concl.disabled && concl.value !== (s.conclusion ?? '')) await db.sessions.update(s.id, { conclusion: concl.value });
-        await signSession(s.id, slot);
-        toast('✓ Đã ký xác nhận');
-        go(location.hash);
-      } catch (err) {
-        toast((err as Error).message, undefined, 6000);
-      }
-    }),
-  );
-  el.querySelectorAll<HTMLButtonElement>('[data-revoke]').forEach((b) =>
-    b.addEventListener('click', async () => {
-      if (!confirm('Thu hồi chữ ký này? Nếu là chữ ký Chỉ huy, biên bản sẽ mở khóa.')) return;
-      await revokeSignature(b.dataset.revoke!);
-      go(location.hash);
-    }),
-  );
-  el.querySelector('#act')?.addEventListener('click', () => {
-    setActiveSession(s.id);
-    toast('Đã đặt làm phiên đang làm');
-    go(location.hash);
-  });
-  el.querySelector('#resnap')?.addEventListener('click', async () => {
-    const cur = await db.profiles.get(s.profileId);
-    if (!cur) return toast('Hồ sơ giàn không còn trong danh mục');
-    if (!confirm('Áp ngưỡng hiện tại của hồ sơ ' + cur.bank + ' và hạn kiểm định máy TN hiện tại cho phiên này? Kết quả Đạt/Không đạt sẽ được tính lại.')) return;
-    const inst = (await db.instruments.bulkGet(s.instruments)).filter((x) => !!x);
-    await db.sessions.update(s.id, { profileSnap: cur, instrumentSnap: inst });
-    go(location.hash);
-  });
-  el.querySelector('#deact')?.addEventListener('click', () => {
-    setActiveSession(null);
-    go(location.hash);
-  });
-  el.querySelector('[data-need-active]')?.addEventListener('click', (e) => {
-    // cổng an toàn ghi vào phiên đang làm – đặt phiên này trước
-    e.preventDefault();
-    setActiveSession(s.id);
-    go('#/gate/gate-platform');
-  });
-  const saveConcl = debounce(async (v: string) => {
-    await db.sessions.update(s.id, { conclusion: v });
-  }, 500);
-  el.querySelector<HTMLTextAreaElement>('#concl')!.addEventListener('input', (e) => saveConcl((e.target as HTMLTextAreaElement).value));
-  el.querySelector<HTMLInputElement>('#done')!.addEventListener('change', async (e) => {
-    await db.sessions.update(s.id, { status: (e.target as HTMLInputElement).checked ? 'done' : 'open' });
-  });
-  el.querySelectorAll<HTMLButtonElement>('[data-exp]').forEach((b) =>
-    b.addEventListener('click', async () => {
-      b.disabled = true;
-      try {
-        // kết luận vừa gõ (chưa qua debounce) phải có trong biên bản
-        if (editable) await db.sessions.update(s.id, { conclusion: el.querySelector<HTMLTextAreaElement>('#concl')!.value });
-        const fresh = (await loadSessionData(s.id))!;
-        const ex = await import('../export/exporters');
-        await ex.exportSession(fresh, b.dataset.exp as 'pdf' | 'xlsx' | 'json' | 'share');
-      } catch (err) {
-        console.error(err);
-        toast('Xuất thất bại: ' + (err as Error).message);
-      } finally {
-        b.disabled = false;
-      }
-    }),
-  );
-  el.querySelector('#del')?.addEventListener('click', async () => {
-    if (!confirm('Xóa phiên này cùng toàn bộ số đo và ảnh? Không thể hoàn tác.')) return;
-    await deleteSession(s.id);
-    go('#/sessions');
-  });
-};
+import { photosBlock } from './session/photos';
+import { itemOn, loadSessionData } from '../domain/session';
 
 // ---------- Biểu mẫu nhập số đo ----------
 const PHASE_KEY = 'tbd.phase';
@@ -285,6 +37,16 @@ export const SessionForm: View = async (_r, el) => {
   }
   const { session: s, profile: p } = d;
   setTop(`${item.id.slice(2)} ${test.title.replace(/^[A-D]\.\s*/, '')}`, { back: `#/session/${s.id}`, sub: `${p.bank} · ${fmtDate(s.date)}` });
+  if (!itemOn(s, itemId)) {
+    const canOn = can('session.edit') && !(await isLocked(s.id));
+    el.innerHTML = `${callout({ level: 'info', text: `Hạng mục **${item.id.slice(2)}. ${item.title}** không thực hiện trong phiên này nên vùng nhập số liệu đang ẩn.` })}
+      <div class="btn-row">${canOn ? '<button class="btn" type="button" id="on">✓ Thực hiện hạng mục này</button>' : ''}<a class="btn secondary" href="#/session/${esc(s.id)}">← Về phiên</a></div>`;
+    el.querySelector('#on')?.addEventListener('click', async () => {
+      await db.sessions.update(s.id, { items: [...(s.items ?? []), itemId] });
+      go(location.hash);
+    });
+    return;
+  }
   const values: Values = { ...(await getValues(s.id, itemId, testId)), __item: itemId, __test: testId };
   let phase: Phase = ((sessionStorage.getItem(PHASE_KEY) as Phase) || 'A') as Phase;
   if (!PHASES.includes(phase)) phase = 'A';

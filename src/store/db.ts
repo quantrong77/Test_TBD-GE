@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { GateCheck, Instrument, Measurement, Photo, Profile, Session, Signature } from '../types';
+import type { GateCheck, Instrument, Measurement, Photo, Profile, Session, Signature, Staff, Unit } from '../types';
 import type { TrendHistoryRecord } from '../calc/trend';
 import { seedProfiles } from '../content';
 import { clearTimers } from '../components/Timer';
@@ -14,6 +14,8 @@ class TbdDb extends Dexie {
   instruments!: Table<Instrument, string>;
   signatures!: Table<Signature, string>;
   trendHistory!: Table<TrendHistoryRecord, string>;
+  units!: Table<Unit, string>;
+  staff!: Table<Staff, string>;
 
   constructor() {
     super('tbd-ge-field');
@@ -29,6 +31,8 @@ class TbdDb extends Dexie {
     this.version(2).stores({ signatures: 'id, sessionId' });
     // v3: mốc lịch sử xu hướng nhập tay (biên bản giấy trước khi dùng app) – chỉ lưu trên máy + file sao lưu
     this.version(3).stores({ trendHistory: 'id, profileId, [profileId+metric]' });
+    // v4: đơn vị thí nghiệm (đầu biên bản, đánh số) và danh sách nhân viên – đồng bộ cả đội
+    this.version(4).stores({ units: 'id', staff: 'id, unitId' });
     this.on('populate', (tx) => {
       // dữ liệu mẫu: đánh dấu 'seed' → không tự gửi lên (không đè hồ sơ thật của đội); bản của đội kéo về sẽ thay thế
       const seed = { _rv: 'seed', _dirty: 0 };

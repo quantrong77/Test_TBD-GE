@@ -10,17 +10,20 @@ export interface SignerBlock {
 
 /**
  * Khối ký cuối biên bản: Người thí nghiệm (trái) – Chỉ huy trực tiếp (phải).
- * Ô chưa ký điện tử vẫn in tên (thành viên / Chỉ huy của phiên) để ký tay trên bản in.
+ * Ô chưa ký điện tử vẫn in tên (người chịu trách nhiệm / Chỉ huy của phiên) để ký tay trên bản in.
+ * Đã ký điện tử thì chỉ in người đã ký (không in thêm tên dự kiến).
  */
-export function signerBlocks(s: Pick<Session, 'leader' | 'members'>, sigs: { slot: SignSlot; name: string; time: string }[]): SignerBlock[] {
+export function signerBlocks(s: Pick<Session, 'leader' | 'members' | 'crew'>, sigs: { slot: SignSlot; name: string; time: string }[]): SignerBlock[] {
   const of = (slot: SignSlot, fallback: string[]) => {
     const signed = sigs.filter((g) => g.slot === slot).map((g) => ({ name: g.name, signedAt: g.time }));
+    if (signed.length && (slot === 'leader' || s.crew?.responsible)) return signed;
     const unsigned = fallback.filter((n) => n && !signed.some((x) => samePerson(x.name, n))).map((name) => ({ name }));
     return [...signed, ...unsigned];
   };
   return [
-    { slot: 'tester', title: 'NGƯỜI THÍ NGHIỆM', people: of('tester', s.members.map(memberName)) },
-    { slot: 'leader', title: 'CHỈ HUY TRỰC TIẾP', people: sigs.some((g) => g.slot === 'leader') ? of('leader', []) : of('leader', [s.leader]) },
+    // ô Người thí nghiệm: chỉ người chịu trách nhiệm ký (phiên cũ chưa khai → in tên các thành viên)
+    { slot: 'tester', title: 'NGƯỜI THÍ NGHIỆM', people: of('tester', s.crew?.responsible ? [s.crew.responsible.name] : s.members.map(memberName)) },
+    { slot: 'leader', title: 'CHỈ HUY TRỰC TIẾP', people: of('leader', [s.crew?.leader?.name || s.leader]) },
   ];
 }
 

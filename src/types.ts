@@ -93,6 +93,40 @@ export interface GateDef {
   checks: { id: string; text: Text; timer?: number }[];
 }
 
+/** Đơn vị thí nghiệm (đầu biên bản) + cách đánh số biên bản. Quản trị thêm/sửa/xóa. */
+export interface Unit {
+  id: string;
+  /** Tên đơn vị cấp trên, vd "Trung tâm Sửa chữa, thí nghiệm điện 3" */
+  orgName: string;
+  /** Tên đơn vị thí nghiệm, vd "Đội Sửa chữa, thí nghiệm điện Lâm Đồng" */
+  name: string;
+  /** Mẫu số biên bản: {nn} = số thứ tự 2 chữ số, {yyyy} = năm */
+  reportFormat: string;
+  /** Số bắt đầu do Quản trị đặt, áp dụng cho năm numberYear; năm khác tự bắt đầu lại từ 01 */
+  numberStart: number;
+  numberYear: number;
+}
+
+/** Nhân viên thuộc đơn vị thí nghiệm – để chọn khi chuẩn bị phiên. */
+export interface Staff {
+  id: string;
+  unitId: string;
+  name: string;
+  title: string;
+  /** Bậc an toàn điện 1–5 */
+  safetyGrade: number;
+  /** Đã nghỉ / chuyển đơn vị: ẩn khỏi danh sách chọn, phiên cũ vẫn giữ tên */
+  inactive?: boolean;
+}
+
+/** Người trong phiên (bản chụp lúc tạo phiên – sửa danh sách nhân viên sau này không đổi biên bản cũ). */
+export interface CrewMember {
+  staffId?: string;
+  name: string;
+  title?: string;
+  safetyGrade?: number;
+}
+
 export interface Session {
   id: string;
   profileId: string;
@@ -107,6 +141,15 @@ export interface Session {
   /** bản chụp hồ sơ giàn & máy TN lúc tạo phiên – sửa hồ sơ sau này không đổi kết quả cũ */
   profileSnap?: Profile;
   instrumentSnap?: Instrument[];
+  /** Đơn vị thí nghiệm (bản chụp đầu biên bản) */
+  unitId?: string;
+  unitSnap?: Pick<Unit, 'orgName' | 'name' | 'reportFormat'>;
+  /** Số thứ tự biên bản trong năm (theo đơn vị) */
+  reportNo?: number;
+  /** Nhân sự chi tiết; `leader`/`members` vẫn giữ tên để tương thích dữ liệu cũ */
+  crew?: { leader?: CrewMember; responsible?: CrewMember; members: CrewMember[] };
+  /** Hạng mục thực hiện (itemId); không có = tất cả (phiên cũ) */
+  items?: string[];
 }
 
 export interface Measurement {

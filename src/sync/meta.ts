@@ -8,11 +8,13 @@ import type Dexie from 'dexie';
  *   - xóa → thêm tombstone (localStorage) để báo máy khác xóa theo
  */
 // thứ tự gửi: chữ ký sau cùng – để số đo/ảnh lên trước khi chữ ký Chỉ huy khóa biên bản trên máy chủ
-export const SYNC_TABLES = ['profiles', 'instruments', 'sessions', 'checks', 'measurements', 'photos', 'signatures'] as const;
+export const SYNC_TABLES = ['units', 'staff', 'profiles', 'instruments', 'sessions', 'checks', 'measurements', 'photos', 'signatures'] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
-/** Tên bảng trên Supabase. */
+/** Tên bảng trên máy chủ. */
 export const REMOTE_TABLE: Record<SyncTable, string> = {
+  units: 'units',
+  staff: 'staff',
   profiles: 'profiles',
   instruments: 'instruments',
   sessions: 'sessions',

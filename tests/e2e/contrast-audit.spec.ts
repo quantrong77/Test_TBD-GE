@@ -81,7 +81,8 @@ for (const theme of THEMES) {
     };
     // phiên + cổng an toàn
     await page.goto('#/session-new');
-    await page.locator('input[name=leader]').fill('Trần Văn C');
+    await page.locator('input[name=leaderText]').fill('Trần Văn C');
+    await page.locator('textarea[name=extra]').fill('Lê D, Kỹ sư, 4');
     await page.getByRole('button', { name: 'Tạo phiên' }).click();
     await expect(page).toHaveURL(/#\/session\/[^/]+$/);
     const sessionUrl = page.url();
@@ -107,7 +108,7 @@ for (const theme of THEMES) {
     await check('form 4.5.B (đạt + không đạt)');
     await page.waitForTimeout(700);
     await page.goto(sessionUrl);
-    await expect(page.locator('.progress-items')).toBeVisible();
+    await expect(page.locator('.phase-matrix')).toBeVisible();
     await check('trang phiên (tổng kết)');
     // chế độ từng bước (gate-visual cho 4.2)
     await page.goto('#/gate/gate-visual');

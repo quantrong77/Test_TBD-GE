@@ -14,7 +14,9 @@ import type { AppUser, RegisterProfile, ServerInfo, UserPatch } from './backend'
 export const SERVER_LABEL = 'Google Drive của đơn vị (Google Sheets + thư mục ảnh)';
 
 /** Phiên bản mã máy chủ (gas/Core.gs – SERVER_VERSION) mà bản app này cần. */
-export const REQUIRED_SERVER_VERSION = 2;
+export const REQUIRED_SERVER_VERSION = 3;
+/** Bảng chỉ có từ máy chủ bản 3 – máy chủ cũ: bỏ qua (giữ trên máy, gửi sau khi cập nhật). */
+const V3_TABLES = ['units', 'staff'];
 const OUTDATED_MSG =
   'Máy chủ Apps Script đang chạy mã cũ, chưa có chức năng này. Quản trị cần dán lại Core.gs và Code.gs mới vào Apps Script rồi Deploy → Manage deployments → New version (gas/README.md, mục 3).';
 
@@ -202,6 +204,13 @@ function base64ToBlob(b64: string, mime: string): Blob {
 }
 
 class GasRemote implements Remote {
+  private version = REQUIRED_SERVER_VERSION;
+  async prepare() {
+    this.version = (await serverVersion()).version;
+  }
+  supports(table: string) {
+    return this.version >= 3 || !V3_TABLES.includes(table);
+  }
   async pull(table: string, since: string | null): Promise<RemoteRow[]> {
     return (await call<{ rows: RemoteRow[] }>('pull', { table, since })).rows;
   }

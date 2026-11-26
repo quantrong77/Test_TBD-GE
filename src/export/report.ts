@@ -1,6 +1,7 @@
 import { items, CONTENT_VERSION, getGate } from '../content';
 import { calibOverdue } from '../calc/evaluate';
-import { sessionInstruments, testState, TYPE_LABEL, type SessionData } from '../domain/session';
+import { itemOn, sessionInstruments, testState, TYPE_LABEL, type SessionData } from '../domain/session';
+import { crewLabel, DEFAULT_UNIT, formatReportNo } from '../domain/units';
 import { db } from '../store/db';
 import { verifySignatures } from '../sign/sign';
 import { SLOT_LABEL } from '../auth/roles';
@@ -33,8 +34,9 @@ export async function buildReport(d: SessionData) {
     ['Giàn tụ', p.bank],
     ['Ngày thí nghiệm', fmtDate(s.date)],
     ['Loại thí nghiệm', TYPE_LABEL[s.type]],
-    ['Chỉ huy trực tiếp', s.leader],
-    ['Thành viên', s.members.join(', ')],
+    ['Chỉ huy trực tiếp', crewLabel(s.crew?.leader ?? { name: s.leader })],
+    ...(s.crew?.responsible ? [['Người chịu trách nhiệm thí nghiệm', crewLabel(s.crew.responsible)] as [string, string]] : []),
+    ['Thành viên', (s.crew ? s.crew.members.map(crewLabel) : s.members).join('; ')],
     ['Điện dung danh định 1 pha', `${p.nominalTotal_uF} µF`],
     ['Ngưỡng ΔC alarm / bypass', `${p.unbAlarm_pct} % / ${p.unbBypass_pct} %`],
     ['Khe hở TAG (hồ sơ)', `${p.tagGap_mm} mm`],
@@ -43,8 +45,10 @@ export async function buildReport(d: SessionData) {
   const gates = checks
     .filter((c) => c.confirmedBy)
     .map((c) => [getGate(c.gateId)?.title ?? c.gateId, c.confirmedBy!, fmtTime(c.timestamp!), timedNote(c)]);
+  const notDone = items.filter((it) => !itemOn(s, it.id));
+  if (notDone.length) info.push(['Hạng mục không thực hiện', notDone.map((it) => `${it.id.slice(2)}. ${it.short}`).join('; ')]);
   const sections: ReportSection[] = [];
-  for (const it of items)
+  for (const it of items.filter((x) => itemOn(s, x.id)))
     for (const t of it.tests) {
       const { rows } = testState(d, it.id, t.id);
       if (rows.length) sections.push({ itemId: it.id, itemTitle: `${it.id} ${it.title}`, testTitle: t.title, rows });
@@ -66,7 +70,9 @@ export async function buildReport(d: SessionData) {
       hash: sig.hash,
       check: valid ? 'Khớp nội dung lúc ký' : 'NỘI DUNG ĐÃ THAY ĐỔI SAU KHI KÝ',
     }));
-  return { s, p, info, instruments, gates, sections, summary, signatures, signers: signerBlocks(s, signatures), resText, contentVersion: CONTENT_VERSION };
+  const unit = s.unitSnap ?? DEFAULT_UNIT;
+  const header = { orgName: unit.orgName, unitName: unit.name, reportNo: formatReportNo(unit.reportFormat, s.reportNo, s.date) };
+  return { s, p, header, info, instruments, gates, sections, summary, signatures, signers: signerBlocks(s, signatures), resText, contentVersion: CONTENT_VERSION };
 }
 
 export const fileBase = (d: SessionData) => `BB_TBD_${d.profile.bank}_${d.profile.station}_${d.session.date}`.replace(/[^\p{L}\p{N}_-]+/gu, '_');
