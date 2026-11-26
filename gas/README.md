@@ -74,7 +74,7 @@ Cả hai giá trị này **công khai được** (nằm trong mã app). Thứ b�
 | Xem dữ liệu của đội | ✓ | ✓ | ✓ | ✓ |
 | Tạo / sửa phiên thí nghiệm | ✓ | ✓ | | |
 | Số đo, cổng an toàn, ảnh | ✓ | ✓ | ✓ | |
-| Ký ô Người thí nghiệm / Chỉ huy / QLVH | QLVH | cả 3 | TN, QLVH | QLVH |
+| Ký ô Người thí nghiệm / Chỉ huy trực tiếp | | cả 2 | Người TN | |
 | **Cấu hình**: hồ sơ giàn, máy TN, mốc xu hướng, nhập JSON | ✓ | | | |
 | Quản lý người dùng, hủy chữ ký | ✓ | | | |
 

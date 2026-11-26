@@ -319,7 +319,6 @@ function canSign(u, d) {
   if (!d || d.userId !== u.user_id) return false;
   if (d.slot === 'tester') return u.role === 'tester' || u.role === 'leader';
   if (d.slot === 'leader') return u.role === 'leader';
-  if (d.slot === 'qlvh') return true; // mọi thành viên đã duyệt
   return false;
 }
 

@@ -251,7 +251,8 @@ describe('phân quyền và ký xác nhận điện tử', () => {
     expect(R.can('users.manage', me('admin'))).toBe(true);
     expect(R.canSign('leader', me('tester'))).toBe(false);
     expect(R.canSign('leader', me('leader'))).toBe(true);
-    expect(R.canSign('qlvh', me('viewer'))).toBe(true);
+    expect(R.canSign('tester', me('viewer'))).toBe(false);
+    expect(R.canSign('tester', me('tester'))).toBe(true);
     expect(R.canSign('tester', me('admin'))).toBe(false);
   });
 

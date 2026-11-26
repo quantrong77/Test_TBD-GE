@@ -132,26 +132,36 @@ export async function buildPdf(d: SessionData): Promise<Blob> {
     }
   }
 
-  // Chữ ký
-  doc.addPage();
-  doc.setFont(FONT, 'bold').setFontSize(10);
-  const cols = ['CHỈ HUY TRỰC TIẾP', 'NGƯỜI THÍ NGHIỆM', 'ĐẠI DIỆN ĐƠN VỊ QLVH'];
-  cols.forEach((c, i) => doc.text(c, M + ((W - 2 * M) / 3) * (i + 0.5), 30, { align: 'center' }));
-  doc.setFont(FONT, 'normal').setFontSize(9);
-  const slots = ['leader', 'tester', 'qlvh'];
-  slots.forEach((slot, i) => {
-    const x = M + ((W - 2 * M) / 3) * (i + 0.5);
-    const signed = r.signatures.filter((g) => g.slot === slot);
-    if (signed.length) {
-      doc.setFont(FONT, 'bold').text('Đã ký điện tử', x, 38, { align: 'center' });
-      doc.setFont(FONT, 'normal');
-      signed.forEach((g, k) => doc.text(g.name, x, 46 + k * 6, { align: 'center' }));
-    } else if (slot === 'leader') doc.text(r.s.leader, x, 60, { align: 'center' });
+  // Chữ ký: Người thí nghiệm (trái) – Chỉ huy trực tiếp (phải). Ô chưa ký điện tử in sẵn tên để ký tay.
+  const lineH = 5;
+  const blockH = (b: (typeof r.signers)[number]) => b.people.reduce((h, p) => h + (p.signedAt ? 3 * lineH : 18 + lineH), 0);
+  const need = 24 + Math.max(...r.signers.map(blockH));
+  let sy = ensure(need, photos.length ? H : y() + 4); // sau trang ảnh → luôn sang trang mới
+  doc.setFont(FONT, 'normal').setFontSize(9).text(`${r.p.station}, ngày ${fmtDate(r.s.date)}`, W - M, sy, { align: 'right' });
+  sy += 8;
+  const colW = (W - 2 * M) / r.signers.length;
+  r.signers.forEach((b, i) => {
+    const x = M + colW * (i + 0.5);
+    let cy = sy;
+    doc.setFont(FONT, 'bold').setFontSize(10).text(b.title, x, cy, { align: 'center' });
+    cy += lineH;
+    doc.setFont(FONT, 'normal').setFontSize(8).text('(Ký, ghi rõ họ tên)', x, cy, { align: 'center' });
+    cy += lineH + 2;
+    doc.setFontSize(9.5);
+    for (const p of b.people) {
+      if (p.signedAt) {
+        doc.setFont(FONT, 'normal').setFontSize(8).setTextColor(46, 125, 50).text(`Đã ký điện tử ${p.signedAt}`, x, cy, { align: 'center' });
+        doc.setTextColor(0);
+        cy += lineH;
+      } else cy += 18; // chỗ ký tay
+      doc.setFont(FONT, 'bold').setFontSize(9.5).text(p.name, x, cy, { align: 'center' });
+      cy += lineH + (p.signedAt ? lineH : 0);
+    }
   });
   if (r.signatures.length) {
     autoTable(doc, {
       ...base,
-      startY: 75,
+      startY: ensure(30, sy + need - 4),
       head: [['Ô ký', 'Người ký', 'Thời điểm', 'Mã kiểm tra nội dung (SHA-256)', 'Kiểm tra']],
       body: clean(r.signatures.map((g) => [g.label, `${g.name}\n${g.email}`, g.time, g.hash, g.check])),
       styles: { ...base.styles, fontSize: 7.5 },

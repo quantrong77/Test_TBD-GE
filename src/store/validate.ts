@@ -68,7 +68,7 @@ export function vPhotoMeta(p: unknown) {
   check(!!o && isId(o.id) && isId(o.sessionId) && isStr(o.itemId, 10) && isStr(o.caption, 500) && isNum(o.ts), 'ảnh');
 }export function vSignature(s: unknown) {
   const o = s as Record<string, unknown>;
-  check(!!o && isStr(o.id, 300) && isId(o.sessionId) && ['tester', 'leader', 'qlvh'].includes(o.slot as string), 'chữ ký');
+  check(!!o && isStr(o.id, 300) && isId(o.sessionId) && ['tester', 'leader', 'qlvh'].includes(o.slot as string), 'chữ ký'); // 'qlvh': bản sao lưu cũ – nhận nhưng không hiển thị
   check(isStr(o.userId, 64) && isStr(o.email, 200) && isStr(o.name, 200) && ['admin', 'leader', 'tester', 'viewer'].includes(o.role as string), 'chữ ký – người ký');
   check(isNum(o.signedAt) && isStr(o.hash, 128) && /^[0-9a-f]{64}$/.test(o.hash as string), 'chữ ký – mã nội dung');
 }

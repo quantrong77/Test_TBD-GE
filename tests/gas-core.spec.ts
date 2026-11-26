@@ -197,7 +197,7 @@ describe('chữ ký và khóa biên bản', () => {
     expect(up(t.token, 'signatures', [sig('x2', t.me.userId, 'leader')]).code).toBe('refused');
     expect(up(t.token, 'signatures', [sig('x3', l.me.userId, 'tester')]).code).toBe('refused'); // ký hộ người khác
     expect(up(l.token, 'signatures', [sig('x4', l.me.userId, 'leader')]).ok).toBe(true);
-    expect(up(t.token, 'signatures', [sig('x5', t.me.userId, 'qlvh')]).ok).toBe(true);
+    expect(up(t.token, 'signatures', [sig('x5', t.me.userId, 'qlvh')]).code).toBe('refused'); // ô QLVH đã bỏ
   });
 
   it('chữ ký Chỉ huy khóa phiên, số đo, kể cả lệnh xóa; mỗi phiên chỉ 1 chữ ký Chỉ huy', () => {

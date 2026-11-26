@@ -139,7 +139,7 @@ async function photosBlock(
 }
 
 // ---------- Ký biên bản ----------
-const SLOTS: SignSlot[] = ['tester', 'leader', 'qlvh'];
+const SLOTS: SignSlot[] = ['tester', 'leader'];
 
 function signBlock(sigs: SignatureCheck[]): string {
   const me = getMe();

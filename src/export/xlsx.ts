@@ -1,9 +1,21 @@
 import * as XLSX from 'xlsx';
-import { buildReport } from './report';
+import { buildReport, type SignerBlock } from './report';
 import { items } from '../content';
 import type { SessionData } from '../views/Session';
 
-const sheetName = (s: string) => s.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31);
+/** Bảng ký: mỗi cột một ô ký, mỗi dòng một người ("Họ tên – đã ký điện tử lúc …" hoặc để trống ký tay). */
+function signerRows(bs: SignerBlock[]): string[][] {
+  const n = Math.max(0, ...bs.map((b) => b.people.length));
+  return Array.from({ length: n }, (_, i) => [
+    i === 0 ? '(Ký, ghi rõ họ tên)' : '',
+    ...bs.map((b) => {
+      const p = b.people[i];
+      return p ? (p.signedAt ? `${p.name} – đã ký điện tử ${p.signedAt}` : p.name) : '';
+    }),
+  ]);
+}
+
+const sheetName =(s: string) => s.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31);
 
 export async function buildXlsx(d: SessionData): Promise<Blob> {
   const r = await buildReport(d);
@@ -26,8 +38,11 @@ export async function buildXlsx(d: SessionData): Promise<Blob> {
     [],
     ['Kết luận, kiến nghị', r.s.conclusion ?? ''],
     [],
-    ['Ô ký', 'Người ký', 'Thời điểm', 'Mã kiểm tra nội dung (SHA-256)', 'Kiểm tra'],
-    ...r.signatures.map((g) => [g.label, `${g.name} (${g.email})`, g.time, g.hash, g.check]),
+    ['XÁC NHẬN', ...r.signers.map((b) => b.title)],
+    ...signerRows(r.signers),
+    ...(r.signatures.length
+      ? [[], ['Ô ký', 'Người ký', 'Thời điểm', 'Mã kiểm tra nội dung (SHA-256)', 'Kiểm tra'], ...r.signatures.map((g) => [g.label, `${g.name} (${g.email})`, g.time, g.hash, g.check])]
+      : []),
   ]);
   info['!cols'] = [{ wch: 30 }, { wch: 50 }, { wch: 20 }];
   XLSX.utils.book_append_sheet(wb, info, 'Thông tin');

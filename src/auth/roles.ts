@@ -48,7 +48,6 @@ export const ROLE_LABEL: Record<Role, string> = {
 export const SLOT_LABEL: Record<SignSlot, string> = {
   tester: 'Người thí nghiệm',
   leader: 'Chỉ huy trực tiếp',
-  qlvh: 'Đại diện đơn vị QLVH',
 };
 
 export type Action =
@@ -79,10 +78,10 @@ const MATRIX: Record<Action, Role[]> = {
 
 /** Ô ký mà mỗi vai trò được ký (khớp hàm can_sign trên máy chủ). */
 export const SIGN_SLOTS: Record<Role, SignSlot[]> = {
-  admin: ['qlvh'],
-  leader: ['tester', 'leader', 'qlvh'],
-  tester: ['tester', 'qlvh'],
-  viewer: ['qlvh'],
+  admin: [],
+  leader: ['tester', 'leader'],
+  tester: ['tester'],
+  viewer: [],
 };
 
 /** Đã đăng nhập và được duyệt vào một đội? */
@@ -99,5 +98,5 @@ export function can(action: Action, me: Me | null = getMe()): boolean {
 }
 
 export function canSign(slot: SignSlot, me: Me | null = getMe()): boolean {
-  return isMember(me) && SIGN_SLOTS[me.role].includes(slot);
+  return isMember(me) && (SIGN_SLOTS[me.role] ?? []).includes(slot);
 }

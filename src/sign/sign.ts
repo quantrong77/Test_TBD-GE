@@ -23,7 +23,7 @@ async function sha256(s: string): Promise<string> {
 /**
  * Mã kiểm tra nội dung biên bản (SHA-256).
  * Người thí nghiệm ký số liệu (không gồm kết luận – Chỉ huy viết sau);
- * Chỉ huy và QLVH ký toàn bộ, gồm kết luận.
+ * Chỉ huy trực tiếp ký toàn bộ, gồm kết luận.
  */
 export async function contentHash(sessionId: string, slot: SignSlot): Promise<string> {
   const s = await db.sessions.get(sessionId);
