@@ -491,7 +491,7 @@ export function renderTrendSvg(
   const bypassY = bypassLimit ? scaleY(bypassLimit) : null;
 
   return `
-  <svg viewBox="0 0 ${W} ${H}" width="100%" class="trend-chart-svg" style="background: rgba(15,23,42,0.65); border-radius: 8px; border: 1px solid var(--c-border, #334155); display:block; font-family: sans-serif;">
+  <svg viewBox="0 0 ${W} ${H}" width="100%" class="trend-chart-svg">
     <!-- Tiêu đề & Chú giải -->
     <g transform="translate(${padLeft}, 25)">
       <text x="0" y="0" fill="#f8fafc" font-size="13" font-weight="bold">${metric.shortTitle} (${metric.unit}) qua các năm</text>

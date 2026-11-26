@@ -99,7 +99,7 @@ export const Users: View = async (r, el) => {
   el.innerHTML = `
     <div id="outdated"></div>
     <div class="filter-tabs" role="group" aria-label="Lọc theo trạng thái" id="tabs"></div>
-    <label class="field" style="margin-top:8px"><span>Tìm theo tên, email, đơn vị</span><input type="search" id="q" autocomplete="off"></label>
+    <label class="field mt-8"><span>Tìm theo tên, email, đơn vị</span><input type="search" id="q" autocomplete="off"></label>
     <div id="list"><p class="small muted">Đang tải…</p></div>`;
 
   el.querySelector('#tabs')!.addEventListener('click', (e) => {

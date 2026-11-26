@@ -39,7 +39,7 @@ function testBlock(itemId: string, t: Test, sid: string | null): string {
     : '';
   const checklist = t.checklist ? `<ul class="clean">${t.checklist.map((c) => `<li>☐ ${rich(c)}</li>`).join('')}</ul>` : '';
   return `<div class="card" id="test-${esc(t.id)}">
-    <h3 style="margin-top:0">${esc(t.title)}</h3>
+    <h3 class="mt-0">${esc(t.title)}</h3>
     ${(t.purpose ?? []).map((p) => `<p>${rich(p)}</p>`).join('')}
     ${(t.callouts ?? []).map(callout).join('')}
     ${checklist}${steps}
@@ -86,7 +86,7 @@ export const ItemView: View = async (_r, el) => {
       ${(item.callouts ?? []).map(callout).join('')}
       ${gateStatus
         .map(
-          ([g, ok]) => `<a class="card row" href="#/gate/${g}" style="text-decoration:none;color:inherit"><span>${ok ? '✅' : '⚠️'} ${esc(getGate(g)?.title ?? g)}</span><span class="pill">${ok ? 'Đã xác nhận' : 'Chưa'}</span></a>`,
+          ([g, ok]) => `<a class="card row link-plain" href="#/gate/${g}"><span>${ok ? '✅' : '⚠️'} ${esc(getGate(g)?.title ?? g)}</span><span class="pill">${ok ? 'Đã xác nhận' : 'Chưa'}</span></a>`,
         )
         .join('')}
     </section>

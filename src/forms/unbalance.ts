@@ -53,7 +53,7 @@ export const unbalanceForm: FormDef = {
       `<details class="card"><summary>Dòng từng string – ${g === 'G1' ? 'Group 1 (Stack 1+2)' : 'Group 2 (Stack 3+4)'} (A)</summary>
         ${renderCapMatrix(g as 'G1' | 'G2', v, ph)}
         <div class="bars" data-bars="${g}" aria-hidden="true"></div>
-        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px">${Array.from(
+        <div class="grid-4 mt-8">${Array.from(
           { length: p.stringsPerGroup || 24 },
           (_, i) => `<label class="small">S${i + 1}<input inputmode="decimal" data-k="${ph}.${g}.s${i + 1}" value="${esc(v[`${ph}.${g}.s${i + 1}`] ?? '')}" aria-label="${g} string ${i + 1}"></label>`,
         ).join('')}</div>
@@ -64,7 +64,7 @@ export const unbalanceForm: FormDef = {
       ${numRow(v, `${ph}.IG1`, 'IG1 (A)', 'Group 1 – vị trí 1')}
       ${numRow(v, `${ph}.IG2`, 'IG2 (A)', 'Group 2 – vị trí 2')}
       <div class="inrow"><span class="lbl">IΔ×10 đọc được<small>Vị trí 4 – = 10 × dòng vi sai thực</small></span>
-        <div style="display:grid;grid-template-columns:1fr 38px 84px;gap:6px"><input inputmode="decimal" data-k="${ph}.Idx10" value="${esc(v[`${ph}.Idx10`] ?? '')}" aria-label="IΔ×10">
+        <div class="grid-idx"><input inputmode="decimal" data-k="${ph}.Idx10" value="${esc(v[`${ph}.Idx10`] ?? '')}" aria-label="IΔ×10">
         <button type="button" class="btn-ocr-scan" data-scan-for="${ph}.Idx10" title="Quét số đo bằng camera (OCR)" aria-label="Quét số cho IΔ×10">📷</button>
         <select data-k="${ph}.unit" aria-label="Đơn vị IΔ×10">${UNITS.map(([o, l]) => `<option value="${o}"${(v[`${ph}.unit`] || 'mA') === o ? ' selected' : ''}>${l}</option>`).join('')}</select></div></div>
       <div class="card calc-out" data-out="calc">—</div>
@@ -104,7 +104,7 @@ export const unbalanceForm: FormDef = {
         if (analysis && analysis.count >= 3) {
           statsBox.innerHTML = `Đã đo: <b>${analysis.count}/24</b> chuỗi · Dòng TB <b>Ī = ${fmt(analysis.mean, 2)} A</b> (σ = ${fmt(analysis.sd, 3)} A)<br>
           Dải bình thường (Ī ± 2σ): <b>${fmt(analysis.lowerLimit, 2)} – ${fmt(analysis.upperLimit, 2)} A</b>
-          ${outl.length ? `<br><b style="color:var(--c-danger-fg)">⚠️ Có ${outl.length} chuỗi vượt ngưỡng bất thường (> ${fmt(analysis.upperLimit, 2)} A)</b>` : ''}`;
+          ${outl.length ? `<br><b class="text-danger">⚠️ Có ${outl.length} chuỗi vượt ngưỡng bất thường (> ${fmt(analysis.upperLimit, 2)} A)</b>` : ''}`;
         } else {
           statsBox.innerHTML = '<span class="muted">Nhập tối thiểu 3 chuỗi để phân tích thống kê và hiển thị chuỗi bất thường (2σ).</span>';
         }
@@ -135,9 +135,9 @@ export const unbalanceForm: FormDef = {
             const loc = stringLocation(g as 'G1' | 'G2', i);
             return `<b>S${i + 1}</b> (${loc.label}): ${vals[i]} A`;
           });
-          o.innerHTML = `<div class="callout danger" style="margin-top:6px">
+          o.innerHTML = `<div class="callout danger mt-6">
             <b>⚠️ Chuỗi lệch dòng (> TB + 2σ):</b><br>${details.join('<br>')}
-            <div class="small" style="margin-top:4px">Kiểm tra ngay lực xiết bu-lông, mắt nối tiếp xúc và đo điện dung từng bình tụ trong chuỗi trên.</div>
+            <div class="small mt-4">Kiểm tra ngay lực xiết bu-lông, mắt nối tiếp xúc và đo điện dung từng bình tụ trong chuỗi trên.</div>
           </div>`;
         } else {
           o.innerHTML = vals.some(Number.isFinite) ? 'Không có string bất thường.' : '';

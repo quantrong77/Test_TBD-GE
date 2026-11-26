@@ -56,7 +56,7 @@ export const CalcUnbalance: View = async (_r, el) => {
       <button class="btn secondary" type="button" id="clr">Xóa số</button></div>
     <div id="body"></div>
     <details class="card"><summary>Dung lượng danh định theo hồ sơ</summary><div id="nom"></div></details>
-    <div class="btn-row" style="margin:16px 0 6px">
+    <div class="btn-row mt-12 mb-6">
       <button class="btn big block" type="button" id="save">💾 Lưu</button>
     </div>
     <div id="save-msg"></div>
@@ -187,9 +187,9 @@ export const CalcUnbalance: View = async (_r, el) => {
     toast('✓ Đã điền kết quả vào mục 1.B của biên bản');
     const msg = el.querySelector('#save-msg');
     if (msg) {
-      msg.innerHTML = `<div class="callout pass" style="margin:8px 0">
+      msg.innerHTML = `<div class="callout pass my-8">
         ✓ <b>Đã điền thành công vào mục 1.B</b> của phiên thí nghiệm.<br>
-        <a class="btn secondary" href="#/session/${esc(sid)}/form/4.1/unbalance" style="margin-top:6px;display:inline-block">📋 Xem mục 1.B trong biên bản →</a>
+        <a class="btn secondary mt-6 inline-block" href="#/session/${esc(sid)}/form/4.1/unbalance">📋 Xem mục 1.B trong biên bản →</a>
       </div>`;
     }
   });

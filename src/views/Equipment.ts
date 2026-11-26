@@ -22,8 +22,8 @@ function quickSteps(eqId: string, s: EquipSection): string {
     .steps!.map((st, i) => {
       const prev = s.steps![i - 1];
       const waitOn = prev?.lock && prev.timer ? `data-wait="eq:${eqId}:${prev.n}" data-wait-sec="${prev.timer}"` : '';
-      return `<div class="card" style="margin:8px 0">
-        <label class="check" style="border:0"><input type="checkbox" data-n="${st.n}" ${waitOn}><span><b>${st.n}.</b> ${rich(st.text)}</span></label>
+      return `<div class="card my-8">
+        <label class="check borderless"><input type="checkbox" data-n="${st.n}" ${waitOn}><span><b>${st.n}.</b> ${rich(st.text)}</span></label>
         ${st.timer ? timerHtml(`eq:${eqId}:${st.n}`, st.timer, st.lock ? 'Bước tiếp chỉ tích được khi hết giờ' : 'Đếm thời gian chờ') : ''}
       </div>`;
     })
@@ -43,7 +43,7 @@ function section(eqId: string, s: EquipSection, monitor: boolean): string {
     ${s.images ? gallery(s.images, 'eq-' + s.id) : ''}
     ${
       s.cards
-        ? `<div class="grid2">${s.cards.map((c) => `<div class="card" style="margin:0"><div style="font-size:24px" aria-hidden="true">${esc(c.icon)}</div><b>${esc(c.name)}</b><div class="small">${rich(c.desc)}</div></div>`).join('')}</div>`
+        ? `<div class="grid2">${s.cards.map((c) => `<div class="card m-0"><div class="icon-lg" aria-hidden="true">${esc(c.icon)}</div><b>${esc(c.name)}</b><div class="small">${rich(c.desc)}</div></div>`).join('')}</div>`
         : ''
     }
     ${s.table ? table(s.table.head, s.table.rows) : ''}
@@ -61,8 +61,8 @@ export const EquipmentView: View = (_r, el) => {
     el.innerHTML = `<p>Thư viện <b>2 máy thí nghiệm</b> dùng trong hạng mục 5.</p>
       ${equipment
         .map(
-          (e) => `<a class="card" href="#/equipment/${e.id}" style="display:block;text-decoration:none;color:inherit">
-          <b style="font-size:var(--fs-h2)">${Icons.testSet} ${esc(e.name)}</b>
+          (e) => `<a class="card block link-plain" href="#/equipment/${e.id}">
+          <b class="h2-size">${Icons.testSet} ${esc(e.name)}</b>
           <div class="small muted">Dùng ở: ${e.usedIn.map((u) => esc(u.label)).join('; ')}</div>
           <div class="small muted">Nguồn: ${esc(e.docRef)}</div></a>`,
         )

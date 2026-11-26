@@ -21,7 +21,7 @@ export const Sessions: View = async (_r, el) => {
       list.length
         ? list
             .map(
-              (s) => `<a class="card" href="#/session/${esc(s.id)}" style="display:block;text-decoration:none;color:inherit">
+              (s) => `<a class="card block link-plain" href="#/session/${esc(s.id)}">
             <div class="row"><b>${esc(s.profileId)}</b>${s.id === active ? '<span class="pill">● Đang làm</span>' : s.status === 'done' ? '<span class="pill">Đã kết thúc</span>' : ''}</div>
             <div class="small muted">${esc(fmtDate(s.date))} · ${esc(TYPE_LABEL[s.type])} · Chỉ huy: ${esc(s.leader)}</div></a>`,
             )
@@ -115,7 +115,7 @@ export const Profiles: View = async (_r, el) => {
   el.innerHTML = `${can('profile.edit') ? '<div class="btn-row"><a class="btn" href="#/profile/new">＋ Hồ sơ mới</a></div>' : ''}
     ${list
       .map(
-        (p) => `<a class="card" href="#/profile/${encodeURIComponent(p.id)}" style="display:block;text-decoration:none;color:inherit"><b>${esc(p.bank)} – ${esc(p.station)}</b>
+        (p) => `<a class="card block link-plain" href="#/profile/${encodeURIComponent(p.id)}"><b>${esc(p.bank)} – ${esc(p.station)}</b>
         <div class="small muted">Khe hở TAG ${esc(p.tagGap_mm)} mm · ΔC alarm ${esc(p.unbAlarm_pct)} % / bypass ${esc(p.unbBypass_pct)} % · VAP ${esc(p.vap?.mC?.[0])}±${esc(p.vap?.mC?.[1])} mC</div></a>`,
       )
       .join('')}`;
@@ -162,7 +162,7 @@ export const ProfileEdit: View = async (_r, el) => {
     ${PF.map(([k, l, t]) => `<label class="field"><span>${esc(l)}</span><input name="${k}" ${t === 'num' ? 'inputmode="decimal"' : 'type="text"'} value="${esc(flat[k] ?? '')}" required></label>`).join('')}
     <label class="field"><span>Ghi chú</span><textarea name="note">${esc(p.note ?? '')}</textarea></label>
     ${can('profile.edit') ? `<button class="btn block big" type="submit">Lưu hồ sơ</button>
-    ${isNew ? '' : '<button class="btn danger block" type="button" id="del" style="margin-top:10px">Xóa hồ sơ</button>'}` : '<p class="small muted">Tài khoản này chỉ xem hồ sơ giàn.</p>'}
+    ${isNew ? '' : '<button class="btn danger block mt-12" type="button" id="del">Xóa hồ sơ</button>'}` : '<p class="small muted">Tài khoản này chỉ xem hồ sơ giàn.</p>'}
   </form>`;
   const f = el.querySelector<HTMLFormElement>('#f')!;
   f.addEventListener('submit', async (e) => {

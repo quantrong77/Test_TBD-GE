@@ -11,14 +11,14 @@ function compareForm(fields: { k: string; label: string; unit: string; compare?:
     phased: true,
     render(v, _p, ph, prev) {
       return `
-        <div class="card" style="margin-bottom:10px">
+        <div class="card mb-8">
           ${numRow(v, `${ph}.t`, 'Nhiệt độ môi trường t (°C)', 'Dùng tự động quy đổi Rcd về 20°C và Rdc về 75°C', '', '25')}
           ${numRow(v, 'flagPct', 'Ngưỡng cờ bất thường Δ (%)', 'So với lần trước – người dùng đặt', '', '20')}
         </div>
         ${fields
           .filter((f) => f.k !== 't')
           .map(
-            (f) => `<div class="card" style="margin:8px 0"><b>${esc(f.label)} (${esc(f.unit)})</b>
+            (f) => `<div class="card my-8"><b>${esc(f.label)} (${esc(f.unit)})</b>
             ${numRow(v, `${ph}.${f.k}`, 'Lần này')}
             ${f.compare === false ? '' : numRow(v, `${ph}.${f.k}_prev`, 'Lần trước', prev?.[`${ph}.${f.k}`] ? `Phiên trước: ${prev[`${ph}.${f.k}`]}` : '')}
             <div data-temp-corr="${ph}.${f.k}"></div>

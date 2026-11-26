@@ -23,7 +23,7 @@ export const injectForm: FormDef = {
       ${selRow(v, `${ph}.CT9B`, 'CT9B – 2 đèn GFOI Fiber Active sáng')}
       <h3>Bước 2 – Đóng aptomat, bơm lần lượt</h3>
       ${CT_ROWS.map(
-        (c) => `<div class="card" style="margin:8px 0"><b>${esc(c.label)}</b><div class="small muted">Bơm ${c.inj} A · vòng ${c.turns} · kỳ vọng ${esc(thDesc(c.th, p))} · HMI ${c.hmi}</div>
+        (c) => `<div class="card my-8"><b>${esc(c.label)}</b><div class="small muted">Bơm ${c.inj} A · vòng ${c.turns} · kỳ vọng ${esc(thDesc(c.th, p))} · HMI ${c.hmi}</div>
           ${numRow(v, `${ph}.${c.id}.a`, 'HMI A (A)', '', c.th)}${numRow(v, `${ph}.${c.id}.b`, 'HMI B (A)', '', c.th)}</div>`,
       ).join('')}
       <p class="small muted">CT5: Not Used.</p>`;

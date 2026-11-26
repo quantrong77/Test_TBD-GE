@@ -2,7 +2,7 @@
 
 > **Mục đích:** Nguồn tri thức duy nhất (Single Source of Truth) về nghiệp vụ, kiến trúc, quy tắc an toàn của **TBD-GE Field**, kèm **luồng sử dụng mục tiêu** và **kế hoạch refactor toàn bộ**. Dành cho kỹ sư phát triển, chuyên gia thí nghiệm và AI agent.
 >
-> **Cập nhật:** 26/11/2026 – nhánh `refactor/field-workflow` (tách từ `main` @ `54bb83d`), app `1.1.0`.
+> **Cập nhật:** 26/11/2026 – nhánh `refactor/field-workflow` (tách từ `main` @ `54bb83d`), app `1.1.0`. Đã xong R0–R3.
 >
 > **Cách đọc:** Phần A = hiện trạng (đúng với mã nguồn). Phần B = đích đến (luồng, nhập liệu, mẫu BBTN). Phần C = kế hoạch refactor theo giai đoạn, mỗi giai đoạn có tiêu chí nghiệm thu.
 
@@ -125,29 +125,31 @@
 content/   items, thresholds, safety, equipment, overview, tools, cycle, review, images, profiles.seed, help (.json)
 src/
   main.ts router.ts content.ts types.ts ui.ts settings.ts pwa.ts
-  forms.ts            # 9 biểu mẫu: render / live / rows (620 dòng – sẽ tách, xem C)
+  domain/session.ts   # SessionData, loadSessionData, testState, itemState, TYPE_LABEL (R1)
+  forms/              # index (FORMS, formFor, evaluateTest), types, inputs, checklist, unbalance,
+                      # compare (mov, reactor), bushing, tag (gap, vap, trigger, ct10), inject (R2)
   auth/               # roles, session, gate, notify
   calc/               # unbalance, evaluate, isolation, units, temp-correction, trend, ocr, watermark
   components/         # Chrome, Icons, Timer, OcrModal, ImageViewer, UserMenu
   export/             # report (mô hình biên bản), signers (khối ký), pdf, xlsx, json, exporters
   sign/ store/ sync/ styles/ views/
 gas/       Core.gs Code.gs appsscript.json README.md
-tests/     calc, sync, gas-core, auth-ui, signers (.spec.ts) + e2e/ (Playwright Pixel 7)
+tests/     calc, sync, gas-core, auth-ui, signers, architecture, forms (snapshot) (.spec.ts) + e2e/ (Playwright Pixel 7)
 ```
 
 ### A5.8. Lệnh
 ```bash
 npm run dev        # http://localhost:5173
-npm test           # vitest – 5 file, 108 test (26/11/2026)
+npm test           # vitest – 7 file, 122 test (26/11/2026)
 npm run build      # tsc + vite build PWA
 npm run test:e2e   # Playwright tự build bản dùng-một-mình (VITE_GAS_URL rỗng); 25 test
 npm run contrast   # kiểm tra tương phản WCAG các chủ đề
 ```
 
 ### A5.9. Nợ kỹ thuật đã thấy (đầu vào cho Phần C)
-1. **Phân tầng ngược:** `export/report.ts` import `loadSessionData`, `testState`, `TYPE_LABEL` từ `views/` → xuất biên bản phụ thuộc màn hình.
-2. **File lớn, HTML lồng nhiều tầng:** `forms.ts` 620, `calc/trend.ts` 592, `views/Session.ts` 462 (gộp chi tiết phiên + biểu mẫu + ảnh + ký).
-3. **CSS nội tuyến** (`style="…"`) rải trong views/forms → khó đổi theme, khó kiểm tra tương phản.
+1. ~~Phân tầng ngược `export/` → `views/`~~ – đã sửa ở R1; `tests/architecture.spec.ts` chặn tái phát.
+2. **File lớn:** ~~`forms.ts` 620~~ (đã tách ở R2); còn `calc/trend.ts` 592, `views/Session.ts` ~460 (gộp chi tiết phiên + biểu mẫu + ảnh + ký → R5).
+3. ~~CSS nội tuyến~~ – R3 đã chuyển sang class trong `base.css` (chỉ còn 2 kích thước tính động: thanh tiến độ, cột biểu đồ chuỗi).
 4. **Con người là chuỗi tự do:** `session.leader`, `session.members`, `gate.confirmedBy` là text; không liên kết tài khoản ký → tên trên chữ ký điện tử và tên in có thể lệch.
 5. **Thứ tự nhập theo tài liệu GE (1→7)**, không theo vị trí làm việc thực tế; không có chỉ báo "còn thiếu ô nào" cho từng pha.
 6. **Ngưỡng xu hướng viết cứng** trong `METRIC_DEFS`; `trendHistory` chưa đồng bộ máy chủ.
@@ -235,9 +237,9 @@ VII. Xác nhận                                   <Trạm>, ngày …
 | GĐ | Nội dung | Tệp chính | Nghiệm thu |
 | :-: | :-- | :-- | :-- |
 | **R0** ✅ | Bỏ ô ký QLVH; khối ký 2 cột Người TN – CHTT, in tên để ký tay | `types`, `roles`, `sign`, `export/signers|pdf|xlsx|report`, `gas/Core.gs` | `tests/signers.spec.ts`; e2e xuất PDF; máy chủ từ chối `qlvh` |
-| **R1** | **Tầng domain:** chuyển `loadSessionData`, `testState`, `itemState`, `sessionInstruments`, `TYPE_LABEL` sang `src/domain/session.ts`; `export/` và `views/` chỉ phụ thuộc `domain/` | `views/Session.ts`, `views/Sessions.ts`, `export/*` | Không còn import `../views/` ngoài `main.ts`; test hiện có xanh |
-| **R2** | **Tách biểu mẫu:** `src/forms/` – `inputs.ts` (numRow/selRow/textRow/paintRows), mỗi form 1 file, `index.ts` giữ `FORMS`, `formFor`, `evaluateTest`; test `rows()` cho từng form | `forms.ts` | Mỗi file < 200 dòng; test snapshot `rows()` 9 form |
-| **R3** | **Bỏ CSS nội tuyến:** class + token trong `base.css`; helper `html`/`attr` tự escape | views, forms, components | `grep 'style="'` ≈ 0; e2e tương phản xanh |
+| **R1** ✅ | **Tầng domain:** chuyển `loadSessionData`, `testState`, `itemState`, `sessionInstruments`, `TYPE_LABEL` sang `src/domain/session.ts`; `export/` và `views/` chỉ phụ thuộc `domain/` | `views/Session.ts`, `views/Sessions.ts`, `export/*` | Không còn import `../views/` ngoài `main.ts`; test hiện có xanh |
+| **R2** ✅ | **Tách biểu mẫu:** `src/forms/` – `inputs.ts` (numRow/selRow/textRow/paintRows), mỗi form 1 file, `index.ts` giữ `FORMS`, `formFor`, `evaluateTest`; test `rows()` cho từng form | `forms.ts` | Mỗi file < 200 dòng; test snapshot `rows()` 9 form |
+| **R3** ✅ | **Bỏ CSS nội tuyến:** class + token trong `base.css`; helper `html`/`attr` tự escape | views, forms, components | `grep 'style="'` ≈ 0; e2e tương phản xanh |
 | **R4** | **Con người gắn tài khoản:** phiên lưu `crew: {userId?, name, role: 'leader'|'tester', atvsv?}[]` (giữ `leader`/`members` cho dữ liệu cũ); tạo phiên chọn từ danh sách tài khoản đã duyệt (dùng một mình: gõ tay); cổng an toàn chọn từ `crew` | `types`, `views/Sessions`, `SafetyGate`, `signers`, `gas/Core.gs` (thao tác `teamMembers`) | Tên in BBTN = tên tài khoản ký; phiên cũ hiển thị đúng |
 | **R5** | **Luồng hiện trường:** màn hình “Làm việc” nhóm theo vị trí; tiến độ hạng mục × pha; “còn N ô trống”; Enter → ô kế; cảnh báo nghi nhập sai; tách `views/Session.ts` thành `SessionHome`, `SessionForm`, `SessionSign`, `photos` | `views/session/*`, `content/items.json` (thêm `location`), `calc/sanity.ts` | e2e: làm trọn 1 phiên bằng bàn phím; unit test sanity |
 | **R6** | **Kết luận & BBTN chuẩn:** gợi ý kết luận từ dòng ❌/⚠️; tiêu đề đơn vị + quốc hiệu + số biên bản (cấu hình trong hồ sơ đội/Quản trị); nhắc ô trống trước khi ký | `export/*`, `views/session/SessionSign` | PDF đúng mẫu B3; Excel cùng nội dung |

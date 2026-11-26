@@ -13,8 +13,8 @@ export const Home: View = async (_r, el) => {
   const off = offlineStatus();
   el.innerHTML = `
     <p class="status-line" id="offline-status"><span class="dot ${off.ok ? 'ok' : 'warn'}"></span>${esc(off.text)}</p>
-    <a class="banner-danger" href="#/safety"><span aria-hidden="true" style="display:flex;align-items:center;font-size:22px">${Icons.hvDanger}</span> AN TOÀN TRƯỚC KHI LÊN SÀN</a>
-    ${s ? `<a class="card row" href="#/session/${esc(s.id)}" style="text-decoration:none;color:inherit"><span style="display:flex;align-items:center;gap:6px">${Icons.report} Phiên đang làm: <b>${esc(s.profileId)}</b> · ${esc(fmtDate(s.date))}</span><span class="pill">Mở</span></a>` : ''}
+    <a class="banner-danger" href="#/safety"><span class="icon-inline" aria-hidden="true">${Icons.hvDanger}</span> AN TOÀN TRƯỚC KHI LÊN SÀN</a>
+    ${s ? `<a class="card row link-plain" href="#/session/${esc(s.id)}"><span class="hstack">${Icons.report} Phiên đang làm: <b>${esc(s.profileId)}</b> · ${esc(fmtDate(s.date))}</span><span class="pill">Mở</span></a>` : ''}
     <div class="grid2">
       ${items
         .map(

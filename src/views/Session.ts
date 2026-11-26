@@ -41,10 +41,10 @@ async function photosBlock(
       .map((p) => {
         const u = URL.createObjectURL(p.blob);
         urls.push(u);
-        return `<figure><a href="${u}" data-pswp-width="1600" data-pswp-height="1200" data-caption="${esc(p.caption)}"><img src="${u}" alt="${esc(p.caption)}"></a><figcaption>${esc(p.caption)} ${readOnly ? '' : `<button class="icon-btn" type="button" data-del="${esc(p.id)}" aria-label="Xóa ảnh" style="min-width:36px;min-height:36px;font-size:16px">🗑</button>`}</figcaption></figure>`;
+        return `<figure><a href="${u}" data-pswp-width="1600" data-pswp-height="1200" data-caption="${esc(p.caption)}"><img src="${u}" alt="${esc(p.caption)}"></a><figcaption>${esc(p.caption)} ${readOnly ? '' : `<button class="icon-btn photo-del" type="button" data-del="${esc(p.id)}" aria-label="Xóa ảnh">🗑</button>`}</figcaption></figure>`;
       })
       .join('')}</div>
-      ${readOnly ? '' : '<label class="btn secondary block" style="margin-top:10px">📷 Chụp / chọn ảnh (Tự động đóng dấu Watermark kỹ thuật)<input type="file" accept="image/*" capture="environment" multiple hidden data-file></label>'}`;
+      ${readOnly ? '' : '<label class="btn secondary block mt-12">📷 Chụp / chọn ảnh (Tự động đóng dấu Watermark kỹ thuật)<input type="file" accept="image/*" capture="environment" multiple hidden data-file></label>'}`;
     // kích thước thật cho trình xem
     box.querySelectorAll<HTMLAnchorElement>('a[data-pswp-width]').forEach((a) => {
       const img = a.querySelector('img')!;
@@ -106,13 +106,13 @@ function signBlock(sigs: SignatureCheck[]): string {
     return `<div class="card"><b>${esc(SLOT_LABEL[slot])}</b>
       ${mine
         .map(
-          ({ sig, valid }) => `<div class="small" style="margin-top:6px">✍️ <b>${esc(sig.name)}</b> (${esc(sig.email)})<br>${esc(fmtTime(sig.signedAt))} · mã ${esc(sig.hash.slice(0, 12))}
+          ({ sig, valid }) => `<div class="small mt-6">✍️ <b>${esc(sig.name)}</b> (${esc(sig.email)})<br>${esc(fmtTime(sig.signedAt))} · mã ${esc(sig.hash.slice(0, 12))}
             <br>${valid ? resBadge('pass', '✓ Nội dung khớp lúc ký') : resBadge('fail', '⚠️ Nội dung đã thay đổi sau khi ký')}
-            ${can('sign.revoke') ? `<button class="btn secondary" type="button" data-revoke="${esc(sig.id)}" style="margin-top:6px">Thu hồi chữ ký</button>` : ''}</div>`,
+            ${can('sign.revoke') ? `<button class="btn secondary mt-6" type="button" data-revoke="${esc(sig.id)}">Thu hồi chữ ký</button>` : ''}</div>`,
         )
         .join('')}
       ${!mine.length ? '<div class="small muted">Chưa ký</div>' : ''}
-      ${canSign(slot) && !already ? `<button class="btn block" type="button" data-sign="${slot}" style="margin-top:8px">✍️ Ký xác nhận</button>` : ''}
+      ${canSign(slot) && !already ? `<button class="btn block mt-8" type="button" data-sign="${slot}">✍️ Ký xác nhận</button>` : ''}
     </div>`;
   }).join('') + (me ? '' : '<p class="small muted">Đăng nhập tài khoản đã được duyệt (⚙️ Cài đặt) để ký biên bản.</p>');
 }
@@ -142,10 +142,10 @@ export const SessionView: View = async (_r, el) => {
     <div class="card">
       <div class="row"><b>${esc(p.bank)} – ${esc(p.station)}</b>${isActive ? '<span class="pill">● Đang làm</span>' : ''}</div>
       <div class="small">Ngày: ${esc(fmtDate(s.date))} · ${esc(TYPE_LABEL[s.type])}<br>Chỉ huy: <b>${esc(s.leader)}</b>${s.members.length ? `<br>Thành viên: ${s.members.map(esc).join(', ')}` : ''}</div>
-      ${insts.map((i) => `<div class="small" style="display:flex;align-items:center;gap:6px">${Icons.testSet} <span>${esc(i!.model)}${i!.serial ? ` · SN ${esc(i!.serial)}` : ''}${calibOverdue(i!.calibDue, s.date) ? ` <span class="res fail">QUÁ HẠN ${esc(fmtDate(i!.calibDue))}</span>` : ''}</span></div>`).join('')}
+      ${insts.map((i) => `<div class="small hstack">${Icons.testSet} <span>${esc(i!.model)}${i!.serial ? ` · SN ${esc(i!.serial)}` : ''}${calibOverdue(i!.calibDue, s.date) ? ` <span class="res fail">QUÁ HẠN ${esc(fmtDate(i!.calibDue))}</span>` : ''}</span></div>`).join('')}
       <div class="btn-row">${isActive ? '<button class="btn secondary" type="button" id="deact">Bỏ chọn phiên</button>' : '<button class="btn" type="button" id="act">Đặt làm phiên đang làm</button>'}${editable ? '<button class="btn secondary" type="button" id="resnap">↻ Cập nhật ngưỡng từ hồ sơ giàn</button>' : ''}<a class="btn secondary" href="#/trend/${esc(s.profileId)}">📈 Xem xu hướng giàn tụ</a></div>
     </div>
-    <a class="card row" href="#/gate/gate-platform" style="text-decoration:none;color:inherit" ${isActive ? '' : 'data-need-active'}>
+    <a class="card row link-plain" href="#/gate/gate-platform" ${isActive ? '' : 'data-need-active'}>
       <span>${gp.confirmedBy ? '✅' : '⚠️'} Cổng an toàn lên sàn tụ</span><span class="small">${gp.confirmedBy ? `${esc(gp.confirmedBy)} · ${esc(fmtTime(gp.timestamp!))}` : 'Chưa xác nhận'}</span></a>
     <h2>Tiến độ</h2>
     <div class="progress-items">${items.map((it) => `<a href="#/session/${esc(s.id)}/form/${it.id}/${it.tests[0].id}">${it.id.slice(2)} ${STATE_ICON[itemState(d, it.id)]}</a>`).join('')}</div>
@@ -155,7 +155,7 @@ export const SessionView: View = async (_r, el) => {
         ${it.tests
           .map((t) => {
             const st = testState(d, it.id, t.id).state;
-            return `<a class="row" href="#/session/${esc(s.id)}/form/${it.id}/${t.id}" style="min-height:44px;color:inherit;text-decoration:none;border-top:1px solid var(--c-border)"><span>${esc(t.title)}</span><span>${STATE_ICON[st]}</span></a>`;
+            return `<a class="row link-plain list-row" href="#/session/${esc(s.id)}/form/${it.id}/${t.id}"><span>${esc(t.title)}</span><span>${STATE_ICON[st]}</span></a>`;
           })
           .join('')}</div>`,
       )
@@ -181,7 +181,7 @@ export const SessionView: View = async (_r, el) => {
       <button class="btn secondary" type="button" data-exp="json">{ } JSON</button>
       ${'share' in navigator ? '<button class="btn secondary" type="button" data-exp="share">📤 Chia sẻ PDF</button>' : ''}
     </div>
-    ${editable ? '<button class="btn danger block" type="button" id="del" style="margin-top:24px">Xóa phiên</button>' : ''}`;
+    ${editable ? '<button class="btn danger block mt-24" type="button" id="del">Xóa phiên</button>' : ''}`;
 
   el.querySelectorAll<HTMLButtonElement>('[data-sign]').forEach((b) =>
     b.addEventListener('click', async () => {
@@ -300,7 +300,7 @@ export const SessionForm: View = async (_r, el) => {
   el.innerHTML = `
     ${locked ? callout({ level: 'info', text: '🔒 **Biên bản đã khóa** do Chỉ huy trực tiếp đã ký. Chỉ xem, không sửa được.' }) : !can('measure.edit') ? callout({ level: 'info', text: 'Tài khoản này **chỉ xem**, không nhập được số đo.' }) : ''}
     ${gateMissing.length && !readOnly ? callout({ level: 'warn', text: `Chưa xác nhận: ${gateMissing.join('; ')}.` }) : ''}
-    <div class="row" style="margin-top:12px">
+    <div class="row mt-12">
       ${form.phased ? `<div class="seg" role="group" aria-label="Pha">${PHASES.map((x) => `<button type="button" data-ph="${x}" aria-pressed="${x === phase}">${x}</button>`).join('')}</div>` : '<span></span>'}
       ${stepsOf(test).length ? `<a class="btn secondary" href="#/item/${itemId}/test/${testId}/step/1">▶ Từng bước</a>` : ''}
     </div>

@@ -18,37 +18,32 @@ export function openOcrScanner(opts: OcrModalOptions): void {
 
   const modal = document.createElement('div');
   modal.className = 'modal-backdrop';
-  modal.style.cssText = `
-    position: fixed; inset: 0; background: rgba(0,0,0,0.78);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 9999; padding: 12px; backdrop-filter: blur(4px);
-  `;
-
+  
   modal.innerHTML = `
-    <div class="card" style="width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; background: var(--c-surface, #1e293b); color: var(--c-text, #f8fafc); border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); padding: 16px;">
-      <div class="row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <b style="font-size: 16px;">📷 Quét số đo đồng hồ (OCR)</b>
-        <button type="button" class="icon-btn" data-close style="font-size: 20px; line-height: 1; min-width: 36px; min-height: 36px; cursor: pointer;">✕</button>
+    <div class="card modal-card">
+      <div class="row modal-head">
+        <b>📷 Quét số đo đồng hồ (OCR)</b>
+        <button type="button" class="icon-btn modal-close" data-close>✕</button>
       </div>
 
-      <p class="small muted" style="margin-bottom: 12px;">
+      <p class="small muted mb-12">
         Chụp hoặc chọn ảnh màn hình hiển thị số của đồng hồ đo (Vôn kế, Ampe kìm, Micro-ohm, Megger...).
       </p>
 
-      <div style="margin-bottom: 14px;">
-        <label class="btn block" style="display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; padding: 12px; font-weight: 600;">
+      <div class="mb-12">
+        <label class="btn block ocr-pick">
           <span>📸 Chụp ảnh / Chọn ảnh</span>
           <input type="file" accept="image/*" capture="environment" data-file hidden>
         </label>
       </div>
 
       <!-- Preview container -->
-      <div id="ocr-preview-wrap" style="display: none; margin-bottom: 14px; text-align: center;">
-        <div style="position: relative; display: inline-block; max-width: 100%; border-radius: 8px; overflow: hidden; border: 2px dashed #38bdf8;">
-          <canvas id="ocr-canvas" style="display: block; max-width: 100%; max-height: 240px; margin: 0 auto;"></canvas>
+      <div id="ocr-preview-wrap" class="ocr-preview" hidden>
+        <div class="ocr-frame">
+          <canvas class="ocr-canvas" id="ocr-canvas"></canvas>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-          <label class="check small" style="display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+        <div class="ocr-tools">
+          <label class="check small ocr-toggle">
             <input type="checkbox" id="ocr-invert">
             <span>Đảo phân cực (Chữ sáng trên nền tối)</span>
           </label>
@@ -57,16 +52,16 @@ export function openOcrScanner(opts: OcrModalOptions): void {
       </div>
 
       <!-- Result section -->
-      <div id="ocr-result-wrap" style="margin-bottom: 14px; background: rgba(0,0,0,0.25); border-radius: 8px; padding: 12px; border: 1px solid var(--c-border, #334155);">
-        <label class="field" style="margin-bottom: 8px;">
-          <span style="font-weight: 600; display: block; margin-bottom: 4px;">Giá trị nhận diện được:</span>
-          <input type="text" id="ocr-val-input" inputmode="decimal" value="${esc(opts.initialValue ?? '')}" style="font-size: 20px; font-weight: 700; text-align: center; color: #38bdf8; font-family: monospace; letter-spacing: 1px;" placeholder="Chưa có ảnh">
+      <div class="ocr-result" id="ocr-result-wrap">
+        <label class="field mb-8">
+          <span class="fw-6 block mb-4">Giá trị nhận diện được:</span>
+          <input class="ocr-value" type="text" id="ocr-val-input" inputmode="decimal" value="${esc(opts.initialValue ?? '')}" placeholder="Chưa có ảnh">
         </label>
-        <div id="ocr-candidates" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;"></div>
+        <div class="ocr-cands" id="ocr-candidates"></div>
       </div>
 
-      <div class="btn-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <button type="button" class="btn" id="ocr-apply" style="font-weight: 600;">✅ Áp dụng vào ô</button>
+      <div class="btn-row grid-2">
+        <button type="button" class="btn fw-6" id="ocr-apply">✅ Áp dụng vào ô</button>
         <button type="button" class="btn secondary" data-close>Hủy</button>
       </div>
     </div>
@@ -132,7 +127,6 @@ export function openOcrScanner(opts: OcrModalOptions): void {
         const pill = document.createElement('button');
         pill.type = 'button';
         pill.className = 'pill';
-        pill.style.cursor = 'pointer';
         pill.textContent = c.text;
         pill.addEventListener('click', () => {
           valInput.value = c.text;
@@ -151,7 +145,7 @@ export function openOcrScanner(opts: OcrModalOptions): void {
       const img = new Image();
       img.onload = () => {
         currentImg = img;
-        previewWrap.style.display = 'block';
+        previewWrap.hidden = false;
         runOcr();
       };
       img.src = e.target?.result as string;

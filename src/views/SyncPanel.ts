@@ -21,7 +21,7 @@ export async function renderSyncPanel(box: HTMLElement) {
   const { loadBackend } = await import('../sync/backend');
   const m = await loadBackend();
   box.innerHTML = `
-    <div class="card" style="margin-top:0">
+    <div class="card mt-0">
       <b>${esc(me.name)}</b>
       <div class="small muted">${esc(me.email)}</div>
       <div class="small">${esc(ROLE_LABEL[me.role])} – ${esc(me.teamName ?? '')}</div>
@@ -34,7 +34,7 @@ export async function renderSyncPanel(box: HTMLElement) {
       <a class="btn secondary" href="#/register">✎ Hồ sơ của tôi</a>
       <button class="btn secondary" type="button" id="sync-out">Đăng xuất</button>
     </div>
-    ${can('admin.panel', me) ? '<a class="btn block" href="#/admin" style="margin-top:8px">🛡️ Quản trị hệ thống</a>' : ''}`;
+    ${can('admin.panel', me) ? '<a class="btn block mt-8" href="#/admin">🛡️ Quản trị hệ thống</a>' : ''}`;
 
   box.querySelector('#sync-now')!.addEventListener('click', () => {
     m.startAuto();

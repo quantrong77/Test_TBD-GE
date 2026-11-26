@@ -59,7 +59,7 @@ export const Settings: View = async (_r, el) => {
     <p class="small muted">Chọn theo nơi đang làm việc. Áp dụng ngay, lưu trên máy này.</p>
     <div class="theme-grid" role="radiogroup" aria-label="Chủ đề hiển thị">${THEMES.map((t) => themeCard(t, getTheme())).join('')}</div>
     <h3>Cỡ chữ</h3>
-    <div class="seg" role="group" aria-label="Cỡ chữ">${SCALES.map(([s, l]) => `<button type="button" data-scale="${s}" aria-pressed="${getFontScale() === s}" style="padding:0 12px">${l}</button>`).join('')}</div>
+    <div class="seg" role="group" aria-label="Cỡ chữ">${SCALES.map(([s, l]) => `<button class="px-12" type="button" data-scale="${s}" aria-pressed="${getFontScale() === s}">${l}</button>`).join('')}</div>
 
     <h2>Offline & cài đặt app</h2>
     <p><span class="dot ${off.ok ? 'ok' : 'warn'}"></span>${esc(off.ok && !import.meta.env.DEV ? 'Toàn bộ nội dung và hình ảnh đã sẵn sàng offline.' : off.text)}</p>

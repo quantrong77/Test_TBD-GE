@@ -1415,3 +1415,75 @@ body.auth-mode {
   text-decoration: none;
   font-weight: 600;
 }
+
+/* ===== Tiện ích bố cục (R3 – thay cho style="" nội tuyến; màu luôn qua token theme) ===== */
+.m-0 { margin: 0; }
+.mt-0 { margin-top: 0; }
+.mt-4 { margin-top: 4px; }
+.mt-6 { margin-top: 6px; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-24 { margin-top: 24px; }
+.mb-4 { margin-bottom: 4px; }
+.mb-6 { margin-bottom: 6px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.my-8 { margin-top: 8px; margin-bottom: 8px; }
+.px-12 { padding-left: 12px; padding-right: 12px; }
+.block { display: block; }
+.inline-block { display: inline-block; }
+.fw-6 { font-weight: 600; }
+.text-danger { color: var(--c-danger-fg); }
+.text-warn { color: var(--c-warn); }
+.grow { flex: 1; min-width: 0; }
+.hstack { display: flex; align-items: center; gap: 6px; }
+.hstack-tight { display: flex; align-items: center; gap: 4px; width: 100%; }
+.link-plain { text-decoration: none; color: inherit; }
+.list-row { min-height: 44px; border-top: 1px solid var(--c-border); }
+.divider-top { padding-top: 6px; border-top: 1px solid var(--c-border); }
+.empty-state { text-align: center; padding: 24px 12px; }
+.icon-lg { font-size: 24px; }
+.icon-inline { display: flex; align-items: center; font-size: 22px; }
+.h2-size { font-size: var(--fs-h2); }
+.check.borderless { border: 0; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grid-fill-auto { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.grid-idx { display: grid; grid-template-columns: 1fr 38px 84px; gap: 6px; }
+
+/* Modal dùng chung (Xu hướng, OCR) */
+.modal-backdrop { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgb(0 0 0 / 0.75); backdrop-filter: blur(4px); }
+.modal-backdrop[hidden] { display: none; }
+.modal-card { width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; background: var(--c-bg); color: var(--c-text); border-radius: 12px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5); padding: 16px; }
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.modal-close { font-size: 20px; line-height: 1; min-width: 44px; min-height: 44px; cursor: pointer; }
+
+/* Xu hướng */
+.trend-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 4px; margin-top: 8px; }
+.trend-verdict { border-left: 4px solid var(--c-muted); }
+.trend-verdict.v-pass { border-left-color: var(--c-ok); }
+.trend-verdict.v-warn { border-left-color: var(--c-warn); }
+.trend-verdict.v-fail { border-left-color: var(--c-danger); }
+.trend-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 10px 0; background: var(--c-surface); padding: 8px; border-radius: 6px; }
+.stat-val { font-size: 15px; }
+.trend-note { margin: -6px 0 12px; }
+.trend-chart-svg { display: block; background: rgb(15 23 42 / 0.92); border-radius: 8px; border: 1px solid var(--c-border); font-family: sans-serif; }
+
+/* OCR */
+.ocr-pick { display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; padding: 12px; font-weight: 600; }
+.ocr-preview { margin-bottom: 12px; text-align: center; }
+.ocr-frame { position: relative; display: inline-block; max-width: 100%; border-radius: 8px; overflow: hidden; border: 2px dashed var(--c-primary); }
+.ocr-canvas { display: block; max-width: 100%; max-height: 240px; margin: 0 auto; }
+.ocr-tools { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.ocr-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.ocr-result { margin-bottom: 12px; background: var(--c-surface); border-radius: 8px; padding: 12px; border: 1px solid var(--c-border); }
+.ocr-value { font-size: 20px; font-weight: 700; text-align: center; font-family: monospace; letter-spacing: 1px; color: var(--c-text); }
+.ocr-cands { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ocr-cands .pill { cursor: pointer; }
+.mb-0 { margin-bottom: 0; }
+.photo-del { min-width: 44px; min-height: 44px; font-size: 16px; }
+.modal-head { gap: 8px; }
+.modal-head > b { flex: 1; min-width: 0; }
+.seg.trend-metrics { display: grid; border-radius: 12px; }
+.seg.trend-metrics button { padding: 0 8px; }

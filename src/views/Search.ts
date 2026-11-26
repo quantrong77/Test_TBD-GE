@@ -111,7 +111,7 @@ export function search(q: string) {
 export const Search: View = (r, el) => {
   setTop('Tìm kiếm', { back: '#/' });
   const q0 = r.query.get('q') ?? '';
-  el.innerHTML = `<form id="sf" role="search" style="margin-top:12px"><input type="search" id="q" value="${esc(q0)}" placeholder="vd: khang can diu, VAP mC, CT6…" autocomplete="off" aria-label="Từ khóa"></form>
+  el.innerHTML = `<form class="mt-12" id="sf" role="search"><input type="search" id="q" value="${esc(q0)}" placeholder="vd: khang can diu, VAP mC, CT6…" autocomplete="off" aria-label="Từ khóa"></form>
     <p class="small muted">Tìm không phân biệt dấu, hoạt động offline.</p><div id="res"></div>`;
   const input = el.querySelector<HTMLInputElement>('#q')!;
   const out = el.querySelector('#res')!;
@@ -124,7 +124,7 @@ export const Search: View = (r, el) => {
         ? `<p class="small muted">${res.length} kết quả</p>` +
           res
             .map(
-              (d) => `<a class="card" href="${esc(d.href)}" style="display:block;text-decoration:none;color:inherit"><span class="pill">${esc(d.kind)}</span> <b>${esc(d.title)}</b><div class="small">${snippet(d.text, q)}</div></a>`,
+              (d) => `<a class="card block link-plain" href="${esc(d.href)}"><span class="pill">${esc(d.kind)}</span> <b>${esc(d.title)}</b><div class="small">${snippet(d.text, q)}</div></a>`,
             )
             .join('')
         : '<p>Không tìm thấy kết quả.</p>'

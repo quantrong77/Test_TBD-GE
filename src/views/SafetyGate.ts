@@ -57,7 +57,7 @@ export const SafetyGate: View = async (r, el) => {
             c.timer && !confirmed && !state.items[c.id]
               ? `<details class="card"><summary>Tụ đã cô lập từ trước?</summary>
                   <p class="small">Nhập <b>giờ cô lập thực tế</b> theo phiếu công tác / nhật ký vận hành. Đủ ${Math.round(c.timer / 60)} phút thì mở khóa ngay, chưa đủ thì đếm phần còn lại. Giờ này được ghi vào biên bản.</p>
-                  <div style="display:grid;grid-template-columns:1fr auto;gap:8px"><input type="time" data-iso-time="${c.id}" aria-label="Giờ cô lập"><button class="btn secondary" type="button" data-iso="${c.id}">Dùng giờ này</button></div>
+                  <div class="grid-fill-auto"><input type="time" data-iso-time="${c.id}" aria-label="Giờ cô lập"><button class="btn secondary" type="button" data-iso="${c.id}">Dùng giờ này</button></div>
                 </details>`
               : ''
           }</div>`;

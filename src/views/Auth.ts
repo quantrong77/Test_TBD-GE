@@ -113,9 +113,9 @@ export const Register: View = async (_r, el) => {
         <label class="field"><span>Đơn vị công tác *</span><input name="unit" required maxlength="150" placeholder="vd: Đội Sửa chữa, thí nghiệm điện Lâm Đồng – PTC3" value="${v(me?.unit)}"></label>
         <label class="field"><span>Số điện thoại</span><input name="phone" type="tel" inputmode="tel" maxlength="30" autocomplete="tel" value="${v(me?.phone)}"></label>
         ${first ? '<label class="field"><span>Ghi chú cho Quản trị</span><textarea name="note" rows="3" maxlength="500" placeholder="vd: tham gia đợt thí nghiệm TBD Pleiku tháng 12"></textarea></label>' : ''}
-        <p class="small" id="err" role="alert" style="color:var(--c-danger-fg)"></p>
+        <p class="small text-danger" id="err" role="alert"></p>
         <button class="btn block big" type="submit">${first ? 'Gửi đăng ký' : 'Lưu hồ sơ'}</button>
-        ${first ? '<button class="btn secondary block" type="button" id="out" style="margin-top:8px">Đăng xuất</button>' : ''}
+        ${first ? '<button class="btn secondary block mt-8" type="button" id="out">Đăng xuất</button>' : ''}
       </form>
       ${first ? DISCLAIMER : ''}
     </div>`;
